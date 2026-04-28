@@ -16,3 +16,9 @@ async def index(request: Request):
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/api/mvrv")
+async def mvrv():
+    from app.metrics.mvrv import get_mvrv
+    return get_mvrv()

@@ -5,15 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTCFunk — Bitcoin On-Chain Analytics</title>
     <style>
-        body { margin: 0; font-family: monospace; background: #0a0a0a; color: #f0f0f0; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        h1 { font-size: 2rem; color: #f7931a; }
-        p { color: #888; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: monospace; background: #0a0a0a; color: #f0f0f0; min-height: 100vh; }
+        header { padding: 1.5rem 2rem; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; gap: 1rem; }
+        header h1 { color: #f7931a; font-size: 1.4rem; }
+        header span { color: #555; font-size: 0.85rem; }
+        .dashboard { padding: 2rem; display: grid; gap: 1.5rem; max-width: 900px; }
+        .card { background: #111; border: 1px solid #222; border-radius: 8px; padding: 1.5rem; }
+        .card h2 { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+        .metric-row { display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .metric { }
+        .metric .value { font-size: 2rem; color: #f7931a; font-weight: bold; }
+        .metric .label { font-size: 0.75rem; color: #555; margin-top: 0.2rem; }
+        .metric .sub { font-size: 0.8rem; color: #888; margin-top: 0.3rem; }
+        .loading { color: #555; font-size: 0.9rem; }
+        .zone { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-top: 0.5rem; }
+        .zone-red { background: #3a0000; color: #ff4444; }
+        .zone-orange { background: #3a1a00; color: #ff9900; }
+        .zone-green { background: #003a00; color: #44ff44; }
+        .zone-blue { background: #00003a; color: #4488ff; }
+        .updated { font-size: 0.7rem; color: #444; margin-top: 1rem; }
     </style>
 </head>
 <body>
-    <div style="text-align:center">
+    <header>
         <h1>BTCFunk</h1>
-        <p>Bitcoin On-Chain Analytics — coming soon</p>
+        <span>Bitcoin On-Chain Analytics</span>
+    </header>
+    <div class="dashboard">
+        <div class="card">
+            <h2>MVRV Ratio</h2>
+            <div id="mvrv-loading" class="loading">Caricamento dati BigQuery...</div>
+            <div id="mvrv-content" style="display:none">
+                <div class="metric-row">
+                    <div class="metric">
+                        <div class="value" id="mvrv-value">—</div>
+                        <div class="label">MVRV</div>
+                        <div id="mvrv-zone" class="zone"></div>
+                    </div>
+                    <div class="metric">
+                        <div class="value" id="mvrv-price" style="font-size:1.4rem">—</div>
+                        <div class="label">Prezzo BTC</div>
+                    </div>
+                    <div class="metric">
+                        <div class="value" id="mvrv-mcap" style="font-size:1.4rem">—</div>
+                        <div class="label">Market Cap</div>
+                    </div>
+                    <div class="metric">
+                        <div class="value" id="mvrv-rcap" style="font-size:1.4rem">—</div>
+                        <div class="label">Realized Cap</div>
+                    </div>
+                </div>
+                <div class="sub" style="color:#666; font-size:0.8rem">
+                    MVRV &lt; 1 → sottovalutato &nbsp;|&nbsp;
+                    1–2 → equo &nbsp;|&nbsp;
+                    2–3.5 → attenzione &nbsp;|&nbsp;
+                    &gt; 3.5 → zona top
+                </div>
+                <div class="updated" id="mvrv-updated"></div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        function fmt_usd(n) {
+            if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
+            if (n >= 1e9)  return '$' + (n/1e9).toFixed(2) + 'B';
+            if (n >= 1e6)  return '$' + (n/1e6).toFixed(2) + 'M';
+            return '$' + n.toLocaleString();
+        }
+
+        function mvrv_zone(v) {
+            if (v < 1)   return { label: 'SOTTOVALUTATO', cls: 'zone-blue' };
+            if (v < 2)   return { label: 'EQUO', cls: 'zone-green' };
+            if (v < 3.5) return { label: 'ATTENZIONE', cls: 'zone-orange' };
+            return { label: 'ZONA TOP', cls: 'zone-red' };
+        }
+
+        fetch('/api/mvrv')
+            .then(r => r.json())
+            .then(d => {
+                document.getElementById('mvrv-loading').style.display = 'none';
+                document.getElementById('mvrv-content').style.display = 'block';
+                document.getElementById('mvrv-value').textContent = d.mvrv.toFixed(2);
+                document.getElementById('mvrv-price').textContent = fmt_usd(d.current_price);
+                document.getElementById('mvrv-mcap').textContent = fmt_usd(d.market_cap);
+                document.getElementById('mvrv-rcap').textContent = fmt_usd(d.realized_cap);
+                const zone = mvrv_zone(d.mvrv);
+                const zoneEl = document.getElementById('mvrv-zone');
+                zoneEl.textContent = zone.label;
+                zoneEl.className = 'zone ' + zone.cls;
+                document.getElementById('mvrv-updated').textContent = 'Aggiornato: ' + new Date(d.updated_at).toLocaleString('it-IT');
+            })
+            .catch(() => {
+                document.getElementById('mvrv-loading').textContent = 'Errore nel caricamento dati.';
+            });
+    </script>
 </body>
 </html>
