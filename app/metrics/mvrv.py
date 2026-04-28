@@ -1,3 +1,5 @@
+import csv
+import os
 import sqlite3
 import json
 import requests
@@ -6,6 +8,7 @@ from google.cloud import bigquery
 
 DB_PATH = "mvrv_cache.sqlite"
 CACHE_TTL_HOURS = 24
+KRAKEN_CSV = os.path.join(os.path.dirname(__file__), "../data/kraken_btcusd_daily.csv")
 
 _bq_client = None
 
@@ -24,6 +27,12 @@ def _init_db():
             key TEXT PRIMARY KEY,
             value TEXT,
             updated_at TEXT
+        )
+    """)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS btc_prices (
+            day TEXT PRIMARY KEY,
+            price REAL
         )
     """)
     con.commit()
@@ -49,18 +58,44 @@ def _cache_set(con, key, value):
     con.commit()
 
 
-def _fetch_prices():
-    """Fetch daily BTC/USDT close prices from Binance (free, no auth, last 1000 days)"""
+def _import_csv(con):
+    count = con.execute("SELECT COUNT(*) FROM btc_prices").fetchone()[0]
+    if count > 0:
+        return
+    rows = []
+    with open(KRAKEN_CSV) as f:
+        for line in csv.reader(f):
+            ts, _, _, _, close = int(line[0]), line[1], line[2], line[3], line[4]
+            day = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
+            rows.append((day, float(close)))
+    con.executemany("INSERT OR REPLACE INTO btc_prices (day, price) VALUES (?, ?)", rows)
+    con.commit()
+
+
+def _update_prices(con):
+    row = con.execute("SELECT MAX(day) FROM btc_prices").fetchone()
+    last_day = datetime.strptime(row[0], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    since = int(last_day.timestamp())
     r = requests.get(
-        "https://api.binance.com/api/v3/klines",
-        params={"symbol": "BTCUSDT", "interval": "1d", "limit": 1000},
+        "https://api.kraken.com/0/public/OHLC",
+        params={"pair": "XBTUSD", "interval": 1440, "since": since},
         timeout=30,
     )
     r.raise_for_status()
-    return {
-        datetime.fromtimestamp(candle[0] / 1000, tz=timezone.utc).strftime("%Y-%m-%d"): float(candle[4])
-        for candle in r.json()
-    }
+    data = r.json()
+    candles = data["result"].get("XXBTZUSD") or data["result"].get("XBTUSD", [])
+    new_rows = [
+        (datetime.fromtimestamp(int(c[0]), tz=timezone.utc).strftime("%Y-%m-%d"), float(c[4]))
+        for c in candles
+    ]
+    if new_rows:
+        con.executemany("INSERT OR REPLACE INTO btc_prices (day, price) VALUES (?, ?)", new_rows)
+        con.commit()
+
+
+def _get_prices(con):
+    rows = con.execute("SELECT day, price FROM btc_prices").fetchall()
+    return {row[0]: row[1] for row in rows}
 
 
 def _fetch_utxos():
@@ -87,18 +122,31 @@ def get_mvrv():
     if cached:
         return cached
 
-    # Current price + market cap
+    # Current price + market cap from Kraken ticker
     r = requests.get(
+        "https://api.kraken.com/0/public/Ticker",
+        params={"pair": "XBTUSD"},
+        timeout=10,
+    )
+    r.raise_for_status()
+    ticker = r.json()["result"]
+    key = list(ticker.keys())[0]
+    current_price = float(ticker[key]["c"][0])
+
+    # Market cap: current price × circulating supply from CoinGecko (lightweight call)
+    cg = requests.get(
         "https://api.coingecko.com/api/v3/simple/price",
         params={"ids": "bitcoin", "vs_currencies": "usd", "include_market_cap": "true"},
         timeout=10,
     )
-    r.raise_for_status()
-    btc = r.json()["bitcoin"]
-    current_price = btc["usd"]
-    market_cap = btc["usd_market_cap"]
+    cg.raise_for_status()
+    market_cap = cg.json()["bitcoin"]["usd_market_cap"]
 
-    prices = _fetch_prices()
+    # Import CSV on first run, then top up with Kraken API
+    _import_csv(con)
+    _update_prices(con)
+    prices = _get_prices(con)
+
     utxos = _fetch_utxos()
 
     realized_cap = sum(
