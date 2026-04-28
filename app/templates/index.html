@@ -31,11 +31,12 @@
     <header>
         <h1>BTCFunk</h1>
         <span>Bitcoin On-Chain Analytics</span>
+
     </header>
     <div class="dashboard">
         <div class="card">
             <h2>MVRV Ratio</h2>
-            <div id="mvrv-loading" class="loading">Caricamento dati BigQuery...</div>
+            <div id="mvrv-loading" class="loading">Loading BigQuery data...</div>
             <div id="mvrv-content" style="display:none">
                 <div class="metric-row">
                     <div class="metric">
@@ -45,7 +46,7 @@
                     </div>
                     <div class="metric">
                         <div class="value" id="mvrv-price" style="font-size:1.4rem">—</div>
-                        <div class="label">Prezzo BTC</div>
+                        <div class="label">BTC Price</div>
                     </div>
                     <div class="metric">
                         <div class="value" id="mvrv-mcap" style="font-size:1.4rem">—</div>
@@ -57,10 +58,10 @@
                     </div>
                 </div>
                 <div class="sub" style="color:#666; font-size:0.8rem">
-                    MVRV &lt; 1 → sottovalutato &nbsp;|&nbsp;
-                    1–2 → equo &nbsp;|&nbsp;
-                    2–3.5 → attenzione &nbsp;|&nbsp;
-                    &gt; 3.5 → zona top
+                    MVRV &lt; 1 → undervalued &nbsp;|&nbsp;
+                    1–2 → fair value &nbsp;|&nbsp;
+                    2–3.5 → caution &nbsp;|&nbsp;
+                    &gt; 3.5 → top zone
                 </div>
                 <div class="updated" id="mvrv-updated"></div>
             </div>
@@ -76,10 +77,10 @@
         }
 
         function mvrv_zone(v) {
-            if (v < 1)   return { label: 'SOTTOVALUTATO', cls: 'zone-blue' };
-            if (v < 2)   return { label: 'EQUO', cls: 'zone-green' };
-            if (v < 3.5) return { label: 'ATTENZIONE', cls: 'zone-orange' };
-            return { label: 'ZONA TOP', cls: 'zone-red' };
+            if (v < 1)   return { label: 'UNDERVALUED', cls: 'zone-blue' };
+            if (v < 2)   return { label: 'FAIR VALUE', cls: 'zone-green' };
+            if (v < 3.5) return { label: 'CAUTION', cls: 'zone-orange' };
+            return { label: 'TOP ZONE', cls: 'zone-red' };
         }
 
         fetch('/api/mvrv')
@@ -95,10 +96,10 @@
                 const zoneEl = document.getElementById('mvrv-zone');
                 zoneEl.textContent = zone.label;
                 zoneEl.className = 'zone ' + zone.cls;
-                document.getElementById('mvrv-updated').textContent = 'Aggiornato: ' + new Date(d.updated_at).toLocaleString('it-IT');
+                document.getElementById('mvrv-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
             })
             .catch(() => {
-                document.getElementById('mvrv-loading').textContent = 'Errore nel caricamento dati.';
+                document.getElementById('mvrv-loading').textContent = 'Error loading data.';
             });
     </script>
 </body>
