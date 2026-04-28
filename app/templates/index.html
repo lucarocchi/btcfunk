@@ -4,39 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BTCFunk — Bitcoin On-Chain Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: monospace; background: #0a0a0a; color: #f0f0f0; min-height: 100vh; }
         header { padding: 1.5rem 2rem; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; gap: 1rem; }
         header h1 { color: #f7931a; font-size: 1.4rem; }
         header span { color: #555; font-size: 0.85rem; }
-        .dashboard { padding: 2rem; display: grid; gap: 1.5rem; max-width: 900px; }
+        .dashboard { padding: 2rem; display: grid; gap: 1.5rem; max-width: 960px; }
         .card { background: #111; border: 1px solid #222; border-radius: 8px; padding: 1.5rem; }
         .card h2 { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
-        .metric-row { display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-        .metric { }
+        .metric-row { display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
         .metric .value { font-size: 2rem; color: #f7931a; font-weight: bold; }
         .metric .label { font-size: 0.75rem; color: #555; margin-top: 0.2rem; }
-        .metric .sub { font-size: 0.8rem; color: #888; margin-top: 0.3rem; }
         .loading { color: #555; font-size: 0.9rem; }
         .zone { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-top: 0.5rem; }
-        .zone-red { background: #3a0000; color: #ff4444; }
+        .zone-red    { background: #3a0000; color: #ff4444; }
         .zone-orange { background: #3a1a00; color: #ff9900; }
-        .zone-green { background: #003a00; color: #44ff44; }
-        .zone-blue { background: #00003a; color: #4488ff; }
-        .updated { font-size: 0.7rem; color: #444; margin-top: 1rem; }
+        .zone-green  { background: #003a00; color: #44ff44; }
+        .zone-blue   { background: #00003a; color: #4488ff; }
+        .hint { font-size: 0.78rem; color: #555; margin-bottom: 1rem; }
+        .updated { font-size: 0.7rem; color: #333; margin-top: 1rem; }
+        canvas { max-height: 220px; }
     </style>
 </head>
 <body>
     <header>
         <h1>BTCFunk</h1>
         <span>Bitcoin On-Chain Analytics</span>
-
     </header>
     <div class="dashboard">
+
+        <!-- MVRV -->
         <div class="card">
             <h2>MVRV Ratio</h2>
-            <div id="mvrv-loading" class="loading">Loading BigQuery data...</div>
+            <div id="mvrv-loading" class="loading">Loading...</div>
             <div id="mvrv-content" style="display:none">
                 <div class="metric-row">
                     <div class="metric">
@@ -45,27 +47,32 @@
                         <div id="mvrv-zone" class="zone"></div>
                     </div>
                     <div class="metric">
-                        <div class="value" id="mvrv-price" style="font-size:1.4rem">—</div>
+                        <div class="value" id="mvrv-price" style="font-size:1.3rem">—</div>
                         <div class="label">BTC Price</div>
                     </div>
                     <div class="metric">
-                        <div class="value" id="mvrv-mcap" style="font-size:1.4rem">—</div>
+                        <div class="value" id="mvrv-mcap" style="font-size:1.3rem">—</div>
                         <div class="label">Market Cap</div>
                     </div>
                     <div class="metric">
-                        <div class="value" id="mvrv-rcap" style="font-size:1.4rem">—</div>
+                        <div class="value" id="mvrv-rcap" style="font-size:1.3rem">—</div>
                         <div class="label">Realized Cap</div>
                     </div>
                 </div>
-                <div class="sub" style="color:#666; font-size:0.8rem">
-                    MVRV &lt; 1 → undervalued &nbsp;|&nbsp;
-                    1–2 → fair value &nbsp;|&nbsp;
-                    2–3.5 → caution &nbsp;|&nbsp;
-                    &gt; 3.5 → top zone
-                </div>
+                <div class="hint">&lt;1 undervalued &nbsp;|&nbsp; 1–2 fair value &nbsp;|&nbsp; 2–3.5 caution &nbsp;|&nbsp; &gt;3.5 top zone</div>
                 <div class="updated" id="mvrv-updated"></div>
             </div>
         </div>
+
+        <!-- SOPR -->
+        <div class="card">
+            <h2>SOPR — Spent Output Profit Ratio <span id="sopr-current" style="color:#f7931a; font-size:1.1rem; margin-left:1rem"></span></h2>
+            <div id="sopr-loading" class="loading">Loading...</div>
+            <div class="hint">&lt;1 selling at loss &nbsp;|&nbsp; =1 breakeven &nbsp;|&nbsp; &gt;1 selling at profit</div>
+            <canvas id="sopr-chart" style="display:none"></canvas>
+            <div class="updated" id="sopr-updated"></div>
+        </div>
+
     </div>
 
     <script>
@@ -78,11 +85,12 @@
 
         function mvrv_zone(v) {
             if (v < 1)   return { label: 'UNDERVALUED', cls: 'zone-blue' };
-            if (v < 2)   return { label: 'FAIR VALUE', cls: 'zone-green' };
-            if (v < 3.5) return { label: 'CAUTION', cls: 'zone-orange' };
-            return { label: 'TOP ZONE', cls: 'zone-red' };
+            if (v < 2)   return { label: 'FAIR VALUE',  cls: 'zone-green' };
+            if (v < 3.5) return { label: 'CAUTION',     cls: 'zone-orange' };
+            return           { label: 'TOP ZONE',    cls: 'zone-red' };
         }
 
+        // MVRV
         fetch('/api/mvrv')
             .then(r => r.json())
             .then(d => {
@@ -90,17 +98,52 @@
                 document.getElementById('mvrv-content').style.display = 'block';
                 document.getElementById('mvrv-value').textContent = d.mvrv.toFixed(2);
                 document.getElementById('mvrv-price').textContent = fmt_usd(d.current_price);
-                document.getElementById('mvrv-mcap').textContent = fmt_usd(d.market_cap);
-                document.getElementById('mvrv-rcap').textContent = fmt_usd(d.realized_cap);
+                document.getElementById('mvrv-mcap').textContent  = fmt_usd(d.market_cap);
+                document.getElementById('mvrv-rcap').textContent  = fmt_usd(d.realized_cap);
                 const zone = mvrv_zone(d.mvrv);
-                const zoneEl = document.getElementById('mvrv-zone');
-                zoneEl.textContent = zone.label;
-                zoneEl.className = 'zone ' + zone.cls;
+                const el = document.getElementById('mvrv-zone');
+                el.textContent = zone.label;
+                el.className = 'zone ' + zone.cls;
                 document.getElementById('mvrv-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
             })
-            .catch(() => {
-                document.getElementById('mvrv-loading').textContent = 'Error loading data.';
-            });
+            .catch(() => { document.getElementById('mvrv-loading').textContent = 'Error loading data.'; });
+
+        // SOPR
+        fetch('/api/sopr')
+            .then(r => r.json())
+            .then(d => {
+                document.getElementById('sopr-loading').style.display = 'none';
+                document.getElementById('sopr-current').textContent = d.current ? d.current.toFixed(3) : '';
+                const canvas = document.getElementById('sopr-chart');
+                canvas.style.display = 'block';
+                new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: d.labels,
+                        datasets: [{
+                            data: d.values,
+                            borderColor: '#f7931a',
+                            borderWidth: 1,
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.2,
+                        }]
+                    },
+                    options: {
+                        animation: false,
+                        plugins: {
+                            legend: { display: false },
+                            annotation: {},
+                        },
+                        scales: {
+                            x: { ticks: { color: '#555', maxTicksLimit: 8 }, grid: { color: '#1a1a1a' } },
+                            y: { ticks: { color: '#555' }, grid: { color: '#1a1a1a' } }
+                        }
+                    }
+                });
+                document.getElementById('sopr-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+            })
+            .catch(() => { document.getElementById('sopr-loading').textContent = 'Error loading data.'; });
     </script>
 </body>
 </html>

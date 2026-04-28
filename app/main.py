@@ -22,3 +22,9 @@ async def health():
 async def mvrv():
     from app.metrics.mvrv import get_mvrv
     return get_mvrv()
+
+
+@app.get("/api/sopr")
+async def sopr():
+    from app.metrics.sopr import get_sopr
+    return get_sopr()
