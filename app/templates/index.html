@@ -38,7 +38,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f2f2f2; color: #111; display: flex; flex-direction: column; height: 100vh; overflow: hidden; font-size: 14px; }
@@ -380,7 +380,7 @@
         <div class="source-card" style="text-align:center">
             <div class="tag" style="background:#fff9e6;color:#b45309">⚡ Lightning</div>
             <h4 style="margin:0.6rem 0 0.3rem">Instant · Zero fees</h4>
-            <canvas id="qr-ln" style="margin:0.75rem auto;display:block"></canvas>
+            <div id="qr-ln" style="margin:0.75rem auto;display:inline-block"></div>
             <div style="font-size:0.72rem;color:#555;word-break:break-all;margin-bottom:0.6rem">amazingbadger664@walletofsatoshi.com</div>
             <button onclick="copyText('amazingbadger664@walletofsatoshi.com', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
         </div>
@@ -388,7 +388,7 @@
         <div class="source-card" style="text-align:center">
             <div class="tag" style="background:#f0faf4;color:#16a34a">₿ Bitcoin on-chain</div>
             <h4 style="margin:0.6rem 0 0.3rem">Any amount · Any wallet</h4>
-            <canvas id="qr-btc" style="margin:0.75rem auto;display:block"></canvas>
+            <div id="qr-btc" style="margin:0.75rem auto;display:inline-block"></div>
             <div style="font-size:0.72rem;color:#555;word-break:break-all;margin-bottom:0.6rem">3Fhqkr4mAK6SHbAD9oh4ATcYqPh6F2x43X</div>
             <button onclick="copyText('3Fhqkr4mAK6SHbAD9oh4ATcYqPh6F2x43X', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
         </div>
@@ -1427,8 +1427,8 @@
     function generateQR() {
         if (qrGenerated) return;
         qrGenerated = true;
-        QRCode.toCanvas(document.getElementById('qr-ln'),  'lightning:amazingbadger664@walletofsatoshi.com', { width: 160, margin: 1 });
-        QRCode.toCanvas(document.getElementById('qr-btc'), 'bitcoin:3Fhqkr4mAK6SHbAD9oh4ATcYqPh6F2x43X',        { width: 160, margin: 1 });
+        new QRCode(document.getElementById('qr-ln'),  { text: 'lightning:amazingbadger664@walletofsatoshi.com', width: 160, height: 160 });
+        new QRCode(document.getElementById('qr-btc'), { text: 'bitcoin:3Fhqkr4mAK6SHbAD9oh4ATcYqPh6F2x43X',        width: 160, height: 160 });
     }
 
     // Page navigation
