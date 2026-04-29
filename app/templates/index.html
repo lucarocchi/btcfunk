@@ -852,6 +852,7 @@
         if (charts[id]) charts[id].destroy();
         const ctx = document.getElementById(id);
         if (!ctx) return;
+        ctx.style.display = 'block';
         const ticks = small ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } } : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
         charts[id] = new Chart(ctx, {
             type: 'line',
@@ -1048,6 +1049,7 @@
         if (charts[id]) charts[id].destroy();
         const ctx = document.getElementById(id);
         if (!ctx) return;
+        ctx.style.display = 'block';
         const labels = bands.map(b => b.label);
         const values = bands.map(b => b.pct);
         const colors = bands.map((b, i) => {
@@ -1073,6 +1075,7 @@
         if (charts[canvasId]) charts[canvasId].destroy();
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
+        ctx.style.display = 'block';
         const labels = bandsProfit.map(b => b.label);
         const values = bandsProfit.map(b => b.pct);
         const colors = bandsProfit.map(b => b.in_profit ? 'rgba(22,163,74,0.7)' : 'rgba(220,38,38,0.6)');
