@@ -48,12 +48,23 @@ def _cache_set(con, key, value):
     con.commit()
 
 
+def _bits_to_difficulty(bits_hex):
+    # bits is a hex string e.g. "1703a30c"
+    # exponent = first byte, mantissa = next 3 bytes
+    exp      = int(bits_hex[:2], 16)
+    mantissa = int(bits_hex[2:8], 16)
+    target   = mantissa * (2 ** (8 * (exp - 3)))
+    # difficulty_1_target = 0xffff * 2^208
+    return (0xffff * (2 ** 208)) / target
+
+
 def _fetch(since_day):
+    # difficulty is not a column in the BQ schema; derive it from the `bits` field
     query = f"""
         SELECT
-            DATE(timestamp)    AS day,
-            AVG(difficulty)    AS avg_difficulty,
-            COUNT(*)           AS block_count
+            DATE(timestamp) AS day,
+            ANY_VALUE(bits) AS bits,
+            COUNT(*)        AS block_count
         FROM `bigquery-public-data.crypto_bitcoin.blocks`
         WHERE DATE(timestamp) > '{since_day}'
         GROUP BY day ORDER BY day
@@ -61,7 +72,10 @@ def _fetch(since_day):
     result = _get_bq().query(query).result()
     rows   = []
     for r in result:
-        diff = float(r.avg_difficulty)
+        try:
+            diff = _bits_to_difficulty(r.bits)
+        except Exception:
+            continue
         # hash_rate (H/s) = difficulty × 2^32 / 600; convert to EH/s (/1e18)
         eh = round(diff * (2 ** 32) / 600 / 1e18, 4)
         rows.append((str(r.day), diff, eh, int(r.block_count)))
