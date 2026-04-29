@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import PlainTextResponse
 
 app = FastAPI(title="BTCFunk Analytics")
 
@@ -11,6 +12,14 @@ templates = Jinja2Templates(directory="app/templates")
 @app.get("/")
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots():
+    return """User-agent: *
+Allow: /
+Sitemap: https://btcfunk.com/static/sitemap.xml
+"""
 
 
 @app.get("/api/health")
