@@ -14,6 +14,8 @@
             width: 200px; min-width: 200px;
             background: #fff; border-right: 1px solid #ddd;
             display: flex; flex-direction: column; height: 100vh;
+            transition: transform 0.25s ease;
+            z-index: 100;
         }
         .logo { padding: 1.2rem 1rem; border-bottom: 1px solid #eee; }
         .logo h1 { font-size: 1rem; font-weight: 700; color: #111; letter-spacing: -0.02em; }
@@ -35,11 +37,40 @@
         .dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
         .metric-item.active .dot { background: #111; }
 
+        /* HAMBURGER */
+        #hamburger {
+            display: none; position: fixed; top: 0.75rem; left: 0.75rem; z-index: 200;
+            background: #fff; border: 1px solid #ddd; border-radius: 6px;
+            width: 34px; height: 34px; cursor: pointer; font-size: 1rem;
+            align-items: center; justify-content: center; color: #444;
+        }
+
+        /* OVERLAY */
+        #overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.25); z-index: 99;
+        }
+        #overlay.open { display: block; }
+
         /* MAIN */
         #main { flex: 1; overflow-y: auto; padding: 1.5rem; }
 
-        /* HOME GRID */
-        #view-home { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        /* HOME GRID — 3 colonne desktop */
+        #view-home { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+
+        /* Tablet */
+        @media (max-width: 1100px) {
+            #view-home { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* Mobile */
+        @media (max-width: 640px) {
+            #sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+            #hamburger { display: flex; }
+            #main { padding: 1rem; padding-top: 3.5rem; }
+            #view-home { grid-template-columns: 1fr; }
+        }
         .home-card {
             background: #fff; border: 1px solid #ddd; border-radius: 8px;
             padding: 1.2rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
@@ -48,8 +79,12 @@
         .home-card:hover { border-color: #999; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
         .home-card.soon { cursor: default; opacity: 0.35; }
         .home-card.soon:hover { border-color: #ddd; box-shadow: none; }
+        .home-card[draggable]:not(.soon) { cursor: grab; }
+        .home-card.dragging { opacity: 0.35; cursor: grabbing; }
+        .home-card.drag-over { border-color: #111; box-shadow: 0 0 0 2px #111; }
         .hc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.5rem; }
-        .hc-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.07em; }
+        .hc-label { font-size: 0.78rem; color: #111; font-weight: 600; letter-spacing: -0.01em; }
+        .hc-acronym { font-size: 0.68rem; color: #888; margin-top: 0.15rem; }
         .hc-value { font-size: 2rem; font-weight: 700; color: #111; line-height: 1; margin-bottom: 0.4rem; }
         .hc-value.loading { font-size: 1rem; color: #ccc; font-weight: 400; }
         .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; }
@@ -72,8 +107,9 @@
         #view-detail { display: none; }
         .detail-back { font-size: 0.8rem; color: #888; cursor: pointer; margin-bottom: 1.2rem; display: inline-flex; align-items: center; gap: 0.3rem; }
         .detail-back:hover { color: #111; }
-        .detail-title { font-size: 1.1rem; font-weight: 700; color: #111; margin-bottom: 0.2rem; }
-        .detail-desc  { font-size: 0.8rem; color: #888; margin-bottom: 1.5rem; }
+        .detail-title   { font-size: 1.1rem; font-weight: 700; color: #111; margin-bottom: 0.15rem; }
+        .detail-acronym { font-size: 0.78rem; color: #888; margin-bottom: 1.5rem; }
+        .detail-text    { font-size: 0.8rem; color: #666; line-height: 1.65; margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid #eee; }
         .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
         .metric-row { display: flex; gap: 2.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .stat .val  { font-size: 1.6rem; font-weight: 700; color: #111; }
@@ -83,6 +119,9 @@
     </style>
 </head>
 <body>
+
+<button id="hamburger">☰</button>
+<div id="overlay"></div>
 
 <!-- SIDEBAR -->
 <div id="sidebar">
@@ -108,48 +147,14 @@
 <!-- MAIN -->
 <div id="main">
 
-    <!-- HOME -->
-    <div id="view-home">
-        <!-- MVRV card -->
-        <div class="home-card" data-id="mvrv" id="hc-mvrv-card" style="pointer-events:none">
-            <div class="hc-top">
-                <div class="hc-label">MVRV Ratio</div>
-                <span class="badge neutral" id="hc-mvrv-badge">—</span>
-            </div>
-            <div class="hc-value loading" id="hc-mvrv-val">—</div>
-            <div class="hc-chart">
-                <div class="hc-loader" id="hc-mvrv-loader"><div class="spinner"></div></div>
-                <canvas id="hc-mvrv-chart" style="display:none"></canvas>
-            </div>
-        </div>
-        <!-- SOPR card -->
-        <div class="home-card" data-id="sopr" id="hc-sopr-card" style="pointer-events:none">
-            <div class="hc-top">
-                <div class="hc-label">SOPR</div>
-                <span class="badge neutral" id="hc-sopr-badge">—</span>
-            </div>
-            <div class="hc-value loading" id="hc-sopr-val">—</div>
-            <div class="hc-chart">
-                <div class="hc-loader" id="hc-sopr-loader"><div class="spinner"></div></div>
-                <canvas id="hc-sopr-chart" style="display:none"></canvas>
-            </div>
-        </div>
-        <!-- Coming soon -->
-        <div class="home-card soon">
-            <div class="hc-label">NVT Ratio</div>
-            <div class="hc-value" style="font-size:1rem; color:#ccc; margin-top:0.5rem">coming soon</div>
-        </div>
-        <div class="home-card soon">
-            <div class="hc-label">HODL Waves</div>
-            <div class="hc-value" style="font-size:1rem; color:#ccc; margin-top:0.5rem">coming soon</div>
-        </div>
-    </div>
+    <!-- HOME (popolato da JS) -->
+    <div id="view-home"></div>
 
     <!-- DETAIL -->
     <div id="view-detail">
         <div class="detail-back" id="btn-back">← Home</div>
-        <div class="detail-title" id="detail-title"></div>
-        <div class="detail-desc"  id="detail-desc"></div>
+        <div class="detail-title"   id="detail-title"></div>
+        <div class="detail-acronym" id="detail-acronym"></div>
 
         <!-- MVRV detail -->
         <div id="detail-mvrv" style="display:none">
@@ -161,7 +166,9 @@
                     <div class="stat"><div class="val" id="d-mvrv-rcap"  style="font-size:1.1rem">—</div><div class="lbl">Realized Cap</div></div>
                 </div>
                 <div class="hint">&lt;1 undervalued &nbsp;|&nbsp; 1–2 fair value &nbsp;|&nbsp; 2–3.5 caution &nbsp;|&nbsp; &gt;3.5 top zone</div>
+                <canvas id="mvrv-chart-detail" style="max-height:220px; margin-top:1rem"></canvas>
                 <div class="updated" id="d-mvrv-updated"></div>
+                <div class="detail-text" id="d-mvrv-text"></div>
             </div>
         </div>
 
@@ -174,6 +181,7 @@
                 <div class="hint">&lt;1 selling at loss &nbsp;|&nbsp; =1 breakeven &nbsp;|&nbsp; &gt;1 selling at profit</div>
                 <canvas id="sopr-chart-detail" style="max-height:220px"></canvas>
                 <div class="updated" id="d-sopr-updated"></div>
+                <div class="detail-text" id="d-sopr-text"></div>
             </div>
         </div>
     </div>
@@ -182,47 +190,123 @@
 
 <script>
     const METRICS = {
-        mvrv: { label: 'MVRV Ratio', desc: 'Market Value vs Realized Value — measures if BTC is over or undervalued relative to its on-chain cost basis.' },
-        sopr: { label: 'SOPR', desc: 'Spent Output Profit Ratio — measures whether coins are being moved at a profit or a loss.' },
+        mvrv: {
+            label: 'MVRV Ratio', acronym: 'Market Value / Realized Value', live: true,
+            detail: 'MVRV compares the current market capitalization to the Realized Cap — the sum of all UTXOs valued at the price when they last moved. Values below 1 indicate the market is trading below the aggregate cost basis of holders, historically a strong accumulation zone. Values above 3.5 have consistently coincided with cycle tops. MVRV is a macro cycle indicator, not a short-term trading signal.',
+        },
+        sopr: {
+            label: 'SOPR', acronym: 'Spent Output Profit Ratio', live: true,
+            detail: 'SOPR measures whether coins moved on a given day were sold at a profit or a loss relative to their acquisition price. A value above 1 means that on average, coins were moved at a gain. Values below 1 signal selling at a loss — often a sign of capitulation or an accumulation phase. A recovery of SOPR back above 1 after a sustained period below is considered a bullish signal.',
+        },
+        nvt: {
+            label: 'NVT Ratio', acronym: 'Network Value to Transactions', live: false,
+            detail: '',
+        },
+        hodl: {
+            label: 'HODL Waves', acronym: 'Age distribution of BTC supply', live: false,
+            detail: '',
+        },
+        cdd: {
+            label: 'CDD', acronym: 'Coin Days Destroyed', live: false,
+            detail: '',
+        },
     };
 
     let data = { mvrv: null, sopr: null };
     let charts = {};
+    let dragSrc = null;
 
-    const CHART_OPTS = (color) => ({
-        animation: false,
-        plugins: { legend: { display: false } },
-        scales: {
-            x: { display: false },
-            y: { display: false }
-        },
-        elements: { line: { borderColor: color, borderWidth: 1.5 } }
-    });
+    function makeCard(id) {
+        const m = METRICS[id];
+        if (!m.live) return `
+            <div class="home-card soon" data-id="${id}" draggable="true">
+                <div class="hc-label">${m.label}</div>
+                <div class="hc-acronym">${m.acronym}</div>
+                <div class="hc-value" style="font-size:1rem;color:#ccc;margin-top:0.5rem">coming soon</div>
+            </div>`;
+        return `
+            <div class="home-card" data-id="${id}" id="hc-${id}-card" draggable="true" style="pointer-events:none">
+                <div class="hc-top">
+                    <div>
+                        <div class="hc-label">${m.label}</div>
+                        <div class="hc-acronym">${m.acronym}</div>
+                    </div>
+                    <span class="badge neutral" id="hc-${id}-badge">—</span>
+                </div>
+                <div class="hc-value loading" id="hc-${id}-val">—</div>
+                <div class="hc-chart">
+                    <div class="hc-loader" id="hc-${id}-loader"><div class="spinner"></div></div>
+                    <canvas id="hc-${id}-chart" style="display:none"></canvas>
+                </div>
+            </div>`;
+    }
 
-    function miniChart(id, labels, values, color) {
-        if (charts[id]) charts[id].destroy();
-        const ctx = document.getElementById(id);
-        if (!ctx) return;
-        charts[id] = new Chart(ctx, {
-            type: 'line',
-            data: { labels, datasets: [{ data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
-            options: CHART_OPTS(color)
+    function saveWidgetOrder() {
+        const order = [...document.querySelectorAll('#view-home .home-card')].map(c => c.dataset.id);
+        localStorage.setItem('btcfunk-widget-order', JSON.stringify(order));
+    }
+
+    function loadWidgetOrder() {
+        try { return JSON.parse(localStorage.getItem('btcfunk-widget-order')); } catch { return null; }
+    }
+
+    function initDragDrop() {
+        const grid = document.getElementById('view-home');
+        grid.querySelectorAll('.home-card').forEach(card => {
+            card.addEventListener('dragstart', e => {
+                dragSrc = card;
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => card.classList.add('dragging'), 0);
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+                grid.querySelectorAll('.home-card').forEach(c => c.classList.remove('drag-over'));
+                saveWidgetOrder();
+            });
+            card.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (card !== dragSrc) {
+                    grid.querySelectorAll('.home-card').forEach(c => c.classList.remove('drag-over'));
+                    card.classList.add('drag-over');
+                }
+            });
+            card.addEventListener('drop', e => {
+                e.preventDefault();
+                if (dragSrc && dragSrc !== card) {
+                    const all = [...grid.querySelectorAll('.home-card')];
+                    all.indexOf(dragSrc) < all.indexOf(card)
+                        ? grid.insertBefore(dragSrc, card.nextSibling)
+                        : grid.insertBefore(dragSrc, card);
+                }
+                card.classList.remove('drag-over');
+            });
         });
     }
 
-    function fullChart(id, labels, values) {
+    function buildHomeCards() {
+        const saved = loadWidgetOrder();
+        const keys = saved ? [...new Set([...saved, ...Object.keys(METRICS)].filter(k => METRICS[k]))] : Object.keys(METRICS);
+        document.getElementById('view-home').innerHTML = keys.map(makeCard).join('');
+        document.querySelectorAll('.home-card:not(.soon)').forEach(el =>
+            el.addEventListener('click', () => showDetail(el.dataset.id)));
+        initDragDrop();
+    }
+    buildHomeCards();
+
+    function cardChart(id, labels, values, color, small) {
         if (charts[id]) charts[id].destroy();
         const ctx = document.getElementById(id);
         if (!ctx) return;
+        const ticks = small ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } } : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
         charts[id] = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets: [{ data: values, borderColor: '#111', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
+            data: { labels, datasets: [{ data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
             options: {
                 animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#999', maxTicksLimit: 8, font: { size: 11 } }, grid: { color: '#f0f0f0' } },
-                    y: { ticks: { color: '#999', font: { size: 11 } }, grid: { color: '#f0f0f0' } }
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
+                    y: { ticks, grid: { color: '#f0f0f0' } }
                 }
             }
         });
@@ -247,6 +331,13 @@
         return                  { label: 'PROFIT',   cls: 'ok' };
     }
 
+    function sigColor(cls) {
+        if (cls === 'ok')     return '#16a34a';
+        if (cls === 'ko')     return '#dc2626';
+        if (cls === 'medium') return '#ea580c';
+        return '#555';
+    }
+
     function cardReady(id) {
         document.getElementById('hc-' + id + '-loader').style.display = 'none';
         document.getElementById('hc-' + id + '-chart').style.display = 'block';
@@ -267,7 +358,7 @@
         document.getElementById('d-mvrv-mcap').textContent  = fmt_usd(d.market_cap);
         document.getElementById('d-mvrv-rcap').textContent  = fmt_usd(d.realized_cap);
         document.getElementById('d-mvrv-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        miniChart('hc-mvrv-chart', ['now'], [d.mvrv], '#16a34a');
+        cardChart('hc-mvrv-chart', d.labels, d.values, sigColor(sig.cls), true);
         cardReady('mvrv');
     }).catch(() => {
         document.getElementById('hc-mvrv-val').textContent = 'error';
@@ -284,8 +375,7 @@
         hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
         document.getElementById('d-sopr-val').textContent = d.current ? d.current.toFixed(3) : '—';
         document.getElementById('d-sopr-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        const color = sig.cls === 'ok' ? '#16a34a' : sig.cls === 'ko' ? '#dc2626' : '#ea580c';
-        miniChart('hc-sopr-chart', d.labels, d.values, color);
+        cardChart('hc-sopr-chart', d.labels, d.values, sigColor(sig.cls), true);
         cardReady('sopr');
     }).catch(() => {
         document.getElementById('hc-sopr-val').textContent = 'error';
@@ -305,14 +395,18 @@
         if (!METRICS[id]) return;
         document.getElementById('view-home').style.display = 'none';
         document.getElementById('view-detail').style.display = 'block';
-        document.getElementById('detail-title').textContent = METRICS[id].label;
-        document.getElementById('detail-desc').textContent  = METRICS[id].desc;
+        document.getElementById('detail-title').textContent   = METRICS[id].label;
+        document.getElementById('detail-acronym').textContent = METRICS[id].acronym;
+        const dt = document.getElementById('d-' + id + '-text');
+        if (dt) dt.textContent = METRICS[id].detail;
         ['mvrv','sopr'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
-        if (id === 'sopr' && data.sopr) fullChart('sopr-chart-detail', data.sopr.labels, data.sopr.values);
+        if (id === 'sopr' && data.sopr)
+            cardChart('sopr-chart-detail', data.sopr.labels, data.sopr.values, sigColor(sopr_signal(data.sopr.current).cls), false);
+        if (id === 'mvrv' && data.mvrv)
+            cardChart('mvrv-chart-detail', data.mvrv.labels, data.mvrv.values, sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
     }
 
-    document.querySelectorAll('.home-card:not(.soon)').forEach(el => el.addEventListener('click', () => showDetail(el.dataset.id)));
     document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => showDetail(el.dataset.id)));
     document.getElementById('btn-back').addEventListener('click', showHome);
 
@@ -321,6 +415,17 @@
         document.querySelectorAll('.metric-item').forEach(el => el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none');
         document.querySelectorAll('.group-label').forEach(el => el.style.display = q ? 'none' : '');
     });
+
+    // Sidebar toggle (mobile)
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    function openSidebar()  { sidebar.classList.add('open'); overlay.classList.add('open'); }
+    function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+    document.getElementById('hamburger').addEventListener('click', openSidebar);
+    overlay.addEventListener('click', closeSidebar);
+    document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => {
+        if (window.innerWidth <= 640) closeSidebar();
+    }));
 </script>
 </body>
 </html>

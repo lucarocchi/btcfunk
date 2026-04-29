@@ -3,7 +3,7 @@ import os
 import sqlite3
 import json
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from google.cloud import bigquery
 
 DB_PATH = "mvrv_cache.sqlite"
@@ -132,7 +132,7 @@ def get_mvrv():
 
     # realized_cap and circulating_supply are expensive (BigQuery) — cache 24h
     cached_rc = _cache_get(con, "realized_cap")
-    if cached_rc:
+    if cached_rc and "circulating_supply" in cached_rc:
         realized_cap = cached_rc["realized_cap"]
         circulating_supply = cached_rc["circulating_supply"]
     else:
@@ -150,10 +150,19 @@ def get_mvrv():
     current_price = _fetch_live_price()
     market_cap = circulating_supply * current_price
 
+    # Historical MVRV (last 365 days, approximate with current realized cap)
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%d")
+    prices = _get_prices(con)
+    hist = sorted((d, p) for d, p in prices.items() if d >= cutoff)
+    labels = [d for d, _ in hist]
+    values = [round((circulating_supply * p) / realized_cap, 4) for _, p in hist] if realized_cap else []
+
     return {
         "mvrv": round(market_cap / realized_cap, 4) if realized_cap else 0,
         "market_cap": market_cap,
         "realized_cap": realized_cap,
         "current_price": current_price,
+        "labels": labels,
+        "values": values,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
