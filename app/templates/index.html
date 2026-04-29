@@ -135,6 +135,15 @@
             #page-donate .cp-inner > div[style*="grid"] { grid-template-columns: 1fr !important; }
         }
 
+        .landing-inner { max-width: 520px; margin: 5rem auto; text-align: center; padding: 0 1.5rem; }
+        .landing-btc { font-size: 2.8rem; margin: 0 0 0.5rem; color: #111; }
+        .landing-title { font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; color: #111; margin: 0 0 0.4rem; }
+        .landing-tagline { font-size: 0.95rem; color: #999; margin: 0 0 1.5rem; }
+        .landing-desc { font-size: 0.88rem; color: #555; line-height: 1.75; margin-bottom: 2rem; }
+        .landing-cta { background: #111; color: #fff; border: none; border-radius: 6px; padding: 0.75rem 2rem; font-size: 0.9rem; cursor: pointer; font-weight: 500; letter-spacing: -0.01em; }
+        .landing-cta:hover { background: #333; }
+        .landing-chips { margin-top: 2.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+        .landing-chips span { background: #ebebeb; color: #666; font-size: 0.73rem; padding: 0.3rem 0.7rem; border-radius: 20px; }
         .nav-icon { display: none; }
 
         /* Mobile */
@@ -216,7 +225,8 @@
         BTCFunk <span>Bitcoin On-Chain Analytics</span>
     </div>
     <div class="nav-links">
-        <a class="nav-link active" data-page="dashboard"><span class="nav-icon"><i data-feather="home"></i></span><span class="nav-text">Dashboard</span></a>
+        <a class="nav-link active" data-page="landing"><span class="nav-icon"><i data-feather="home"></i></span><span class="nav-text">Home</span></a>
+        <a class="nav-link" data-page="dashboard"><span class="nav-icon"><i data-feather="grid"></i></span><span class="nav-text">Dashboard</span></a>
         <a class="nav-link" data-page="about"><span class="nav-icon"><i data-feather="database"></i></span><span class="nav-text">Data Sources</span></a>
         <a class="nav-link" data-page="api"><span class="nav-icon"><i data-feather="zap"></i></span><span class="nav-text">API</span></a>
         <a class="nav-link" data-page="donate"><span class="nav-icon"><i data-feather="heart"></i></span><span class="nav-text">Support</span></a>
@@ -225,6 +235,22 @@
 
 <div id="app-body">
 <div id="overlay"></div>
+
+<!-- ── LANDING PAGE ── -->
+<div id="page-landing" class="content-page">
+    <div class="landing-inner">
+        <p class="landing-btc">₿</p>
+        <h1 class="landing-title">BTCFunk</h1>
+        <p class="landing-tagline">Free Bitcoin On-Chain Analytics</p>
+        <p class="landing-desc">Monitor the most important Bitcoin on-chain signals in one place.<br>No account. No subscription. Updated daily.</p>
+        <button class="landing-cta" onclick="showPage('dashboard')">Open Dashboard →</button>
+        <div class="landing-chips">
+            <span>MVRV</span><span>SOPR</span><span>NVT</span><span>HODL Waves</span>
+            <span>Hashrate</span><span>Exchange Flow</span><span>NUPL</span><span>RHODL</span>
+            <span>Puell Multiple</span><span>LTH / STH</span><span>S2F</span><span>Whale Tx</span>
+        </div>
+    </div>
+</div>
 
 <!-- ── DASHBOARD PAGE ── -->
 <div id="page-dashboard">
@@ -1449,14 +1475,14 @@
     function showPage(name) {
         document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === name));
         document.getElementById('page-dashboard').style.display = name === 'dashboard' ? 'flex' : 'none';
-        ['about', 'api', 'donate'].forEach(p => {
+        ['landing', 'about', 'api', 'donate'].forEach(p => {
             const el = document.getElementById('page-' + p);
             el.classList.toggle('active', p === name);
         });
         if (name === 'donate') generateQR();
     }
     document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => showPage(l.dataset.page)));
-    showPage('dashboard');
+    showPage('landing');
 
     // Sidebar toggle (mobile)
     const sidebar = document.getElementById('sidebar');
