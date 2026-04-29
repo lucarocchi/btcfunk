@@ -58,6 +58,15 @@
         .medium  { background: #fff7ed; color: #ea580c; }
         .neutral { background: #f5f5f5; color: #777; }
         .hc-chart { flex: 1; min-height: 120px; margin-top: 0.8rem; position: relative; }
+        .hc-loader {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        }
+        .spinner {
+            width: 20px; height: 20px; border: 2px solid #eee;
+            border-top-color: #bbb; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* DETAIL VIEW */
         #view-detail { display: none; }
@@ -102,22 +111,28 @@
     <!-- HOME -->
     <div id="view-home">
         <!-- MVRV card -->
-        <div class="home-card" data-id="mvrv">
+        <div class="home-card" data-id="mvrv" id="hc-mvrv-card" style="pointer-events:none">
             <div class="hc-top">
                 <div class="hc-label">MVRV Ratio</div>
                 <span class="badge neutral" id="hc-mvrv-badge">—</span>
             </div>
-            <div class="hc-value loading" id="hc-mvrv-val">loading</div>
-            <div class="hc-chart"><canvas id="hc-mvrv-chart"></canvas></div>
+            <div class="hc-value loading" id="hc-mvrv-val">—</div>
+            <div class="hc-chart">
+                <div class="hc-loader" id="hc-mvrv-loader"><div class="spinner"></div></div>
+                <canvas id="hc-mvrv-chart" style="display:none"></canvas>
+            </div>
         </div>
         <!-- SOPR card -->
-        <div class="home-card" data-id="sopr">
+        <div class="home-card" data-id="sopr" id="hc-sopr-card" style="pointer-events:none">
             <div class="hc-top">
                 <div class="hc-label">SOPR</div>
                 <span class="badge neutral" id="hc-sopr-badge">—</span>
             </div>
-            <div class="hc-value loading" id="hc-sopr-val">loading</div>
-            <div class="hc-chart"><canvas id="hc-sopr-chart"></canvas></div>
+            <div class="hc-value loading" id="hc-sopr-val">—</div>
+            <div class="hc-chart">
+                <div class="hc-loader" id="hc-sopr-loader"><div class="spinner"></div></div>
+                <canvas id="hc-sopr-chart" style="display:none"></canvas>
+            </div>
         </div>
         <!-- Coming soon -->
         <div class="home-card soon">
@@ -232,12 +247,19 @@
         return                  { label: 'PROFIT',   cls: 'ok' };
     }
 
+    function cardReady(id) {
+        document.getElementById('hc-' + id + '-loader').style.display = 'none';
+        document.getElementById('hc-' + id + '-chart').style.display = 'block';
+        document.getElementById('hc-' + id + '-card').style.pointerEvents = '';
+        document.getElementById('hc-' + id + '-val').classList.remove('loading');
+    }
+
     // Load MVRV
     fetch('/api/mvrv').then(r => r.json()).then(d => {
         data.mvrv = d;
         const sig = mvrv_signal(d.mvrv);
         const hv = document.getElementById('hc-mvrv-val');
-        hv.textContent = d.mvrv.toFixed(2); hv.classList.remove('loading');
+        hv.textContent = d.mvrv.toFixed(2);
         const hb = document.getElementById('hc-mvrv-badge');
         hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
         document.getElementById('d-mvrv-val').textContent   = d.mvrv.toFixed(2);
@@ -245,10 +267,11 @@
         document.getElementById('d-mvrv-mcap').textContent  = fmt_usd(d.market_cap);
         document.getElementById('d-mvrv-rcap').textContent  = fmt_usd(d.realized_cap);
         document.getElementById('d-mvrv-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        // placeholder mini chart (single point — historical coming soon)
         miniChart('hc-mvrv-chart', ['now'], [d.mvrv], '#16a34a');
+        cardReady('mvrv');
     }).catch(() => {
         document.getElementById('hc-mvrv-val').textContent = 'error';
+        cardReady('mvrv');
     });
 
     // Load SOPR
@@ -256,15 +279,17 @@
         data.sopr = d;
         const sig = sopr_signal(d.current);
         const hv = document.getElementById('hc-sopr-val');
-        hv.textContent = d.current ? d.current.toFixed(3) : '—'; hv.classList.remove('loading');
+        hv.textContent = d.current ? d.current.toFixed(3) : '—';
         const hb = document.getElementById('hc-sopr-badge');
         hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
         document.getElementById('d-sopr-val').textContent = d.current ? d.current.toFixed(3) : '—';
         document.getElementById('d-sopr-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
         const color = sig.cls === 'ok' ? '#16a34a' : sig.cls === 'ko' ? '#dc2626' : '#ea580c';
         miniChart('hc-sopr-chart', d.labels, d.values, color);
+        cardReady('sopr');
     }).catch(() => {
         document.getElementById('hc-sopr-val').textContent = 'error';
+        cardReady('sopr');
     });
 
     // Navigation
