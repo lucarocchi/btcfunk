@@ -4,3 +4,6 @@ __pycache__/
 .env
 *.sqlite
 .DS_Store
+*.json
+app/data/raw/XBTUSD_1.csv
+app/data/raw/XBTUSD_5.csv

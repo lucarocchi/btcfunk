@@ -8,7 +8,7 @@ from google.cloud import bigquery
 
 DB_PATH = "mvrv_cache.sqlite"
 CACHE_TTL_HOURS = 24
-KRAKEN_CSV = os.path.join(os.path.dirname(__file__), "../data/kraken_btcusd_daily.csv")
+KRAKEN_CSV = os.path.join(os.path.dirname(__file__), "../data/raw/XBTUSD_1440.csv")
 
 _bq_client = None
 
@@ -115,14 +115,7 @@ def _fetch_utxos():
     return {str(row.day): float(row.btc_value) for row in result}
 
 
-def get_mvrv():
-    con = _init_db()
-
-    cached = _cache_get(con, "mvrv")
-    if cached:
-        return cached
-
-    # Current price + market cap from Kraken ticker
+def _fetch_live_price():
     r = requests.get(
         "https://api.kraken.com/0/public/Ticker",
         params={"pair": "XBTUSD"},
@@ -131,36 +124,36 @@ def get_mvrv():
     r.raise_for_status()
     ticker = r.json()["result"]
     key = list(ticker.keys())[0]
-    current_price = float(ticker[key]["c"][0])
+    return float(ticker[key]["c"][0])
 
-    # Market cap: current price × circulating supply from CoinGecko (lightweight call)
-    cg = requests.get(
-        "https://api.coingecko.com/api/v3/simple/price",
-        params={"ids": "bitcoin", "vs_currencies": "usd", "include_market_cap": "true"},
-        timeout=10,
-    )
-    cg.raise_for_status()
-    market_cap = cg.json()["bitcoin"]["usd_market_cap"]
 
-    # Import CSV on first run, then top up with Kraken API
-    _import_csv(con)
-    _update_prices(con)
-    prices = _get_prices(con)
+def get_mvrv():
+    con = _init_db()
 
-    utxos = _fetch_utxos()
+    # realized_cap and circulating_supply are expensive (BigQuery) — cache 24h
+    cached_rc = _cache_get(con, "realized_cap")
+    if cached_rc:
+        realized_cap = cached_rc["realized_cap"]
+        circulating_supply = cached_rc["circulating_supply"]
+    else:
+        _import_csv(con)
+        _update_prices(con)
+        prices = _get_prices(con)
+        utxos = _fetch_utxos()
+        circulating_supply = sum(utxos.values())
+        realized_cap = sum(
+            btc_val * prices.get(day, 0)
+            for day, btc_val in utxos.items()
+        )
+        _cache_set(con, "realized_cap", {"realized_cap": realized_cap, "circulating_supply": circulating_supply})
 
-    realized_cap = sum(
-        btc_val * prices.get(day, current_price)
-        for day, btc_val in utxos.items()
-    )
+    current_price = _fetch_live_price()
+    market_cap = circulating_supply * current_price
 
-    result = {
+    return {
         "mvrv": round(market_cap / realized_cap, 4) if realized_cap else 0,
         "market_cap": market_cap,
         "realized_cap": realized_cap,
         "current_price": current_price,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-
-    _cache_set(con, "mvrv", result)
-    return result
