@@ -107,6 +107,8 @@
         #view-detail { display: none; }
         .detail-back { font-size: 0.8rem; color: #888; cursor: pointer; margin-bottom: 1.2rem; display: inline-flex; align-items: center; gap: 0.3rem; }
         .detail-back:hover { color: #111; }
+        .detail-api  { font-size: 0.72rem; color: #bbb; text-decoration: none; float: right; margin-top: 0.1rem; }
+        .detail-api:hover { color: #888; }
         .detail-title   { font-size: 1.1rem; font-weight: 700; color: #111; margin-bottom: 0.15rem; }
         .detail-acronym { font-size: 0.78rem; color: #888; margin-bottom: 1.5rem; }
         .detail-text    { font-size: 0.8rem; color: #666; line-height: 1.65; margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid #eee; }
@@ -144,6 +146,7 @@
     <!-- DETAIL -->
     <div id="view-detail">
         <div class="detail-back" id="btn-back">← Home</div>
+        <a class="detail-api" id="detail-api-link" href="#" target="_blank"></a>
         <div class="detail-title"   id="detail-title"></div>
         <div class="detail-acronym" id="detail-acronym"></div>
 
@@ -545,6 +548,8 @@
         document.getElementById('view-detail').style.display = 'block';
         document.getElementById('detail-title').textContent   = METRICS[id].label;
         document.getElementById('detail-acronym').textContent = METRICS[id].acronym;
+        document.getElementById('detail-api-link').href = '/api/' + id;
+        document.getElementById('detail-api-link').textContent = '{ } /api/' + id;
         const dt = document.getElementById('d-' + id + '-text');
         if (dt) dt.textContent = METRICS[id].detail;
         ['mvrv','sopr','nvt','hodl','cdd'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
