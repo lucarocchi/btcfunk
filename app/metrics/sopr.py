@@ -56,8 +56,11 @@ def _cache_set(con, key, value):
 
 
 def _fetch_sopr(since_day=None):
-    """Fetch daily SOPR from BigQuery.
-    SOPR = sum(value_at_spend) / sum(value_at_creation) per day.
+    """
+    SOPR = sum(btc_i * price_at_spend_day) / sum(btc_i * price_at_creation_day)
+
+    Query returns (spend_day, creation_day, btc_amount) for each unique pair.
+    Prices are applied in Python using local btc_prices table.
     """
     where = ""
     if since_day:
@@ -65,23 +68,20 @@ def _fetch_sopr(since_day=None):
 
     query = f"""
         SELECT
-            DATE(i.block_timestamp) AS day,
-            SUM(o.value) / 1e8      AS value_created,
-            SUM(i_val.value) / 1e8  AS value_spent
+            DATE(i.block_timestamp) AS spend_day,
+            DATE(o.block_timestamp) AS creation_day,
+            SUM(o.value) / 1e8      AS btc_amount
         FROM `bigquery-public-data.crypto_bitcoin.inputs` i
         JOIN `bigquery-public-data.crypto_bitcoin.outputs` o
             ON i.spent_transaction_hash = o.transaction_hash
             AND i.spent_output_index = o.index
-        JOIN `bigquery-public-data.crypto_bitcoin.outputs` i_val
-            ON i.transaction_hash = i_val.transaction_hash
-            AND i_val.index = 0
         WHERE o.value > 0
         {where}
-        GROUP BY day
-        ORDER BY day
+        GROUP BY spend_day, creation_day
+        ORDER BY spend_day
     """
     result = _get_bq().query(query).result()
-    return [(str(row.day), float(row.value_spent), float(row.value_created)) for row in result]
+    return [(str(row.spend_day), str(row.creation_day), float(row.btc_amount)) for row in result]
 
 
 def _get_prices(con):
@@ -89,22 +89,37 @@ def _get_prices(con):
     return {row[0]: row[1] for row in rows}
 
 
+SOPR_HISTORY_DAYS = 400  # fetch slightly more than the 365 shown in chart
+
 def _update_sopr(con):
     row = con.execute("SELECT MAX(day) FROM sopr_daily").fetchone()
-    since_day = row[0] if row and row[0] else None
+    last = row[0] if row and row[0] else None
+    floor = (datetime.now(timezone.utc) - timedelta(days=SOPR_HISTORY_DAYS)).strftime("%Y-%m-%d")
+    since_day = last if last and last > floor else floor
 
     rows = _fetch_sopr(since_day)
     if not rows:
         return
 
     prices = _get_prices(con)
-    to_insert = []
-    for day, value_spent, value_created in rows:
-        price = prices.get(day)
-        if not price or value_created == 0:
+
+    from collections import defaultdict
+    realized  = defaultdict(float)
+    cost_basis = defaultdict(float)
+
+    for spend_day, creation_day, btc_amount in rows:
+        p_spend    = prices.get(spend_day)
+        p_creation = prices.get(creation_day)
+        if not p_spend or not p_creation:
             continue
-        sopr = (value_spent * price) / (value_created * price)
-        to_insert.append((day, round(sopr, 6)))
+        realized[spend_day]   += btc_amount * p_spend
+        cost_basis[spend_day] += btc_amount * p_creation
+
+    to_insert = [
+        (day, round(realized[day] / cost_basis[day], 6))
+        for day in sorted(realized)
+        if cost_basis[day] > 0
+    ]
 
     if to_insert:
         con.executemany("INSERT OR REPLACE INTO sopr_daily (day, sopr) VALUES (?, ?)", to_insert)

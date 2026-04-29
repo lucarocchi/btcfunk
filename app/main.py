@@ -28,3 +28,9 @@ async def mvrv():
 async def sopr():
     from app.metrics.sopr import get_sopr
     return get_sopr()
+
+
+@app.get("/api/validate")
+async def validate():
+    from app.metrics.validate import get_validation
+    return get_validation()
