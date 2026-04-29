@@ -118,6 +118,15 @@
         .stat .lbl  { font-size: 0.7rem; color: #888; margin-top: 0.15rem; }
         .hint { font-size: 0.75rem; color: #999; margin-bottom: 1rem; }
         .updated { font-size: 0.68rem; color: #ccc; margin-top: 1rem; }
+        .view-toggle { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; }
+        .toggle-btn { padding: 0.2rem 0.65rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.72rem; cursor: pointer; background: #fff; color: #666; font-family: inherit; }
+        .toggle-btn:hover { border-color: #999; color: #111; }
+        .toggle-btn.active { background: #111; color: #fff; border-color: #111; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .data-table th { text-align: left; padding: 0.35rem 0.5rem; color: #888; font-weight: 500; border-bottom: 1px solid #eee; font-size: 0.7rem; position: sticky; top: 0; background: #fff; }
+        .data-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #f5f5f5; color: #333; }
+        .data-table tbody tr:hover { background: #fafafa; }
+        .table-wrap { max-height: 380px; overflow-y: auto; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
@@ -317,7 +326,12 @@
                 <div class="card">
                     <div class="metric-row">${statsHtml}</div>
                     <div class="hint">${m.hint || ''}</div>
-                    <canvas id="${id}-chart-detail" style="max-height:${h}px; margin-top:1rem"></canvas>
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" onclick="toggleDetailView('${id}','chart',this)">Chart</button>
+                        <button class="toggle-btn"        onclick="toggleDetailView('${id}','table',this)">Table</button>
+                    </div>
+                    <canvas id="${id}-chart-detail" style="max-height:${h}px"></canvas>
+                    <div id="${id}-table-detail" class="table-wrap" style="display:none"></div>
                     ${m.extra === 'top' ? `<div id="d-${id}-extra" style="margin-top:1rem"></div>` : ''}
                     <div class="updated" id="d-${id}-updated"></div>
                     <div class="detail-text" id="d-${id}-text"></div>
@@ -330,6 +344,65 @@
             Object.keys(METRICS).map(makeDetailPanel).join('');
     }
     buildDetailPanels();
+
+    function toggleDetailView(id, view, btn) {
+        document.querySelectorAll('#detail-' + id + ' .toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const canvas = document.getElementById(id + '-chart-detail');
+        const table  = document.getElementById(id + '-table-detail');
+        if (view === 'chart') {
+            if (canvas) canvas.style.display = '';
+            if (table)  table.style.display  = 'none';
+        } else {
+            if (canvas) canvas.style.display = 'none';
+            if (table)  { table.style.display = ''; renderDetailTable(id); }
+        }
+    }
+
+    function renderDetailTable(id) {
+        const el = document.getElementById(id + '-table-detail');
+        if (!el || el.dataset.rendered) return;
+        el.dataset.rendered = '1';
+        const d = data[id];
+        if (!d) { el.innerHTML = '<p style="color:#aaa;padding:1rem;font-size:0.8rem">Data not loaded yet.</p>'; return; }
+        const m = METRICS[id];
+
+        // Band-type metrics (HODL, RHODL, Supply in Profit)
+        if (m.chartType === 'hodl' || m.chartType === 'hodl_profit') {
+            const bands = d.bands_profit || d.bands || [];
+            const hasStatus = !!d.bands_profit;
+            el.innerHTML = `<table class="data-table">
+                <thead><tr><th>Band</th><th style="text-align:right">BTC</th><th style="text-align:right">%</th>${hasStatus ? '<th>Status</th>' : ''}</tr></thead>
+                <tbody>${bands.map(b => `<tr>
+                    <td>${b.label}</td>
+                    <td style="text-align:right">${fmt_btc(b.btc)}</td>
+                    <td style="text-align:right">${b.pct != null ? b.pct.toFixed(2) + '%' : '—'}</td>
+                    ${hasStatus ? `<td style="color:${b.in_profit ? '#16a34a' : '#dc2626'};font-weight:500">${b.in_profit ? '▲ Profit' : '▼ Loss'}</td>` : ''}
+                </tr>`).join('')}</tbody>
+            </table>`;
+            return;
+        }
+
+        // Time-series metrics
+        const cfgMap = {
+            mvrv:             { vals: d.values,  col: 'MVRV',         fmt: v => v != null ? v.toFixed(4) : '—' },
+            sopr:             { vals: d.values,  col: 'SOPR',         fmt: v => v != null ? v.toFixed(4) : '—' },
+            nvt:              { vals: d.values,  col: 'NVT',          fmt: v => v != null ? v.toFixed(1)  : '—' },
+            cdd:              { vals: d.values,  col: 'CDD',          fmt: v => fmt_cdd(v) },
+            nupl:             { vals: d.values,  col: 'NUPL',         fmt: v => v != null ? v.toFixed(4) : '—' },
+            puell:            { vals: d.values,  col: 'Puell',        fmt: v => v != null ? v.toFixed(4) : '—' },
+            active_addresses: { vals: d.values,  col: 'Addresses',    fmt: v => v != null ? v.toLocaleString() : '—' },
+            whale_tx:         { vals: d.values,  col: 'Whale Txs',    fmt: v => v != null ? v.toLocaleString() : '—' },
+            exchange_flow:    { vals: d.net,     col: 'Net Flow BTC', fmt: v => v != null ? v.toFixed(2) : '—' },
+        };
+        const cfg = cfgMap[id];
+        if (!cfg || !d.labels) { el.innerHTML = '<p style="color:#aaa;padding:1rem">No data.</p>'; return; }
+        const rows = d.labels.map((l, i) => [l, cfg.vals[i]]).reverse();
+        el.innerHTML = `<table class="data-table">
+            <thead><tr><th>Date</th><th style="text-align:right">${cfg.col}</th></tr></thead>
+            <tbody>${rows.map(([date, val]) => `<tr><td>${date}</td><td style="text-align:right">${cfg.fmt(val)}</td></tr>`).join('')}</tbody>
+        </table>`;
+    }
 
     function saveWidgetOrder() {
         const order = [...document.querySelectorAll('#view-home .home-card')].map(c => c.dataset.id);
@@ -795,6 +868,12 @@
         document.getElementById('view-detail').style.display = 'block';
         document.getElementById('detail-title').textContent   = METRICS[id].label;
         document.getElementById('detail-acronym').textContent = METRICS[id].acronym;
+        // Reset chart/table toggle to Chart
+        const canvas = document.getElementById(id + '-chart-detail');
+        const tbl    = document.getElementById(id + '-table-detail');
+        if (canvas) canvas.style.display = '';
+        if (tbl)  { tbl.style.display = 'none'; delete tbl.dataset.rendered; tbl.innerHTML = ''; }
+        document.querySelectorAll('#detail-' + id + ' .toggle-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
         document.getElementById('detail-api-link').href = '/api/' + id;
         document.getElementById('detail-api-link').textContent = '{ } /api/' + id;
         const dt = document.getElementById('d-' + id + '-text');
