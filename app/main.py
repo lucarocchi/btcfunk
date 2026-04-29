@@ -88,3 +88,33 @@ async def active_addresses():
 async def whale_tx():
     from app.metrics.whale_tx import get_whale_tx
     return get_whale_tx()
+
+
+@app.get("/api/mvrv_zscore")
+async def mvrv_zscore():
+    from app.metrics.mvrv_zscore import get_mvrv_zscore
+    return get_mvrv_zscore()
+
+
+@app.get("/api/lth_sth")
+async def lth_sth():
+    from app.metrics.lth_sth import get_lth_sth
+    return get_lth_sth()
+
+
+@app.get("/api/stf")
+async def stf():
+    from app.metrics.stf import get_stf
+    return get_stf()
+
+
+@app.get("/api/tx_stats")
+async def tx_stats():
+    from app.metrics.tx_stats import get_tx_stats
+    return get_tx_stats()
+
+
+@app.get("/api/hashrate")
+async def hashrate():
+    from app.metrics.hashrate import get_hashrate
+    return get_hashrate()

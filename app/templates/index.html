@@ -271,6 +271,26 @@
         <h4>CDD — Coin Days Destroyed</h4>
         <p><code>CDD = Σ(btc_moved × days_since_last_move)</code> per day. Weights transactions by dormancy — a spike means old, long-idle coins are moving, often a distribution signal near tops.</p>
     </div>
+    <div class="source-card">
+        <h4>MVRV Z-Score</h4>
+        <p>Normalizes the MVRV signal: <code>Z = (Market Cap − Realized Cap) / stdev(all historical Market Caps)</code>. The standard deviation is computed over all daily market caps since 2013, making the Z-Score comparable across cycles despite Bitcoin's growth in absolute size.</p>
+    </div>
+    <div class="source-card">
+        <h4>LTH / STH Supply &amp; Realized Price</h4>
+        <p>Long-Term and Short-Term Holder supplies are derived from HODL Wave band aggregates. LTH = bands older than 1 year; STH = bands younger than 1 year. Realized prices are estimated by weighting each band's BTC by the price at the midpoint acquisition date, approximated from the Kraken price history.</p>
+    </div>
+    <div class="source-card">
+        <h4>Stock-to-Flow (S2F)</h4>
+        <p><code>SF = Circulating Supply / Annual Issuance</code>. Annual issuance is the sum of the last 365 days of coinbase revenue (from <code>puell_daily</code>). Model price uses PlanB's approximation: <code>10^(2.66 × log₁₀(SF) − 1.59)</code>. Historical SF is computed using a sliding window over the full puell_daily history.</p>
+    </div>
+    <div class="source-card">
+        <h4>Transaction Count &amp; Fees</h4>
+        <p>Queried daily from <code>bigquery-public-data.crypto_bitcoin.transactions</code>, excluding coinbase transactions. Volume = <code>SUM(output_value)</code> in BTC; average fee = <code>SUM(fee) / COUNT(*)</code>. Incrementally updated — only new days since the last cached row are fetched.</p>
+    </div>
+    <div class="source-card">
+        <h4>Hash Rate</h4>
+        <p>Derived from the <code>blocks</code> table: <code>hash_rate (H/s) = AVG(difficulty) × 2³² / 600</code>, converted to EH/s by dividing by 10¹⁸. The 600-second denominator is the target block interval. A 14-day moving average smooths out variance from natural block time fluctuation.</p>
+    </div>
 </div>
 </div><!-- /page-about -->
 
@@ -295,6 +315,11 @@
             <tr><td>/api/active_addresses</td><td>Unique active addresses / day</td><td>current, ma30, labels[], values[]<br><a href="/api/active_addresses" target="_blank">↗ live JSON</a></td></tr>
             <tr><td>/api/whale_tx</td><td>Transactions &gt; 100 BTC / day</td><td>current, ma30, labels[], values[], btc_series[]<br><a href="/api/whale_tx" target="_blank">↗ live JSON</a></td></tr>
             <tr><td>/api/exchange_flow</td><td>Exchange inflows, outflows, net</td><td>current_net, labels[], inflows[], outflows[], net[], top_exchanges[]<br><a href="/api/exchange_flow" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/mvrv_zscore</td><td>MVRV Z-Score + 365d history</td><td>z_score, market_cap, realized_cap, labels[], values[]<br><a href="/api/mvrv_zscore" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/lth_sth</td><td>LTH &amp; STH supply + realized price</td><td>lth_supply, sth_supply, lth_realized_price, sth_realized_price, bands[]<br><a href="/api/lth_sth" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/stf</td><td>Stock-to-Flow ratio + model price</td><td>sf, model_price, deviation_pct, labels[], values[]<br><a href="/api/stf" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/tx_stats</td><td>Daily tx count, volume, fees</td><td>tx_count, tx_count_ma30, volume_btc, avg_fee_btc, labels[], tx_counts[], avg_fees[]<br><a href="/api/tx_stats" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/hashrate</td><td>Network hash rate (EH/s) + 14d MA</td><td>hashrate_eh, ma14_eh, block_count, labels[], values[]<br><a href="/api/hashrate" target="_blank">↗ live JSON</a></td></tr>
         </tbody>
     </table>
 
@@ -424,9 +449,88 @@
             hint: 'Spike + rising exchange inflow = distribution risk &nbsp;|&nbsp; Spike + outflow = accumulation',
             chartHeight: 220,
         },
+        mvrv_zscore: {
+            label: 'MVRV Z-Score', acronym: 'Market cap distance from realized cap in std devs', live: true, group: 'Market',
+            detail: 'The MVRV Z-Score normalizes the gap between market cap and realized cap by the historical standard deviation of all market caps. Unlike plain MVRV, it accounts for the variance of the metric across different market cycles. Values above 7 have consistently coincided with major cycle tops; values below 0 signal extreme undervaluation relative to holder cost basis.',
+            stats: [
+                { id: 'val',  label: 'Z-Score' },
+                { id: 'mcap', label: 'Market Cap',   small: true },
+                { id: 'rcap', label: 'Realized Cap', small: true },
+            ],
+            hint: '&lt;0 buy zone &nbsp;|&nbsp; 0–3 fair &nbsp;|&nbsp; 3–7 caution &nbsp;|&nbsp; &gt;7 top zone',
+            chartHeight: 220,
+        },
+        lth: {
+            label: 'LTH Supply', acronym: 'Long-Term Holder supply (> 1 year)', live: true, group: 'Supply',
+            api: 'lth_sth',
+            detail: 'Long-Term Holder supply counts all BTC that has not moved in over 1 year. A growing LTH supply signals conviction and supply contraction — holders refuse to sell. When LTH supply starts declining near market tops, experienced holders are distributing into strength. The LTH Realized Price (aggregate cost basis of long-term holders) acts as a macro support level.',
+            stats: [
+                { id: 'supply', label: 'LTH Supply (BTC)' },
+                { id: 'rp',     label: 'LTH Realized Price', small: true },
+            ],
+            hint: 'Growing LTH supply = accumulation &nbsp;|&nbsp; Declining LTH = distribution phase',
+            chartHeight: 320,
+            chartType: 'hodl',
+        },
+        sth: {
+            label: 'STH Supply', acronym: 'Short-Term Holder supply (< 1 year)', live: true, group: 'Supply',
+            api: 'lth_sth',
+            detail: 'Short-Term Holder supply tracks all BTC moved within the last year. High STH supply relative to LTH reflects a market dominated by recent buyers. The STH Realized Price (average entry price of short-term holders) is a critical level — when spot price falls below it, recent buyers are underwater and capitulation risk rises sharply.',
+            stats: [
+                { id: 'supply', label: 'STH Supply (BTC)' },
+                { id: 'rp',     label: 'STH Realized Price', small: true },
+            ],
+            hint: 'Price below STH realized price = capitulation risk for recent buyers',
+            chartHeight: 320,
+            chartType: 'hodl',
+        },
+        stf: {
+            label: 'Stock-to-Flow', acronym: 'Supply scarcity model (SF ratio)', live: true, group: 'Market',
+            detail: 'Stock-to-Flow divides Bitcoin\'s circulating supply by its annual issuance. After each halving, SF doubles, making Bitcoin progressively scarcer. PlanB\'s model maps SF to price via a power law. The deviation from model price shows how far the current price is from the scarcity-implied fair value. Halvings are clearly visible as step-changes in the SF ratio.',
+            stats: [
+                { id: 'val',   label: 'SF Ratio' },
+                { id: 'model', label: 'Model Price', small: true },
+                { id: 'dev',   label: 'Deviation',   small: true },
+            ],
+            hint: 'Price near/below model = scarcity undervalued &nbsp;|&nbsp; Large premium = extended vs model',
+            chartHeight: 220,
+        },
+        tx_count: {
+            label: 'Tx Count', acronym: 'Daily on-chain transactions', live: true, group: 'Network',
+            api: 'tx_stats',
+            detail: 'Daily transaction count measures the number of on-chain Bitcoin transactions, excluding coinbase (miner reward) transactions. Rising activity signals growing network usage. A divergence — price rising while transaction count falls — can indicate a speculative rally not supported by genuine on-chain demand.',
+            stats: [
+                { id: 'val', label: 'Txs (today)' },
+                { id: 'ma',  label: '30d Average', small: true },
+            ],
+            hint: 'Rising count + rising price = fundamental growth &nbsp;|&nbsp; Divergence = speculative caution',
+            chartHeight: 220,
+        },
+        avg_fee: {
+            label: 'Avg Fee', acronym: 'Average transaction fee (BTC)', live: true, group: 'Network',
+            api: 'tx_stats',
+            detail: 'Average fee per transaction measures how much users collectively pay for block space inclusion. Fee spikes signal high block space demand — typically during bull market peaks, inscription/ordinal activity surges, or mempool congestion. Sustained low fees indicate reduced urgency and lower on-chain activity.',
+            stats: [
+                { id: 'val', label: 'Avg Fee (BTC)' },
+                { id: 'vol', label: 'Volume (BTC)', small: true },
+            ],
+            hint: 'Fee spike = high block space demand &nbsp;|&nbsp; Low fee = network underutilized',
+            chartHeight: 220,
+        },
+        hashrate: {
+            label: 'Hash Rate', acronym: 'Network mining power (EH/s)', live: true, group: 'Mining',
+            detail: 'Hash Rate measures the total computational power directed at Bitcoin mining, in Exahashes per second (EH/s). A rising hash rate means more miners are competing, strengthening network security. Hash rate rarely falls significantly — sustained declines reflect miner capitulation (unprofitable miners shutting down), which has historically coincided with market bottoms.',
+            stats: [
+                { id: 'val',    label: 'Hash Rate (EH/s)' },
+                { id: 'ma14',   label: '14d Average',      small: true },
+                { id: 'blocks', label: 'Blocks (today)',    small: true },
+            ],
+            hint: 'Rising hashrate = security growth &nbsp;|&nbsp; Decline = miner stress / potential bottom',
+            chartHeight: 220,
+        },
     };
 
-    let data = { mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null };
+    let data = { mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null };
     let charts = {};
     let dragSrc = null;
 
@@ -528,15 +632,20 @@
 
         // Time-series metrics
         const cfgMap = {
-            mvrv:             { vals: d.values,  col: 'MVRV',         fmt: v => v != null ? v.toFixed(4) : '—' },
-            sopr:             { vals: d.values,  col: 'SOPR',         fmt: v => v != null ? v.toFixed(4) : '—' },
-            nvt:              { vals: d.values,  col: 'NVT',          fmt: v => v != null ? v.toFixed(1)  : '—' },
-            cdd:              { vals: d.values,  col: 'CDD',          fmt: v => fmt_cdd(v) },
-            nupl:             { vals: d.values,  col: 'NUPL',         fmt: v => v != null ? v.toFixed(4) : '—' },
-            puell:            { vals: d.values,  col: 'Puell',        fmt: v => v != null ? v.toFixed(4) : '—' },
-            active_addresses: { vals: d.values,  col: 'Addresses',    fmt: v => v != null ? v.toLocaleString() : '—' },
-            whale_tx:         { vals: d.values,  col: 'Whale Txs',    fmt: v => v != null ? v.toLocaleString() : '—' },
-            exchange_flow:    { vals: d.net,     col: 'Net Flow BTC', fmt: v => v != null ? v.toFixed(2) : '—' },
+            mvrv:             { vals: d.values,    col: 'MVRV',         fmt: v => v != null ? v.toFixed(4) : '—' },
+            sopr:             { vals: d.values,    col: 'SOPR',         fmt: v => v != null ? v.toFixed(4) : '—' },
+            nvt:              { vals: d.values,    col: 'NVT',          fmt: v => v != null ? v.toFixed(1)  : '—' },
+            cdd:              { vals: d.values,    col: 'CDD',          fmt: v => fmt_cdd(v) },
+            nupl:             { vals: d.values,    col: 'NUPL',         fmt: v => v != null ? v.toFixed(4) : '—' },
+            puell:            { vals: d.values,    col: 'Puell',        fmt: v => v != null ? v.toFixed(4) : '—' },
+            active_addresses: { vals: d.values,    col: 'Addresses',    fmt: v => v != null ? v.toLocaleString() : '—' },
+            whale_tx:         { vals: d.values,    col: 'Whale Txs',    fmt: v => v != null ? v.toLocaleString() : '—' },
+            exchange_flow:    { vals: d.net,       col: 'Net Flow BTC', fmt: v => v != null ? v.toFixed(2) : '—' },
+            mvrv_zscore:      { vals: d.values,    col: 'Z-Score',      fmt: v => v != null ? v.toFixed(4) : '—' },
+            stf:              { vals: d.values,    col: 'SF Ratio',     fmt: v => v != null ? v.toFixed(2) : '—' },
+            tx_count:         { vals: d.tx_counts, col: 'Tx Count',     fmt: v => v != null ? v.toLocaleString() : '—' },
+            avg_fee:          { vals: d.avg_fees,  col: 'Avg Fee BTC',  fmt: v => v != null ? v.toFixed(8) : '—' },
+            hashrate:         { vals: d.values,    col: 'EH/s',         fmt: v => v != null ? v.toFixed(4) : '—' },
         };
         const cfg = cfgMap[id];
         if (!cfg || !d.labels) { el.innerHTML = '<p style="color:#aaa;padding:1rem">No data.</p>'; return; }
@@ -757,6 +866,54 @@
         if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
         if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
         return n.toLocaleString();
+    }
+
+    function mvrv_zscore_signal(v) {
+        if (v === null || v === undefined) return { label: '—', cls: 'neutral' };
+        if (v < 0)   return { label: 'BUY ZONE', cls: 'ok' };
+        if (v < 3)   return { label: 'FAIR',     cls: 'neutral' };
+        if (v < 7)   return { label: 'CAUTION',  cls: 'medium' };
+        return           { label: 'TOP ZONE', cls: 'ko' };
+    }
+
+    function stf_signal(dev) {
+        if (dev === null || dev === undefined) return { label: '—', cls: 'neutral' };
+        if (dev < -30) return { label: 'UNDERVALUED', cls: 'ok' };
+        if (dev < 30)  return { label: 'FAIR VALUE',  cls: 'neutral' };
+        if (dev < 100) return { label: 'PREMIUM',     cls: 'medium' };
+        return             { label: 'EXTENDED',    cls: 'ko' };
+    }
+
+    function hashrate_signal(hr, ma14) {
+        if (!hr || !ma14) return { label: '—', cls: 'neutral' };
+        const r = hr / ma14;
+        if (r > 1.05)  return { label: 'RISING',   cls: 'ok' };
+        if (r > 0.95)  return { label: 'STABLE',   cls: 'neutral' };
+        return             { label: 'DECLINING', cls: 'medium' };
+    }
+
+    function tx_count_signal(current, ma30) {
+        if (!current || !ma30) return { label: '—', cls: 'neutral' };
+        const r = current / ma30;
+        if (r > 1.3)  return { label: 'SURGE',  cls: 'medium' };
+        if (r > 0.8)  return { label: 'NORMAL', cls: 'neutral' };
+        return            { label: 'LOW',    cls: 'neutral' };
+    }
+
+    function lth_signal(supply) {
+        if (!supply) return { label: '—', cls: 'neutral' };
+        const pct = supply / 21e6 * 100;
+        if (pct > 65) return { label: 'HIGH HODL', cls: 'ok' };
+        if (pct > 55) return { label: 'HODL',      cls: 'neutral' };
+        return            { label: 'LOW HODL',  cls: 'medium' };
+    }
+
+    function sth_signal(supply) {
+        if (!supply) return { label: '—', cls: 'neutral' };
+        const pct = supply / 21e6 * 100;
+        if (pct > 40) return { label: 'HIGH STH', cls: 'medium' };
+        if (pct > 30) return { label: 'MODERATE', cls: 'neutral' };
+        return            { label: 'LOW STH',  cls: 'ok' };
     }
 
     function sigColor(cls) {
@@ -996,6 +1153,109 @@
         cardReady('whale_tx');
     }).catch(() => { document.getElementById('hc-whale_tx-val').textContent = 'error'; cardReady('whale_tx'); });
 
+    // Load MVRV Z-Score
+    fetch('/api/mvrv_zscore').then(r => r.json()).then(d => {
+        data.mvrv_zscore = d;
+        const sig = mvrv_zscore_signal(d.z_score);
+        document.getElementById('hc-mvrv_zscore-val').textContent = d.z_score !== null ? d.z_score.toFixed(2) : '—';
+        const hb = document.getElementById('hc-mvrv_zscore-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-mvrv_zscore-val').textContent  = d.z_score !== null ? d.z_score.toFixed(4) : '—';
+        document.getElementById('d-mvrv_zscore-mcap').textContent = d.market_cap ? fmt_usd(d.market_cap) : '—';
+        document.getElementById('d-mvrv_zscore-rcap').textContent = d.realized_cap ? fmt_usd(d.realized_cap) : '—';
+        document.getElementById('d-mvrv_zscore-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-mvrv_zscore-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('mvrv_zscore');
+    }).catch(() => { document.getElementById('hc-mvrv_zscore-val').textContent = 'error'; cardReady('mvrv_zscore'); });
+
+    // Load LTH + STH Supply
+    fetch('/api/lth_sth').then(r => r.json()).then(d => {
+        data.lth = d;
+        data.sth = d;
+        // LTH card
+        const sigL = lth_signal(d.lth_supply);
+        document.getElementById('hc-lth-val').textContent = d.lth_supply ? fmt_btc(d.lth_supply) : '—';
+        const hbL = document.getElementById('hc-lth-badge');
+        hbL.textContent = sigL.label; hbL.className = 'badge ' + sigL.cls;
+        document.getElementById('d-lth-supply').textContent = d.lth_supply ? fmt_btc(d.lth_supply) : '—';
+        document.getElementById('d-lth-rp').textContent     = d.lth_realized_price ? fmt_usd(d.lth_realized_price) : '—';
+        document.getElementById('d-lth-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        if (d.bands) renderHodlChart('hc-lth-chart', d.bands, true);
+        cardReady('lth');
+        // STH card
+        const sigS = sth_signal(d.sth_supply);
+        document.getElementById('hc-sth-val').textContent = d.sth_supply ? fmt_btc(d.sth_supply) : '—';
+        const hbS = document.getElementById('hc-sth-badge');
+        hbS.textContent = sigS.label; hbS.className = 'badge ' + sigS.cls;
+        document.getElementById('d-sth-supply').textContent = d.sth_supply ? fmt_btc(d.sth_supply) : '—';
+        document.getElementById('d-sth-rp').textContent     = d.sth_realized_price ? fmt_usd(d.sth_realized_price) : '—';
+        document.getElementById('d-sth-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        if (d.bands) renderHodlChart('hc-sth-chart', d.bands, true);
+        cardReady('sth');
+    }).catch(() => {
+        document.getElementById('hc-lth-val').textContent = 'error'; cardReady('lth');
+        document.getElementById('hc-sth-val').textContent = 'error'; cardReady('sth');
+    });
+
+    // Load Stock-to-Flow
+    fetch('/api/stf').then(r => r.json()).then(d => {
+        data.stf = d;
+        if (d.error) { document.getElementById('hc-stf-val').textContent = 'n/a'; cardReady('stf'); return; }
+        const sig = stf_signal(d.deviation_pct);
+        document.getElementById('hc-stf-val').textContent = d.sf !== null ? d.sf.toFixed(1) : '—';
+        const hb = document.getElementById('hc-stf-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-stf-val').textContent   = d.sf !== null ? d.sf.toFixed(2) : '—';
+        document.getElementById('d-stf-model').textContent = d.model_price ? fmt_usd(d.model_price) : '—';
+        document.getElementById('d-stf-dev').textContent   = d.deviation_pct !== null ? (d.deviation_pct > 0 ? '+' : '') + d.deviation_pct.toFixed(1) + '%' : '—';
+        document.getElementById('d-stf-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-stf-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('stf');
+    }).catch(() => { document.getElementById('hc-stf-val').textContent = 'error'; cardReady('stf'); });
+
+    // Load Tx Count + Avg Fee
+    fetch('/api/tx_stats').then(r => r.json()).then(d => {
+        data.tx_count = d;
+        data.avg_fee  = d;
+        // Tx Count card
+        const sigT = tx_count_signal(d.tx_count, d.tx_count_ma30);
+        document.getElementById('hc-tx_count-val').textContent = d.tx_count ? d.tx_count.toLocaleString() : '—';
+        const hbT = document.getElementById('hc-tx_count-badge');
+        hbT.textContent = sigT.label; hbT.className = 'badge ' + sigT.cls;
+        document.getElementById('d-tx_count-val').textContent = d.tx_count ? d.tx_count.toLocaleString() : '—';
+        document.getElementById('d-tx_count-ma').textContent  = d.tx_count_ma30 ? Math.round(d.tx_count_ma30).toLocaleString() : '—';
+        document.getElementById('d-tx_count-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        if (d.labels && d.tx_counts) cardChart('hc-tx_count-chart', d.labels, d.tx_counts, sigColor(sigT.cls), true);
+        cardReady('tx_count');
+        // Avg Fee card
+        document.getElementById('hc-avg_fee-val').textContent = d.avg_fee_btc ? d.avg_fee_btc.toFixed(6) : '—';
+        const hbF = document.getElementById('hc-avg_fee-badge');
+        hbF.textContent = '—'; hbF.className = 'badge neutral';
+        document.getElementById('d-avg_fee-val').textContent = d.avg_fee_btc ? d.avg_fee_btc.toFixed(8) : '—';
+        document.getElementById('d-avg_fee-vol').textContent = d.volume_btc ? fmt_btc(d.volume_btc) : '—';
+        document.getElementById('d-avg_fee-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        if (d.labels && d.avg_fees) cardChart('hc-avg_fee-chart', d.labels, d.avg_fees, '#888', true);
+        cardReady('avg_fee');
+    }).catch(() => {
+        document.getElementById('hc-tx_count-val').textContent = 'error'; cardReady('tx_count');
+        document.getElementById('hc-avg_fee-val').textContent  = 'error'; cardReady('avg_fee');
+    });
+
+    // Load Hash Rate
+    fetch('/api/hashrate').then(r => r.json()).then(d => {
+        data.hashrate = d;
+        const sig = hashrate_signal(d.hashrate_eh, d.ma14_eh);
+        document.getElementById('hc-hashrate-val').textContent = d.hashrate_eh ? d.hashrate_eh.toFixed(1) + ' EH/s' : '—';
+        const hb = document.getElementById('hc-hashrate-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-hashrate-val').textContent    = d.hashrate_eh ? d.hashrate_eh.toFixed(2) + ' EH/s' : '—';
+        document.getElementById('d-hashrate-ma14').textContent   = d.ma14_eh ? d.ma14_eh.toFixed(2) + ' EH/s' : '—';
+        document.getElementById('d-hashrate-blocks').textContent = d.block_count ? d.block_count.toString() : '—';
+        document.getElementById('d-hashrate-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-hashrate-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('hashrate');
+    }).catch(() => { document.getElementById('hc-hashrate-val').textContent = 'error'; cardReady('hashrate'); });
+
     // Navigation
     function showHome() {
         document.getElementById('view-home').style.display = 'grid';
@@ -1017,11 +1277,12 @@
         if (canvas) canvas.style.display = '';
         if (tbl)  { tbl.style.display = 'none'; delete tbl.dataset.rendered; tbl.innerHTML = ''; }
         document.querySelectorAll('#detail-' + id + ' .toggle-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
-        document.getElementById('detail-api-link').href = '/api/' + id;
-        document.getElementById('detail-api-link').textContent = '{ } /api/' + id;
+        const apiId = METRICS[id].api || id;
+        document.getElementById('detail-api-link').href = '/api/' + apiId;
+        document.getElementById('detail-api-link').textContent = '{ } /api/' + apiId;
         const dt = document.getElementById('d-' + id + '-text');
         if (dt) dt.textContent = METRICS[id].detail;
-        ['mvrv','sopr','nvt','hodl','cdd','exchange_flow','nupl','rhodl','supply_profit','puell','active_addresses','whale_tx'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
+        ['mvrv','sopr','nvt','hodl','cdd','exchange_flow','nupl','rhodl','supply_profit','puell','active_addresses','whale_tx','mvrv_zscore','lth','sth','stf','tx_count','avg_fee','hashrate'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
         if (id === 'mvrv' && data.mvrv)
             cardChart('mvrv-chart-detail', data.mvrv.labels, data.mvrv.values, sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
@@ -1060,6 +1321,20 @@
                     ).join('');
             }
         }
+        if (id === 'mvrv_zscore' && data.mvrv_zscore)
+            cardChart('mvrv_zscore-chart-detail', data.mvrv_zscore.labels, data.mvrv_zscore.values, sigColor(mvrv_zscore_signal(data.mvrv_zscore.z_score).cls), false);
+        if (id === 'lth' && data.lth)
+            renderHodlChart('lth-chart-detail', data.lth.bands, false);
+        if (id === 'sth' && data.sth)
+            renderHodlChart('sth-chart-detail', data.sth.bands, false);
+        if (id === 'stf' && data.stf)
+            cardChart('stf-chart-detail', data.stf.labels, data.stf.values, sigColor(stf_signal(data.stf.deviation_pct).cls), false);
+        if (id === 'tx_count' && data.tx_count)
+            cardChart('tx_count-chart-detail', data.tx_count.labels, data.tx_count.tx_counts, sigColor(tx_count_signal(data.tx_count.tx_count, data.tx_count.tx_count_ma30).cls), false);
+        if (id === 'avg_fee' && data.avg_fee)
+            cardChart('avg_fee-chart-detail', data.avg_fee.labels, data.avg_fee.avg_fees, '#888', false);
+        if (id === 'hashrate' && data.hashrate)
+            cardChart('hashrate-chart-detail', data.hashrate.labels, data.hashrate.values, sigColor(hashrate_signal(data.hashrate.hashrate_eh, data.hashrate.ma14_eh).cls), false);
     }
 
     document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => showDetail(el.dataset.id)));
