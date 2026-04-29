@@ -132,16 +132,7 @@
     <div id="search-wrap">
         <input id="search" type="text" placeholder="Search...">
     </div>
-    <div id="metric-list">
-        <div class="group-label">Market</div>
-        <div class="metric-item active" data-id="mvrv"><span class="dot"></span>MVRV Ratio</div>
-        <div class="metric-item soon"   data-id="nvt"><span class="dot"></span>NVT Ratio</div>
-        <div class="group-label">Profitability</div>
-        <div class="metric-item active" data-id="sopr"><span class="dot"></span>SOPR</div>
-        <div class="group-label">Supply</div>
-        <div class="metric-item soon" data-id="hodl"><span class="dot"></span>HODL Waves</div>
-        <div class="metric-item soon" data-id="cdd"><span class="dot"></span>Coin Days Destroyed</div>
-    </div>
+    <div id="metric-list"></div>
 </div>
 
 <!-- MAIN -->
@@ -231,23 +222,23 @@
 <script>
     const METRICS = {
         mvrv: {
-            label: 'MVRV Ratio', acronym: 'Market Value / Realized Value', live: true,
+            label: 'MVRV Ratio', acronym: 'Market Value / Realized Value', live: true, group: 'Market',
             detail: 'MVRV compares the current market capitalization to the Realized Cap — the sum of all UTXOs valued at the price when they last moved. Values below 1 indicate the market is trading below the aggregate cost basis of holders, historically a strong accumulation zone. Values above 3.5 have consistently coincided with cycle tops. MVRV is a macro cycle indicator, not a short-term trading signal.',
         },
         sopr: {
-            label: 'SOPR', acronym: 'Spent Output Profit Ratio', live: true,
+            label: 'SOPR', acronym: 'Spent Output Profit Ratio', live: true, group: 'Profitability',
             detail: 'SOPR measures whether coins moved on a given day were sold at a profit or a loss relative to their acquisition price. A value above 1 means that on average, coins were moved at a gain. Values below 1 signal selling at a loss — often a sign of capitulation or an accumulation phase. A recovery of SOPR back above 1 after a sustained period below is considered a bullish signal.',
         },
         nvt: {
-            label: 'NVT Ratio', acronym: 'Network Value to Transactions', live: true,
+            label: 'NVT Ratio', acronym: 'Network Value to Transactions', live: true, group: 'Market',
             detail: 'NVT compares Bitcoin\'s market cap to its on-chain transaction volume (28-day moving average). It works like a P/E ratio for Bitcoin: a high NVT means the network is valued far above its actual usage, historically a sign of overvaluation. A low NVT signals strong utility relative to price — a potential buy zone.',
         },
         hodl: {
-            label: 'HODL Waves', acronym: 'Age distribution of BTC supply', live: true,
+            label: 'HODL Waves', acronym: 'Age distribution of BTC supply', live: true, group: 'Supply',
             detail: 'HODL Waves show what percentage of Bitcoin supply has not moved within each time band. A rising Long-Term Holder (LTH) share — coins unmoved for over 1 year — signals conviction and supply contraction. Distribution phases are visible when old coins start moving, reducing the LTH percentage.',
         },
         cdd: {
-            label: 'CDD', acronym: 'Coin Days Destroyed', live: true,
+            label: 'CDD', acronym: 'Coin Days Destroyed', live: true, group: 'Supply',
             detail: 'Coin Days Destroyed weights each BTC transaction by how long the coins sat idle before moving. One coin held for 100 days and then spent destroys 100 coin-days. A spike in CDD means old, long-dormant coins are being moved — often a sign of large holders distributing near market tops.',
         },
     };
@@ -332,6 +323,25 @@
         initDragDrop();
     }
     buildHomeCards();
+
+    function buildSidebar() {
+        const groups = {};
+        Object.entries(METRICS).forEach(([id, m]) => {
+            if (!groups[m.group]) groups[m.group] = [];
+            groups[m.group].push({ id, ...m });
+        });
+        const list = document.getElementById('metric-list');
+        list.innerHTML = Object.entries(groups).map(([group, items]) => `
+            <div class="group-label">${group}</div>
+            ${items.map(m => `
+                <div class="metric-item${m.live ? '' : ' soon'}" data-id="${m.id}">
+                    <span class="dot"></span>${m.label}
+                </div>`).join('')}
+        `).join('');
+        document.querySelectorAll('.metric-item:not(.soon)').forEach(el =>
+            el.addEventListener('click', () => showDetail(el.dataset.id)));
+    }
+    buildSidebar();
 
     function cardChart(id, labels, values, color, small) {
         if (charts[id]) charts[id].destroy();
