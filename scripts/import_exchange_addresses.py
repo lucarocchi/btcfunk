@@ -6,17 +6,18 @@ Source: duneanalytics/spellbook (MIT license)
 Run: python scripts/import_exchange_addresses.py
 """
 
+import base64
 import re
 import sqlite3
-import subprocess
-import sys
+
+import requests
 
 DB_PATH = "mvrv_cache.sqlite"
-SPELLBOOK_PATH = (
+SPELLBOOK_URL = (
+    "https://api.github.com/repos/duneanalytics/spellbook/contents/"
     "dbt_subprojects/hourly_spellbook/models/_sector/cex/addresses/chains/bitcoin"
     "/cex_bitcoin_addresses.sql"
 )
-REPO = "duneanalytics/spellbook"
 
 # Pattern: ('bitcoin', '<address>', '<exchange>', '<label>', ...)
 ROW_RE = re.compile(
@@ -25,12 +26,9 @@ ROW_RE = re.compile(
 
 
 def fetch_sql():
-    result = subprocess.run(
-        ["gh", "api", f"repos/{REPO}/contents/{SPELLBOOK_PATH}", "--jq", ".content"],
-        capture_output=True, text=True, check=True,
-    )
-    import base64
-    return base64.b64decode(result.stdout.strip()).decode()
+    resp = requests.get(SPELLBOOK_URL, headers={"Accept": "application/vnd.github+json"}, timeout=30)
+    resp.raise_for_status()
+    return base64.b64decode(resp.json()["content"]).decode()
 
 
 def parse_addresses(sql):
