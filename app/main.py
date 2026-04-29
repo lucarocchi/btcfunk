@@ -52,3 +52,9 @@ async def hodl():
 async def validate():
     from app.metrics.validate import get_validation
     return get_validation()
+
+
+@app.get("/api/exchange_flow")
+async def exchange_flow():
+    from app.metrics.exchange_flow import get_exchange_flow
+    return get_exchange_flow()

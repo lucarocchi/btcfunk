@@ -107,8 +107,8 @@
         #view-detail { display: none; }
         .detail-back { font-size: 0.8rem; color: #888; cursor: pointer; margin-bottom: 1.2rem; display: inline-flex; align-items: center; gap: 0.3rem; }
         .detail-back:hover { color: #111; }
-        .detail-api  { font-size: 0.72rem; color: #bbb; text-decoration: none; float: right; margin-top: 0.1rem; }
-        .detail-api:hover { color: #888; }
+        .detail-api  { font-size: 0.72rem; color: #888; text-decoration: none; float: right; margin-top: 0.1rem; }
+        .detail-api:hover { color: #111; }
         .detail-title   { font-size: 1.1rem; font-weight: 700; color: #111; margin-bottom: 0.15rem; }
         .detail-acronym { font-size: 0.78rem; color: #888; margin-bottom: 1.5rem; }
         .detail-text    { font-size: 0.8rem; color: #666; line-height: 1.65; margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid #eee; }
@@ -218,6 +218,22 @@
                 <div class="detail-text" id="d-cdd-text"></div>
             </div>
         </div>
+
+        <!-- Exchange Flow detail -->
+        <div id="detail-exchange_flow" style="display:none">
+            <div class="card">
+                <div class="metric-row">
+                    <div class="stat"><div class="val" id="d-ef-inflow">—</div><div class="lbl">Inflow (today)</div></div>
+                    <div class="stat"><div class="val" id="d-ef-outflow">—</div><div class="lbl">Outflow (today)</div></div>
+                    <div class="stat"><div class="val" id="d-ef-net">—</div><div class="lbl">Net Flow</div></div>
+                </div>
+                <div class="hint">Net &gt; 0 (more inflow) bearish — BTC entering exchanges to be sold &nbsp;|&nbsp; Net &lt; 0 bullish — accumulation</div>
+                <canvas id="ef-chart-detail" style="max-height:220px; margin-top:1rem"></canvas>
+                <div id="d-ef-top" style="margin-top:1rem"></div>
+                <div class="updated" id="d-ef-updated"></div>
+                <div class="detail-text" id="d-ef-text"></div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -244,9 +260,13 @@
             label: 'CDD', acronym: 'Coin Days Destroyed', live: true, group: 'Supply',
             detail: 'Coin Days Destroyed weights each BTC transaction by how long the coins sat idle before moving. One coin held for 100 days and then spent destroys 100 coin-days. A spike in CDD means old, long-dormant coins are being moved — often a sign of large holders distributing near market tops.',
         },
+        exchange_flow: {
+            label: 'Exchange Flows', acronym: 'BTC inflows & outflows to exchanges', live: true, group: 'Flows',
+            detail: 'Exchange Flow tracks Bitcoin moving into and out of known exchange wallets (761 labeled addresses across 50+ exchanges, sourced from Dune Analytics). Net inflow — more BTC entering exchanges — is historically bearish, as coins are often deposited to be sold. Net outflow — BTC leaving exchanges — suggests accumulation and reduced sell pressure.',
+        },
     };
 
-    let data = { mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null };
+    let data = { mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null };
     let charts = {};
     let dragSrc = null;
 
@@ -400,6 +420,21 @@
         return             { label: 'DISTRIBUTION', cls: 'ko' };
     }
 
+    function ef_signal(net) {
+        if (net === null || net === undefined) return { label: '—', cls: 'neutral' };
+        if (net > 5000)  return { label: 'SELL PRESSURE', cls: 'ko' };
+        if (net > 0)     return { label: 'INFLOW',        cls: 'medium' };
+        if (net > -5000) return { label: 'OUTFLOW',       cls: 'ok' };
+        return               { label: 'STRONG OUT',   cls: 'ok' };
+    }
+
+    function fmt_btc(n) {
+        if (!n && n !== 0) return '—';
+        if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(2) + 'M BTC';
+        if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1) + 'K BTC';
+        return n.toFixed(0) + ' BTC';
+    }
+
     function cdd_signal(cdd, ma90) {
         if (!cdd || !ma90) return { label: '—', cls: 'neutral' };
         const ratio = cdd / ma90;
@@ -519,6 +554,21 @@
         cardReady('hodl');
     }).catch(() => { document.getElementById('hc-hodl-val').textContent = 'error'; cardReady('hodl'); });
 
+    // Load Exchange Flow
+    fetch('/api/exchange_flow').then(r => r.json()).then(d => {
+        data.exchange_flow = d;
+        const sig = ef_signal(d.current_net);
+        document.getElementById('hc-exchange_flow-val').textContent = fmt_btc(d.current_net);
+        const hb = document.getElementById('hc-exchange_flow-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-ef-inflow').textContent  = fmt_btc(d.current_inflow);
+        document.getElementById('d-ef-outflow').textContent = fmt_btc(d.current_outflow);
+        document.getElementById('d-ef-net').textContent     = fmt_btc(d.current_net);
+        document.getElementById('d-ef-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · ' + d.address_count + ' addresses';
+        cardChart('hc-exchange_flow-chart', d.labels, d.net, sigColor(sig.cls), true);
+        cardReady('exchange_flow');
+    }).catch(() => { document.getElementById('hc-exchange_flow-val').textContent = 'error'; cardReady('exchange_flow'); });
+
     // Load CDD
     fetch('/api/cdd').then(r => r.json()).then(d => {
         data.cdd = d;
@@ -552,7 +602,7 @@
         document.getElementById('detail-api-link').textContent = '{ } /api/' + id;
         const dt = document.getElementById('d-' + id + '-text');
         if (dt) dt.textContent = METRICS[id].detail;
-        ['mvrv','sopr','nvt','hodl','cdd'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
+        ['mvrv','sopr','nvt','hodl','cdd','exchange_flow'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
         if (id === 'mvrv' && data.mvrv)
             cardChart('mvrv-chart-detail', data.mvrv.labels, data.mvrv.values, sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
@@ -564,6 +614,21 @@
             renderHodlChart('hodl-chart-detail', data.hodl.bands, false);
         if (id === 'cdd' && data.cdd)
             cardChart('cdd-chart-detail', data.cdd.labels, data.cdd.values, sigColor(cdd_signal(data.cdd.current, data.cdd.ma90).cls), false);
+        if (id === 'exchange_flow' && data.exchange_flow) {
+            const d = data.exchange_flow;
+            const sig = ef_signal(d.current_net);
+            cardChart('ef-chart-detail', d.labels, d.net, sigColor(sig.cls), false);
+            const topEl = document.getElementById('d-ef-top');
+            if (d.top_exchanges && d.top_exchanges.length) {
+                topEl.innerHTML = '<div style="font-size:0.75rem;color:#888;margin-bottom:0.5rem">Top exchanges (30d)</div>' +
+                    d.top_exchanges.map(e =>
+                        `<div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.2rem 0;border-bottom:1px solid #f5f5f5">
+                            <span style="color:#333">${e.exchange}</span>
+                            <span><span style="color:#16a34a">↓${fmt_btc(e.inflow)}</span> &nbsp; <span style="color:#dc2626">↑${fmt_btc(e.outflow)}</span></span>
+                        </div>`
+                    ).join('');
+            }
+        }
     }
 
     document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => showDetail(el.dataset.id)));
