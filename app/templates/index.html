@@ -216,9 +216,65 @@
             chartHeight: 220,
             extra: 'top',
         },
+        nupl: {
+            label: 'NUPL', acronym: 'Net Unrealized Profit / Loss', live: true, group: 'Profitability',
+            detail: 'NUPL measures the aggregate unrealized profit or loss of all Bitcoin holders. It is derived directly from MVRV: NUPL = 1 – 1/MVRV. Values below 0 indicate the market is in capitulation — holders are collectively at a loss, historically a strong buy zone. Values above 0.75 signal euphoria, where most supply is in heavy profit and a reversal is likely.',
+            stats: [
+                { id: 'val', label: 'NUPL' },
+                { id: 'rp',  label: 'Realized Price', small: true },
+            ],
+            hint: '&lt;0 capitulation &nbsp;|&nbsp; 0–0.25 hope &nbsp;|&nbsp; 0.25–0.5 optimism &nbsp;|&nbsp; 0.5–0.75 belief &nbsp;|&nbsp; &gt;0.75 euphoria',
+            chartHeight: 220,
+        },
+        rhodl: {
+            label: 'RHODL Ratio', acronym: 'Ratio HODLed 1–2y vs 1d–1w supply', live: true, group: 'Supply',
+            detail: 'The RHODL Ratio compares the BTC held for 1–2 years to the BTC held for just 1 day–1 week. A high ratio means long-term holders dominate supply — bullish conviction. A low ratio means recent buyers dominate — typical of early bear markets when LTH have distributed and new buyers have not yet accumulated. It signals cycle phases without relying on price.',
+            stats: [{ id: 'val', label: 'RHODL Ratio' }],
+            hint: 'High ratio: LTH conviction &nbsp;|&nbsp; Low ratio: STH dominant — early bear or opportunity',
+            chartHeight: 320,
+            chartType: 'hodl_profit',
+        },
+        supply_profit: {
+            label: 'Supply in Profit', acronym: '% of BTC supply in unrealized profit', live: true, group: 'Profitability',
+            detail: 'Supply in Profit measures what percentage of the circulating Bitcoin supply has an acquisition price below the current market price — meaning those coins are currently sitting on an unrealized gain. When nearly all supply is in profit (>90%) the market is historically near cycle tops. When supply in profit falls below 50%, it signals widespread capitulation and potential accumulation zones.',
+            stats: [{ id: 'val', label: '% in Profit' }],
+            hint: '&gt;90% euphoria / top zone &nbsp;|&nbsp; 50–75% fair &nbsp;|&nbsp; &lt;50% capitulation / buy zone',
+            chartHeight: 320,
+            chartType: 'hodl_profit',
+        },
+        puell: {
+            label: 'Puell Multiple', acronym: 'Daily miner revenue vs 365d average', live: true, group: 'Mining',
+            detail: 'The Puell Multiple divides the current daily miner revenue (block rewards + fees) by its 365-day moving average. Miners are systematic sellers — when revenue is unusually high relative to the historical average, they tend to sell more, creating downward price pressure. Values below 0.5 historically coincide with market bottoms; values above 4 with cycle tops.',
+            stats: [
+                { id: 'val',     label: 'Puell Multiple' },
+                { id: 'revenue', label: 'Daily Revenue',  small: true },
+            ],
+            hint: '&lt;0.5 bottom zone &nbsp;|&nbsp; 0.5–2 fair &nbsp;|&nbsp; 2–4 caution &nbsp;|&nbsp; &gt;4 top zone',
+            chartHeight: 220,
+        },
+        active_addresses: {
+            label: 'Active Addresses', acronym: 'Unique addresses transacting per day', live: true, group: 'Network',
+            detail: 'Active Addresses counts the number of unique Bitcoin addresses that participated in a transaction on a given day (receiving side). Rising active addresses signal growing network adoption and user activity. A divergence between rising price and falling active addresses can be a warning sign — price moves not supported by underlying on-chain activity often reverse.',
+            stats: [
+                { id: 'val', label: 'Active today' },
+                { id: 'ma',  label: '30d Average', small: true },
+            ],
+            hint: 'Rising addresses = growing adoption &nbsp;|&nbsp; Divergence from price = warning signal',
+            chartHeight: 220,
+        },
+        whale_tx: {
+            label: 'Whale Transactions', acronym: 'Transactions > 100 BTC per day', live: true, group: 'Network',
+            detail: 'Whale Transactions counts the number of on-chain Bitcoin transactions moving more than 100 BTC (~$10M+) per day. A spike in whale activity often precedes significant price moves — large holders repositioning, OTC settlements, or exchange deposits ahead of selling. Sustained high whale transaction volume alongside rising exchange inflows is a classic distribution signal.',
+            stats: [
+                { id: 'val', label: 'Count (today)' },
+                { id: 'vol', label: 'Volume (BTC)',  small: true },
+            ],
+            hint: 'Spike + rising exchange inflow = distribution risk &nbsp;|&nbsp; Spike + outflow = accumulation',
+            chartHeight: 220,
+        },
     };
 
-    let data = { mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null };
+    let data = { mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null };
     let charts = {};
     let dragSrc = null;
 
@@ -400,6 +456,62 @@
         return             { label: 'DISTRIBUTION', cls: 'ko' };
     }
 
+    function nupl_signal(v) {
+        if (v === null || v === undefined) return { label: '—', cls: 'neutral' };
+        if (v < 0)    return { label: 'CAPITULATION', cls: 'ok' };
+        if (v < 0.25) return { label: 'HOPE',         cls: 'ok' };
+        if (v < 0.5)  return { label: 'OPTIMISM',     cls: 'neutral' };
+        if (v < 0.75) return { label: 'BELIEF',       cls: 'medium' };
+        return             { label: 'EUPHORIA',    cls: 'ko' };
+    }
+
+    function supply_profit_signal(pct) {
+        if (!pct) return { label: '—', cls: 'neutral' };
+        if (pct > 90) return { label: 'TOP ZONE',    cls: 'ko' };
+        if (pct > 75) return { label: 'BULL MARKET', cls: 'medium' };
+        if (pct > 50) return { label: 'RECOVERY',    cls: 'neutral' };
+        return            { label: 'BUY ZONE',    cls: 'ok' };
+    }
+
+    function rhodl_signal(v) {
+        if (!v) return { label: '—', cls: 'neutral' };
+        if (v > 50)  return { label: 'EUPHORIA',    cls: 'ko' };
+        if (v > 10)  return { label: 'BULL',        cls: 'medium' };
+        if (v > 2)   return { label: 'ACCUMULATE',  cls: 'neutral' };
+        return           { label: 'STH DOMINANT', cls: 'ok' };
+    }
+
+    function puell_signal(v) {
+        if (!v) return { label: '—', cls: 'neutral' };
+        if (v < 0.5) return { label: 'BOTTOM ZONE', cls: 'ok' };
+        if (v < 2.0) return { label: 'FAIR',        cls: 'neutral' };
+        if (v < 4.0) return { label: 'CAUTION',     cls: 'medium' };
+        return           { label: 'TOP ZONE',    cls: 'ko' };
+    }
+
+    function active_signal(current, ma30) {
+        if (!current || !ma30) return { label: '—', cls: 'neutral' };
+        const r = current / ma30;
+        if (r > 1.3)  return { label: 'SURGE',   cls: 'medium' };
+        if (r > 0.85) return { label: 'NORMAL',  cls: 'neutral' };
+        return            { label: 'LOW',     cls: 'neutral' };
+    }
+
+    function whale_signal(current, ma30) {
+        if (!current || !ma30) return { label: '—', cls: 'neutral' };
+        const r = current / ma30;
+        if (r > 2)   return { label: 'SPIKE',    cls: 'medium' };
+        if (r > 1.3) return { label: 'ELEVATED', cls: 'neutral' };
+        return           { label: 'NORMAL',   cls: 'neutral' };
+    }
+
+    function fmt_addr(n) {
+        if (!n) return '—';
+        if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+        if (n >= 1e3) return (n/1e3).toFixed(0) + 'K';
+        return n.toLocaleString();
+    }
+
     function ef_signal(net) {
         if (net === null || net === undefined) return { label: '—', cls: 'neutral' };
         if (net > 5000)  return { label: 'SELL PRESSURE', cls: 'ko' };
@@ -454,6 +566,27 @@
             options: {
                 indexAxis: 'y',
                 animation: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#999', font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: '#f0f0f0' } },
+                    y: { ticks: { color: '#888', font: { size: small ? 9 : 11 } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderProfitChart(canvasId, bandsProfit, small) {
+        if (charts[canvasId]) charts[canvasId].destroy();
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        const labels = bandsProfit.map(b => b.label);
+        const values = bandsProfit.map(b => b.pct);
+        const colors = bandsProfit.map(b => b.in_profit ? 'rgba(22,163,74,0.7)' : 'rgba(220,38,38,0.6)');
+        charts[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
+            options: {
+                indexAxis: 'y', animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { color: '#999', font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: '#f0f0f0' } },
@@ -563,6 +696,90 @@
         cardReady('cdd');
     }).catch(() => { document.getElementById('hc-cdd-val').textContent = 'error'; cardReady('cdd'); });
 
+    // Load NUPL
+    fetch('/api/nupl').then(r => r.json()).then(d => {
+        data.nupl = d;
+        const sig = nupl_signal(d.nupl);
+        document.getElementById('hc-nupl-val').textContent = d.nupl !== null ? d.nupl.toFixed(3) : '—';
+        const hb = document.getElementById('hc-nupl-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-nupl-val').textContent = d.nupl !== null ? d.nupl.toFixed(3) : '—';
+        document.getElementById('d-nupl-rp').textContent  = d.realized_price ? fmt_usd(d.realized_price) : '—';
+        document.getElementById('d-nupl-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-nupl-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('nupl');
+    }).catch(() => { document.getElementById('hc-nupl-val').textContent = 'error'; cardReady('nupl'); });
+
+    // Load RHODL + Supply in Profit
+    fetch('/api/rhodl').then(r => r.json()).then(d => {
+        data.rhodl = d;
+        data.supply_profit = d;
+        // RHODL card
+        const sigR = rhodl_signal(d.rhodl);
+        document.getElementById('hc-rhodl-val').textContent = d.rhodl !== null ? d.rhodl.toLocaleString() : '—';
+        const hbR = document.getElementById('hc-rhodl-badge');
+        hbR.textContent = sigR.label; hbR.className = 'badge ' + sigR.cls;
+        document.getElementById('d-rhodl-val').textContent = d.rhodl !== null ? d.rhodl.toLocaleString() : '—';
+        document.getElementById('d-rhodl-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        if (d.bands_profit) renderProfitChart('hc-rhodl-chart', d.bands_profit, true);
+        cardReady('rhodl');
+        // Supply in Profit card
+        const pct = d.supply_in_profit_pct;
+        const sigP = supply_profit_signal(pct);
+        document.getElementById('hc-supply_profit-val').textContent = pct !== null ? pct.toFixed(1) + '%' : '—';
+        const hbP = document.getElementById('hc-supply_profit-badge');
+        hbP.textContent = sigP.label; hbP.className = 'badge ' + sigP.cls;
+        document.getElementById('d-supply_profit-val').textContent = pct !== null ? pct.toFixed(1) + '%' : '—';
+        document.getElementById('d-supply_profit-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        if (d.bands_profit) renderProfitChart('hc-supply_profit-chart', d.bands_profit, true);
+        cardReady('supply_profit');
+    }).catch(() => {
+        document.getElementById('hc-rhodl-val').textContent = 'error'; cardReady('rhodl');
+        document.getElementById('hc-supply_profit-val').textContent = 'error'; cardReady('supply_profit');
+    });
+
+    // Load Puell Multiple
+    fetch('/api/puell').then(r => r.json()).then(d => {
+        data.puell = d;
+        const sig = puell_signal(d.puell);
+        document.getElementById('hc-puell-val').textContent = d.puell !== null ? d.puell.toFixed(2) : '—';
+        const hb = document.getElementById('hc-puell-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-puell-val').textContent     = d.puell !== null ? d.puell.toFixed(2) : '—';
+        document.getElementById('d-puell-revenue').textContent = d.daily_revenue ? fmt_btc(d.daily_revenue) : '—';
+        document.getElementById('d-puell-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-puell-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('puell');
+    }).catch(() => { document.getElementById('hc-puell-val').textContent = 'error'; cardReady('puell'); });
+
+    // Load Active Addresses
+    fetch('/api/active_addresses').then(r => r.json()).then(d => {
+        data.active_addresses = d;
+        const sig = active_signal(d.current, d.ma30);
+        document.getElementById('hc-active_addresses-val').textContent = fmt_addr(d.current);
+        const hb = document.getElementById('hc-active_addresses-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-active_addresses-val').textContent = fmt_addr(d.current);
+        document.getElementById('d-active_addresses-ma').textContent  = fmt_addr(d.ma30);
+        document.getElementById('d-active_addresses-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-active_addresses-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('active_addresses');
+    }).catch(() => { document.getElementById('hc-active_addresses-val').textContent = 'error'; cardReady('active_addresses'); });
+
+    // Load Whale Transactions
+    fetch('/api/whale_tx').then(r => r.json()).then(d => {
+        data.whale_tx = d;
+        const sig = whale_signal(d.current, d.ma30);
+        document.getElementById('hc-whale_tx-val').textContent = d.current !== null ? d.current.toLocaleString() : '—';
+        const hb = document.getElementById('hc-whale_tx-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-whale_tx-val').textContent = d.current !== null ? d.current.toLocaleString() : '—';
+        document.getElementById('d-whale_tx-vol').textContent = d.current_volume ? fmt_btc(d.current_volume) : '—';
+        document.getElementById('d-whale_tx-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · >' + d.threshold_btc + ' BTC threshold';
+        cardChart('hc-whale_tx-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('whale_tx');
+    }).catch(() => { document.getElementById('hc-whale_tx-val').textContent = 'error'; cardReady('whale_tx'); });
+
     // Navigation
     function showHome() {
         document.getElementById('view-home').style.display = 'grid';
@@ -582,7 +799,7 @@
         document.getElementById('detail-api-link').textContent = '{ } /api/' + id;
         const dt = document.getElementById('d-' + id + '-text');
         if (dt) dt.textContent = METRICS[id].detail;
-        ['mvrv','sopr','nvt','hodl','cdd','exchange_flow'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
+        ['mvrv','sopr','nvt','hodl','cdd','exchange_flow','nupl','rhodl','supply_profit','puell','active_addresses','whale_tx'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
         if (id === 'mvrv' && data.mvrv)
             cardChart('mvrv-chart-detail', data.mvrv.labels, data.mvrv.values, sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
@@ -594,6 +811,18 @@
             renderHodlChart('hodl-chart-detail', data.hodl.bands, false);
         if (id === 'cdd' && data.cdd)
             cardChart('cdd-chart-detail', data.cdd.labels, data.cdd.values, sigColor(cdd_signal(data.cdd.current, data.cdd.ma90).cls), false);
+        if (id === 'nupl' && data.nupl)
+            cardChart('nupl-chart-detail', data.nupl.labels, data.nupl.values, sigColor(nupl_signal(data.nupl.nupl).cls), false);
+        if (id === 'rhodl' && data.rhodl && data.rhodl.bands_profit)
+            renderProfitChart('rhodl-chart-detail', data.rhodl.bands_profit, false);
+        if (id === 'supply_profit' && data.supply_profit && data.supply_profit.bands_profit)
+            renderProfitChart('supply_profit-chart-detail', data.supply_profit.bands_profit, false);
+        if (id === 'puell' && data.puell)
+            cardChart('puell-chart-detail', data.puell.labels, data.puell.values, sigColor(puell_signal(data.puell.puell).cls), false);
+        if (id === 'active_addresses' && data.active_addresses)
+            cardChart('active_addresses-chart-detail', data.active_addresses.labels, data.active_addresses.values, sigColor(active_signal(data.active_addresses.current, data.active_addresses.ma30).cls), false);
+        if (id === 'whale_tx' && data.whale_tx)
+            cardChart('whale_tx-chart-detail', data.whale_tx.labels, data.whale_tx.values, sigColor(whale_signal(data.whale_tx.current, data.whale_tx.ma30).cls), false);
         if (id === 'exchange_flow' && data.exchange_flow) {
             const d = data.exchange_flow;
             const sig = ef_signal(d.current_net);

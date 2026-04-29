@@ -146,17 +146,26 @@ def get_exchange_flow():
         LIMIT 10
     """).fetchall()
 
+    # Exchange Reserve: cumulative net flow trend over available period
+    reserve_values = []
+    running = 0.0
+    for v in net:
+        running += v
+        reserve_values.append(round(running, 2))
+
     result = {
-        "current_inflow":  inflows[-1]  if inflows  else None,
-        "current_outflow": outflows[-1] if outflows else None,
-        "current_net":     net[-1]      if net      else None,
-        "labels":          labels,
-        "inflows":         inflows,
-        "outflows":        outflows,
-        "net":             net,
-        "top_exchanges":   [{"exchange": r[0], "inflow": round(r[1], 2), "outflow": round(r[2], 2)} for r in top],
-        "address_count":   len(addr_map),
-        "updated_at":      datetime.now(timezone.utc).isoformat(),
+        "current_inflow":   inflows[-1]  if inflows  else None,
+        "current_outflow":  outflows[-1] if outflows else None,
+        "current_net":      net[-1]      if net      else None,
+        "current_reserve":  reserve_values[-1] if reserve_values else None,
+        "labels":           labels,
+        "inflows":          inflows,
+        "outflows":         outflows,
+        "net":              net,
+        "reserve":          reserve_values,
+        "top_exchanges":    [{"exchange": r[0], "inflow": round(r[1], 2), "outflow": round(r[2], 2)} for r in top],
+        "address_count":    len(addr_map),
+        "updated_at":       datetime.now(timezone.utc).isoformat(),
     }
     _cache_set(con, "exchange_flow", result)
     return result
