@@ -787,8 +787,7 @@
         list.innerHTML = Object.entries(groups).map(([group, items]) => `
             <div class="group-label">${group}</div>
             ${items.map(m => `
-                <div class="metric-item${m.live ? '' : ' soon'}" data-id="${m.id}">
-                    <span class="dot"></span>${m.label}
+                <div class="metric-item${m.live ? '' : ' soon'}" data-id="${m.id}">${m.label}
                 </div>`).join('')}
         `).join('');
         document.querySelectorAll('.metric-item:not(.soon)').forEach(el =>
