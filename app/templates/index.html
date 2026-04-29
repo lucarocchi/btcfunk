@@ -1098,6 +1098,8 @@
         document.getElementById('hc-' + id + '-chart').style.display = 'block';
         document.getElementById('hc-' + id + '-card').style.pointerEvents = '';
         document.getElementById('hc-' + id + '-val').classList.remove('loading');
+        const ch = charts['hc-' + id + '-chart'];
+        if (ch) requestAnimationFrame(() => ch.resize());
     }
 
     // Load MVRV
@@ -1488,6 +1490,7 @@
 
     // Page navigation
     function showPage(name) {
+        location.hash = name;
         document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === name));
         document.getElementById('page-dashboard').style.display = name === 'dashboard' ? 'flex' : 'none';
         document.getElementById('hamburger').style.display = name === 'dashboard' ? '' : 'none';
@@ -1499,7 +1502,9 @@
         if (name === 'donate') generateQR();
     }
     document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => showPage(l.dataset.page)));
-    showPage('landing');
+    const pages = ['landing', 'dashboard', 'about', 'api', 'donate'];
+    const hashPage = location.hash.slice(1);
+    showPage(pages.includes(hashPage) ? hashPage : 'landing');
 
     // Sidebar toggle (mobile)
     const sidebar = document.getElementById('sidebar');
