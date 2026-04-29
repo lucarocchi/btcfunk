@@ -184,6 +184,46 @@
                 <div class="detail-text" id="d-sopr-text"></div>
             </div>
         </div>
+        <!-- NVT detail -->
+        <div id="detail-nvt" style="display:none">
+            <div class="card">
+                <div class="metric-row">
+                    <div class="stat"><div class="val" id="d-nvt-val">—</div><div class="lbl">NVT (28d MA)</div></div>
+                </div>
+                <div class="hint">&lt;50 undervalued &nbsp;|&nbsp; 50–100 fair &nbsp;|&nbsp; 100–150 caution &nbsp;|&nbsp; &gt;150 overvalued</div>
+                <canvas id="nvt-chart-detail" style="max-height:220px"></canvas>
+                <div class="updated" id="d-nvt-updated"></div>
+                <div class="detail-text" id="d-nvt-text"></div>
+            </div>
+        </div>
+
+        <!-- HODL detail -->
+        <div id="detail-hodl" style="display:none">
+            <div class="card">
+                <div class="metric-row">
+                    <div class="stat"><div class="val" id="d-hodl-lth">—</div><div class="lbl">LTH (&gt; 1 year)</div></div>
+                    <div class="stat"><div class="val" id="d-hodl-sth">—</div><div class="lbl">STH (&lt; 1 year)</div></div>
+                </div>
+                <div class="hint">LTH &gt; 70% strong accumulation &nbsp;|&nbsp; LTH &lt; 50% distribution phase</div>
+                <canvas id="hodl-chart-detail" style="max-height:320px"></canvas>
+                <div class="updated" id="d-hodl-updated"></div>
+                <div class="detail-text" id="d-hodl-text"></div>
+            </div>
+        </div>
+
+        <!-- CDD detail -->
+        <div id="detail-cdd" style="display:none">
+            <div class="card">
+                <div class="metric-row">
+                    <div class="stat"><div class="val" id="d-cdd-val">—</div><div class="lbl">CDD (today)</div></div>
+                    <div class="stat"><div class="val" id="d-cdd-ma">—</div><div class="lbl">90d Average</div></div>
+                </div>
+                <div class="hint">Spike above 2× 90d avg signals old coins moving — potential distribution</div>
+                <canvas id="cdd-chart-detail" style="max-height:220px"></canvas>
+                <div class="updated" id="d-cdd-updated"></div>
+                <div class="detail-text" id="d-cdd-text"></div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -199,20 +239,20 @@
             detail: 'SOPR measures whether coins moved on a given day were sold at a profit or a loss relative to their acquisition price. A value above 1 means that on average, coins were moved at a gain. Values below 1 signal selling at a loss — often a sign of capitulation or an accumulation phase. A recovery of SOPR back above 1 after a sustained period below is considered a bullish signal.',
         },
         nvt: {
-            label: 'NVT Ratio', acronym: 'Network Value to Transactions', live: false,
-            detail: '',
+            label: 'NVT Ratio', acronym: 'Network Value to Transactions', live: true,
+            detail: 'NVT compares Bitcoin\'s market cap to its on-chain transaction volume (28-day moving average). It works like a P/E ratio for Bitcoin: a high NVT means the network is valued far above its actual usage, historically a sign of overvaluation. A low NVT signals strong utility relative to price — a potential buy zone.',
         },
         hodl: {
-            label: 'HODL Waves', acronym: 'Age distribution of BTC supply', live: false,
-            detail: '',
+            label: 'HODL Waves', acronym: 'Age distribution of BTC supply', live: true,
+            detail: 'HODL Waves show what percentage of Bitcoin supply has not moved within each time band. A rising Long-Term Holder (LTH) share — coins unmoved for over 1 year — signals conviction and supply contraction. Distribution phases are visible when old coins start moving, reducing the LTH percentage.',
         },
         cdd: {
-            label: 'CDD', acronym: 'Coin Days Destroyed', live: false,
-            detail: '',
+            label: 'CDD', acronym: 'Coin Days Destroyed', live: true,
+            detail: 'Coin Days Destroyed weights each BTC transaction by how long the coins sat idle before moving. One coin held for 100 days and then spent destroys 100 coin-days. A spike in CDD means old, long-dormant coins are being moved — often a sign of large holders distributing near market tops.',
         },
     };
 
-    let data = { mvrv: null, sopr: null };
+    let data = { mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null };
     let charts = {};
     let dragSrc = null;
 
@@ -331,11 +371,68 @@
         return                  { label: 'PROFIT',   cls: 'ok' };
     }
 
+    function nvt_signal(v) {
+        if (!v)       return { label: '—',           cls: 'neutral' };
+        if (v < 50)   return { label: 'UNDERVALUED', cls: 'ok' };
+        if (v < 100)  return { label: 'FAIR VALUE',  cls: 'neutral' };
+        if (v < 150)  return { label: 'CAUTION',     cls: 'medium' };
+        return            { label: 'OVERVALUED',  cls: 'ko' };
+    }
+
+    function hodl_signal(lth) {
+        if (!lth)      return { label: '—',           cls: 'neutral' };
+        if (lth > 70)  return { label: 'STRONG HODL', cls: 'ok' };
+        if (lth > 60)  return { label: 'HODL',        cls: 'neutral' };
+        if (lth > 50)  return { label: 'MIXED',       cls: 'medium' };
+        return             { label: 'DISTRIBUTION', cls: 'ko' };
+    }
+
+    function cdd_signal(cdd, ma90) {
+        if (!cdd || !ma90) return { label: '—', cls: 'neutral' };
+        const ratio = cdd / ma90;
+        if (ratio < 0.5)  return { label: 'LOW',      cls: 'ok' };
+        if (ratio < 1.5)  return { label: 'NORMAL',   cls: 'neutral' };
+        if (ratio < 2.5)  return { label: 'ELEVATED', cls: 'medium' };
+        return                { label: 'SPIKE',     cls: 'ko' };
+    }
+
+    function fmt_cdd(n) {
+        if (!n) return '—';
+        if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+        return n.toLocaleString();
+    }
+
     function sigColor(cls) {
         if (cls === 'ok')     return '#16a34a';
         if (cls === 'ko')     return '#dc2626';
         if (cls === 'medium') return '#ea580c';
         return '#555';
+    }
+
+    function renderHodlChart(id, bands, small) {
+        if (charts[id]) charts[id].destroy();
+        const ctx = document.getElementById(id);
+        if (!ctx) return;
+        const labels = bands.map(b => b.label);
+        const values = bands.map(b => b.pct);
+        const colors = bands.map((b, i) => {
+            const age = ['< 1 day','1d – 1w','1w – 1m','1m – 3m','3m – 6m','6m – 1y'].includes(b.label);
+            return age ? '#e5e7eb' : `hsl(${210 + i * 10}, 60%, ${55 - i * 2}%)`;
+        });
+        charts[id] = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
+            options: {
+                indexAxis: 'y',
+                animation: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#999', font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: '#f0f0f0' } },
+                    y: { ticks: { color: '#888', font: { size: small ? 9 : 11 } }, grid: { display: false } }
+                }
+            }
+        });
     }
 
     function cardReady(id) {
@@ -382,6 +479,47 @@
         cardReady('sopr');
     });
 
+    // Load NVT
+    fetch('/api/nvt').then(r => r.json()).then(d => {
+        data.nvt = d;
+        const sig = nvt_signal(d.nvt);
+        document.getElementById('hc-nvt-val').textContent = d.nvt ? d.nvt.toFixed(1) : '—';
+        const hb = document.getElementById('hc-nvt-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-nvt-val').textContent = d.nvt ? d.nvt.toFixed(1) : '—';
+        document.getElementById('d-nvt-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-nvt-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('nvt');
+    }).catch(() => { document.getElementById('hc-nvt-val').textContent = 'error'; cardReady('nvt'); });
+
+    // Load HODL
+    fetch('/api/hodl').then(r => r.json()).then(d => {
+        data.hodl = d;
+        const sig = hodl_signal(d.lth_pct);
+        document.getElementById('hc-hodl-val').textContent = d.lth_pct ? d.lth_pct.toFixed(1) + '%' : '—';
+        const hb = document.getElementById('hc-hodl-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-hodl-lth').textContent = d.lth_pct ? d.lth_pct.toFixed(1) + '%' : '—';
+        document.getElementById('d-hodl-sth').textContent = d.sth_pct ? d.sth_pct.toFixed(1) + '%' : '—';
+        document.getElementById('d-hodl-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        renderHodlChart('hc-hodl-chart', d.bands, true);
+        cardReady('hodl');
+    }).catch(() => { document.getElementById('hc-hodl-val').textContent = 'error'; cardReady('hodl'); });
+
+    // Load CDD
+    fetch('/api/cdd').then(r => r.json()).then(d => {
+        data.cdd = d;
+        const sig = cdd_signal(d.current, d.ma90);
+        document.getElementById('hc-cdd-val').textContent = fmt_cdd(d.current);
+        const hb = document.getElementById('hc-cdd-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-cdd-val').textContent = fmt_cdd(d.current);
+        document.getElementById('d-cdd-ma').textContent  = fmt_cdd(d.ma90);
+        document.getElementById('d-cdd-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-cdd-chart', d.labels, d.values, sigColor(sig.cls), true);
+        cardReady('cdd');
+    }).catch(() => { document.getElementById('hc-cdd-val').textContent = 'error'; cardReady('cdd'); });
+
     // Navigation
     function showHome() {
         document.getElementById('view-home').style.display = 'grid';
@@ -399,12 +537,18 @@
         document.getElementById('detail-acronym').textContent = METRICS[id].acronym;
         const dt = document.getElementById('d-' + id + '-text');
         if (dt) dt.textContent = METRICS[id].detail;
-        ['mvrv','sopr'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
+        ['mvrv','sopr','nvt','hodl','cdd'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
-        if (id === 'sopr' && data.sopr)
-            cardChart('sopr-chart-detail', data.sopr.labels, data.sopr.values, sigColor(sopr_signal(data.sopr.current).cls), false);
         if (id === 'mvrv' && data.mvrv)
             cardChart('mvrv-chart-detail', data.mvrv.labels, data.mvrv.values, sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
+        if (id === 'sopr' && data.sopr)
+            cardChart('sopr-chart-detail', data.sopr.labels, data.sopr.values, sigColor(sopr_signal(data.sopr.current).cls), false);
+        if (id === 'nvt' && data.nvt)
+            cardChart('nvt-chart-detail', data.nvt.labels, data.nvt.values, sigColor(nvt_signal(data.nvt.nvt).cls), false);
+        if (id === 'hodl' && data.hodl)
+            renderHodlChart('hodl-chart-detail', data.hodl.bands, false);
+        if (id === 'cdd' && data.cdd)
+            cardChart('cdd-chart-detail', data.cdd.labels, data.cdd.values, sigColor(cdd_signal(data.cdd.current, data.cdd.ma90).cls), false);
     }
 
     document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => showDetail(el.dataset.id)));

@@ -30,6 +30,24 @@ async def sopr():
     return get_sopr()
 
 
+@app.get("/api/nvt")
+async def nvt():
+    from app.metrics.nvt import get_nvt
+    return get_nvt()
+
+
+@app.get("/api/cdd")
+async def cdd():
+    from app.metrics.cdd import get_cdd
+    return get_cdd()
+
+
+@app.get("/api/hodl")
+async def hodl():
+    from app.metrics.hodl import get_hodl
+    return get_hodl()
+
+
 @app.get("/api/validate")
 async def validate():
     from app.metrics.validate import get_validation
