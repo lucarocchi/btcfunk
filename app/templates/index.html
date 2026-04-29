@@ -1001,10 +1001,10 @@
         data.sopr = d;
         const sig = sopr_signal(d.current);
         const hv = document.getElementById('hc-sopr-val');
-        hv.textContent = d.current ? d.current.toFixed(4) : '—';
+        hv.textContent = d.current ? d.current.toFixed(6) : '—';
         const hb = document.getElementById('hc-sopr-badge');
         hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
-        document.getElementById('d-sopr-val').textContent = d.current ? d.current.toFixed(4) : '—';
+        document.getElementById('d-sopr-val').textContent = d.current ? d.current.toFixed(6) : '—';
         document.getElementById('d-sopr-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
         cardChart('hc-sopr-chart', d.labels, d.values, sigColor(sig.cls), true);
         cardReady('sopr');
