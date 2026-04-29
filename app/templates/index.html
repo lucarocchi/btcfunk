@@ -7,79 +7,75 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: monospace; background: #0a0a0a; color: #f0f0f0; display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #111; display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
 
         /* SIDEBAR */
         #sidebar {
-            width: 220px; min-width: 220px;
-            background: #0e0e0e;
-            border-right: 1px solid #1a1a1a;
-            display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
+            width: 210px; min-width: 210px;
+            background: #fff; border-right: 1px solid #e8e8e8;
+            display: flex; flex-direction: column; height: 100vh;
         }
-        #sidebar .logo {
-            padding: 1.2rem 1rem;
-            border-bottom: 1px solid #1a1a1a;
-        }
-        #sidebar .logo h1 { color: #f7931a; font-size: 1.1rem; }
-        #sidebar .logo p  { color: #444; font-size: 0.7rem; margin-top: 0.2rem; }
-        #search-wrap { padding: 0.8rem 1rem; border-bottom: 1px solid #1a1a1a; }
+        .logo { padding: 1.2rem 1rem; border-bottom: 1px solid #f0f0f0; }
+        .logo h1 { font-size: 1rem; font-weight: 700; color: #111; letter-spacing: -0.02em; }
+        .logo p  { font-size: 0.7rem; color: #aaa; margin-top: 0.15rem; }
+        #search-wrap { padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; }
         #search {
-            width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a;
-            color: #f0f0f0; padding: 0.4rem 0.6rem; font-family: monospace;
-            font-size: 0.8rem; border-radius: 4px; outline: none;
+            width: 100%; background: #f5f5f5; border: 1px solid #e8e8e8;
+            color: #111; padding: 0.4rem 0.6rem; font-size: 0.8rem;
+            border-radius: 5px; outline: none; font-family: inherit;
         }
-        #search::placeholder { color: #444; }
+        #search:focus { border-color: #bbb; }
+        #search::placeholder { color: #bbb; }
         #metric-list { overflow-y: auto; flex: 1; padding: 0.5rem 0; }
-        .metric-group { }
-        .metric-group-label {
-            font-size: 0.65rem; color: #333; text-transform: uppercase;
-            letter-spacing: 0.1em; padding: 0.8rem 1rem 0.3rem;
-        }
+        .group-label { font-size: 0.65rem; color: #ccc; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.9rem 1rem 0.3rem; }
         .metric-item {
-            padding: 0.45rem 1rem; font-size: 0.8rem; color: #888;
+            padding: 0.5rem 1rem; font-size: 0.82rem; color: #666;
             cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
-            transition: background 0.1s;
         }
-        .metric-item:hover { background: #161616; color: #ccc; }
-        .metric-item.active { color: #f7931a; background: #161616; }
-        .metric-item.soon { color: #333; cursor: default; }
-        .metric-item .dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: #2a2a2a; flex-shrink: 0;
-        }
-        .metric-item.active .dot { background: #f7931a; }
-        .metric-item.soon  .dot { background: #1a1a1a; }
+        .metric-item:hover { background: #f9f9f9; color: #111; }
+        .metric-item.active { color: #111; font-weight: 600; background: #f5f5f5; }
+        .metric-item.soon { color: #ccc; cursor: default; pointer-events: none; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; flex-shrink: 0; }
+        .metric-item.active .dot { background: #111; }
+        .metric-item.soon  .dot { background: #e8e8e8; }
 
         /* MAIN */
-        #main {
-            flex: 1; overflow-y: auto;
-            padding: 2rem;
-            display: flex; flex-direction: column; gap: 1.5rem;
+        #main { flex: 1; overflow-y: auto; padding: 2rem; }
+
+        /* HOME GRID */
+        #view-home { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 780px; }
+        .home-card {
+            background: #fff; border: 1px solid #e8e8e8; border-radius: 8px;
+            padding: 1.4rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .card {
-            background: #111; border: 1px solid #1e1e1e;
-            border-radius: 8px; padding: 1.5rem;
-        }
-        .card-title {
-            font-size: 0.8rem; color: #555; text-transform: uppercase;
-            letter-spacing: 0.1em; margin-bottom: 1.2rem;
-        }
-        .metric-row { display: flex; gap: 2.5rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
-        .stat .value { font-size: 1.8rem; color: #f7931a; font-weight: bold; }
-        .stat .label { font-size: 0.7rem; color: #444; margin-top: 0.2rem; }
+        .home-card:hover { border-color: #bbb; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .home-card.soon { cursor: default; opacity: 0.4; }
+        .home-card.soon:hover { border-color: #e8e8e8; box-shadow: none; }
+        .hc-label { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
+        .hc-value { font-size: 1.8rem; font-weight: 700; color: #111; line-height: 1; margin-bottom: 0.5rem; }
+        .hc-value.loading { font-size: 1rem; color: #ddd; font-weight: 400; }
         .badge {
-            display: inline-block; padding: 0.15rem 0.5rem;
-            border-radius: 3px; font-size: 0.7rem; font-weight: bold; margin-top: 0.4rem;
+            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
+            font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em;
         }
-        .badge-blue   { background: #00003a; color: #4488ff; }
-        .badge-green  { background: #003a00; color: #44ff44; }
-        .badge-orange { background: #3a1a00; color: #ff9900; }
-        .badge-red    { background: #3a0000; color: #ff4444; }
-        .hint { font-size: 0.75rem; color: #444; margin-bottom: 1rem; }
-        .updated { font-size: 0.65rem; color: #2a2a2a; margin-top: 1rem; }
+        .ok     { background: #f0faf4; color: #16a34a; }
+        .ko     { background: #fef2f2; color: #dc2626; }
+        .medium { background: #fff7ed; color: #ea580c; }
+        .neutral{ background: #f5f5f5; color: #888; }
+
+        /* DETAIL VIEW */
+        #view-detail { display: none; max-width: 780px; }
+        .detail-back { font-size: 0.8rem; color: #aaa; cursor: pointer; margin-bottom: 1.5rem; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .detail-back:hover { color: #111; }
+        .detail-title { font-size: 1.1rem; font-weight: 700; color: #111; margin-bottom: 0.25rem; }
+        .detail-desc  { font-size: 0.8rem; color: #aaa; margin-bottom: 1.5rem; }
+        .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+        .metric-row { display: flex; gap: 2.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .stat .val  { font-size: 1.6rem; font-weight: 700; color: #111; }
+        .stat .lbl  { font-size: 0.7rem; color: #aaa; margin-top: 0.15rem; }
+        .hint { font-size: 0.75rem; color: #bbb; margin-bottom: 1rem; }
+        .updated { font-size: 0.68rem; color: #ddd; margin-top: 1rem; }
         canvas { max-height: 200px; }
-        .loading { color: #333; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -91,84 +87,90 @@
         <p>Bitcoin On-Chain Analytics</p>
     </div>
     <div id="search-wrap">
-        <input id="search" type="text" placeholder="Search metric...">
+        <input id="search" type="text" placeholder="Search...">
     </div>
     <div id="metric-list">
-        <div class="metric-group">
-            <div class="metric-group-label">Market</div>
-            <div class="metric-item active" data-id="mvrv"><span class="dot"></span>MVRV Ratio</div>
-            <div class="metric-item soon"   data-id="nvt"><span class="dot"></span>NVT Ratio</div>
-        </div>
-        <div class="metric-group">
-            <div class="metric-group-label">Profitability</div>
-            <div class="metric-item active" data-id="sopr"><span class="dot"></span>SOPR</div>
-            <div class="metric-item soon"   data-id="mpi"><span class="dot"></span>Miner Pulse</div>
-        </div>
-        <div class="metric-group">
-            <div class="metric-group-label">Supply</div>
-            <div class="metric-item soon" data-id="hodl"><span class="dot"></span>HODL Waves</div>
-            <div class="metric-item soon" data-id="cdd"><span class="dot"></span>Coin Days Destroyed</div>
-        </div>
+        <div class="group-label">Market</div>
+        <div class="metric-item active" data-id="mvrv"><span class="dot"></span>MVRV Ratio</div>
+        <div class="metric-item soon"   data-id="nvt"><span class="dot"></span>NVT Ratio</div>
+
+        <div class="group-label">Profitability</div>
+        <div class="metric-item active" data-id="sopr"><span class="dot"></span>SOPR</div>
+
+        <div class="group-label">Supply</div>
+        <div class="metric-item soon" data-id="hodl"><span class="dot"></span>HODL Waves</div>
+        <div class="metric-item soon" data-id="cdd"><span class="dot"></span>Coin Days Destroyed</div>
     </div>
 </div>
 
-<!-- MAIN CONTENT -->
+<!-- MAIN -->
 <div id="main">
 
-    <!-- MVRV -->
-    <div class="card" id="card-mvrv">
-        <div class="card-title">MVRV Ratio — Market Value / Realized Value</div>
-        <div id="mvrv-loading" class="loading">Loading...</div>
-        <div id="mvrv-content" style="display:none">
-            <div class="metric-row">
-                <div class="stat">
-                    <div class="value" id="mvrv-value">—</div>
-                    <div class="label">MVRV</div>
-                    <div id="mvrv-badge" class="badge"></div>
-                </div>
-                <div class="stat">
-                    <div class="value" id="mvrv-price" style="font-size:1.2rem">—</div>
-                    <div class="label">BTC Price</div>
-                </div>
-                <div class="stat">
-                    <div class="value" id="mvrv-mcap" style="font-size:1.2rem">—</div>
-                    <div class="label">Market Cap</div>
-                </div>
-                <div class="stat">
-                    <div class="value" id="mvrv-rcap" style="font-size:1.2rem">—</div>
-                    <div class="label">Realized Cap</div>
-                </div>
-            </div>
-            <div class="hint">&lt;1 undervalued &nbsp;|&nbsp; 1–2 fair value &nbsp;|&nbsp; 2–3.5 caution &nbsp;|&nbsp; &gt;3.5 top zone</div>
-            <div class="updated" id="mvrv-updated"></div>
+    <!-- HOME -->
+    <div id="view-home">
+        <div class="home-card" data-id="mvrv">
+            <div class="hc-label">MVRV Ratio</div>
+            <div class="hc-value loading" id="hc-mvrv-val">—</div>
+            <span class="badge neutral" id="hc-mvrv-badge">loading</span>
+        </div>
+        <div class="home-card" data-id="sopr">
+            <div class="hc-label">SOPR</div>
+            <div class="hc-value loading" id="hc-sopr-val">—</div>
+            <span class="badge neutral" id="hc-sopr-badge">loading</span>
+        </div>
+        <div class="home-card soon">
+            <div class="hc-label">NVT Ratio</div>
+            <div class="hc-value" style="font-size:1rem; color:#ddd">coming soon</div>
+        </div>
+        <div class="home-card soon">
+            <div class="hc-label">HODL Waves</div>
+            <div class="hc-value" style="font-size:1rem; color:#ddd">coming soon</div>
         </div>
     </div>
 
-    <!-- SOPR -->
-    <div class="card" id="card-sopr">
-        <div class="card-title">
-            SOPR — Spent Output Profit Ratio
-            <span id="sopr-current" style="color:#f7931a; margin-left:1rem; font-size:1rem"></span>
+    <!-- DETAIL -->
+    <div id="view-detail">
+        <div class="detail-back" id="btn-back">← Home</div>
+        <div class="detail-title" id="detail-title"></div>
+        <div class="detail-desc"  id="detail-desc"></div>
+
+        <!-- MVRV detail -->
+        <div id="detail-mvrv" style="display:none">
+            <div class="card">
+                <div class="metric-row">
+                    <div class="stat"><div class="val" id="d-mvrv-val">—</div><div class="lbl">MVRV</div></div>
+                    <div class="stat"><div class="val" id="d-mvrv-price" style="font-size:1.1rem">—</div><div class="lbl">BTC Price</div></div>
+                    <div class="stat"><div class="val" id="d-mvrv-mcap"  style="font-size:1.1rem">—</div><div class="lbl">Market Cap</div></div>
+                    <div class="stat"><div class="val" id="d-mvrv-rcap"  style="font-size:1.1rem">—</div><div class="lbl">Realized Cap</div></div>
+                </div>
+                <div class="hint">&lt;1 undervalued &nbsp;|&nbsp; 1–2 fair value &nbsp;|&nbsp; 2–3.5 caution &nbsp;|&nbsp; &gt;3.5 top zone</div>
+                <div class="updated" id="d-mvrv-updated"></div>
+            </div>
         </div>
-        <div id="sopr-loading" class="loading">Loading...</div>
-        <div class="hint">&lt;1 selling at loss &nbsp;|&nbsp; =1 breakeven &nbsp;|&nbsp; &gt;1 selling at profit</div>
-        <canvas id="sopr-chart" style="display:none"></canvas>
-        <div class="updated" id="sopr-updated"></div>
+
+        <!-- SOPR detail -->
+        <div id="detail-sopr" style="display:none">
+            <div class="card">
+                <div class="metric-row">
+                    <div class="stat"><div class="val" id="d-sopr-val">—</div><div class="lbl">SOPR (today)</div></div>
+                </div>
+                <div class="hint">&lt;1 selling at loss &nbsp;|&nbsp; =1 breakeven &nbsp;|&nbsp; &gt;1 selling at profit</div>
+                <canvas id="sopr-chart"></canvas>
+                <div class="updated" id="d-sopr-updated"></div>
+            </div>
+        </div>
     </div>
 
 </div>
 
 <script>
-    // Search filter
-    document.getElementById('search').addEventListener('input', function() {
-        const q = this.value.toLowerCase();
-        document.querySelectorAll('.metric-item').forEach(el => {
-            el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
-        });
-        document.querySelectorAll('.metric-group-label').forEach(el => {
-            el.style.display = q ? 'none' : '';
-        });
-    });
+    const METRICS = {
+        mvrv: { label: 'MVRV Ratio', desc: 'Market Value vs Realized Value — measures if BTC is over or undervalued relative to its on-chain cost basis.' },
+        sopr: { label: 'SOPR', desc: 'Spent Output Profit Ratio — measures whether coins are being moved at a profit or a loss.' },
+    };
+
+    let data = { mvrv: null, sopr: null };
+    let soprChart = null;
 
     function fmt_usd(n) {
         if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
@@ -176,63 +178,120 @@
         return '$' + n.toLocaleString();
     }
 
-    function mvrv_badge(v) {
-        if (v < 1)   return { label: 'UNDERVALUED', cls: 'badge-blue' };
-        if (v < 2)   return { label: 'FAIR VALUE',  cls: 'badge-green' };
-        if (v < 3.5) return { label: 'CAUTION',     cls: 'badge-orange' };
-        return           { label: 'TOP ZONE',    cls: 'badge-red' };
+    function mvrv_signal(v) {
+        if (v < 1)   return { label: 'UNDERVALUED', cls: 'ok' };
+        if (v < 2)   return { label: 'FAIR VALUE',  cls: 'neutral' };
+        if (v < 3.5) return { label: 'CAUTION',     cls: 'medium' };
+        return           { label: 'TOP ZONE',    cls: 'ko' };
     }
 
-    // MVRV
-    fetch('/api/mvrv')
-        .then(r => r.json())
-        .then(d => {
-            document.getElementById('mvrv-loading').style.display = 'none';
-            document.getElementById('mvrv-content').style.display = 'block';
-            document.getElementById('mvrv-value').textContent = d.mvrv.toFixed(2);
-            document.getElementById('mvrv-price').textContent = fmt_usd(d.current_price);
-            document.getElementById('mvrv-mcap').textContent  = fmt_usd(d.market_cap);
-            document.getElementById('mvrv-rcap').textContent  = fmt_usd(d.realized_cap);
-            const b = mvrv_badge(d.mvrv);
-            const el = document.getElementById('mvrv-badge');
-            el.textContent = b.label; el.className = 'badge ' + b.cls;
-            document.getElementById('mvrv-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        })
-        .catch(() => { document.getElementById('mvrv-loading').textContent = 'Error.'; });
+    function sopr_signal(v) {
+        if (v < 1)    return { label: 'LOSS',    cls: 'ko' };
+        if (v < 1.02) return { label: 'BREAKEVEN', cls: 'neutral' };
+        return            { label: 'PROFIT',  cls: 'ok' };
+    }
 
-    // SOPR
-    fetch('/api/sopr')
-        .then(r => r.json())
-        .then(d => {
-            document.getElementById('sopr-loading').style.display = 'none';
-            document.getElementById('sopr-current').textContent = d.current ? d.current.toFixed(3) : '';
-            const canvas = document.getElementById('sopr-chart');
-            canvas.style.display = 'block';
-            new Chart(canvas, {
+    // Load MVRV
+    fetch('/api/mvrv').then(r => r.json()).then(d => {
+        data.mvrv = d;
+        const sig = mvrv_signal(d.mvrv);
+        // home card
+        const hv = document.getElementById('hc-mvrv-val');
+        hv.textContent = d.mvrv.toFixed(2); hv.classList.remove('loading');
+        const hb = document.getElementById('hc-mvrv-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        // detail
+        document.getElementById('d-mvrv-val').textContent   = d.mvrv.toFixed(2);
+        document.getElementById('d-mvrv-price').textContent = fmt_usd(d.current_price);
+        document.getElementById('d-mvrv-mcap').textContent  = fmt_usd(d.market_cap);
+        document.getElementById('d-mvrv-rcap').textContent  = fmt_usd(d.realized_cap);
+        document.getElementById('d-mvrv-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+    }).catch(() => {
+        document.getElementById('hc-mvrv-val').textContent = 'err';
+        document.getElementById('hc-mvrv-badge').textContent = 'error';
+    });
+
+    // Load SOPR
+    fetch('/api/sopr').then(r => r.json()).then(d => {
+        data.sopr = d;
+        const sig = sopr_signal(d.current);
+        // home card
+        const hv = document.getElementById('hc-sopr-val');
+        hv.textContent = d.current ? d.current.toFixed(3) : '—'; hv.classList.remove('loading');
+        const hb = document.getElementById('hc-sopr-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        // detail value
+        document.getElementById('d-sopr-val').textContent = d.current ? d.current.toFixed(3) : '—';
+        document.getElementById('d-sopr-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        // chart (only rendered when entering detail)
+    }).catch(() => {
+        document.getElementById('hc-sopr-val').textContent = 'err';
+        document.getElementById('hc-sopr-badge').textContent = 'error';
+    });
+
+    // Navigation
+    function showHome() {
+        document.getElementById('view-home').style.display = 'grid';
+        document.getElementById('view-detail').style.display = 'none';
+        document.querySelectorAll('.metric-item').forEach(el => el.classList.remove('active'));
+    }
+
+    function showDetail(id) {
+        if (!METRICS[id]) return;
+        document.getElementById('view-home').style.display = 'none';
+        const det = document.getElementById('view-detail');
+        det.style.display = 'block';
+        document.getElementById('detail-title').textContent = METRICS[id].label;
+        document.getElementById('detail-desc').textContent  = METRICS[id].desc;
+        // hide all detail panels, show the right one
+        ['mvrv','sopr'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
+        // sidebar active state
+        document.querySelectorAll('.metric-item').forEach(el => {
+            el.classList.toggle('active', el.dataset.id === id);
+        });
+        // render SOPR chart on first open
+        if (id === 'sopr' && data.sopr && !soprChart) {
+            soprChart = new Chart(document.getElementById('sopr-chart'), {
                 type: 'line',
                 data: {
-                    labels: d.labels,
-                    datasets: [{
-                        data: d.values,
-                        borderColor: '#f7931a',
-                        borderWidth: 1.5,
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0.2,
-                    }]
+                    labels: data.sopr.labels,
+                    datasets: [{ data: data.sopr.values, borderColor: '#111', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }]
                 },
                 options: {
                     animation: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { ticks: { color: '#444', maxTicksLimit: 8, font: { family: 'monospace', size: 10 } }, grid: { color: '#161616' } },
-                        y: { ticks: { color: '#444', font: { family: 'monospace', size: 10 } }, grid: { color: '#161616' } }
+                        x: { ticks: { color: '#bbb', maxTicksLimit: 8, font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+                        y: { ticks: { color: '#bbb', font: { size: 11 } }, grid: { color: '#f0f0f0' } }
                     }
                 }
             });
-            document.getElementById('sopr-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        })
-        .catch(() => { document.getElementById('sopr-loading').textContent = 'Error.'; });
+        }
+    }
+
+    // Home cards
+    document.querySelectorAll('.home-card:not(.soon)').forEach(el => {
+        el.addEventListener('click', () => showDetail(el.dataset.id));
+    });
+
+    // Sidebar items
+    document.querySelectorAll('.metric-item:not(.soon)').forEach(el => {
+        el.addEventListener('click', () => showDetail(el.dataset.id));
+    });
+
+    // Back button
+    document.getElementById('btn-back').addEventListener('click', showHome);
+
+    // Search
+    document.getElementById('search').addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('.metric-item').forEach(el => {
+            el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+        document.querySelectorAll('.group-label').forEach(el => {
+            el.style.display = q ? 'none' : '';
+        });
+    });
 </script>
 </body>
 </html>
