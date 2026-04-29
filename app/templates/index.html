@@ -150,90 +150,7 @@
         <div class="detail-title"   id="detail-title"></div>
         <div class="detail-acronym" id="detail-acronym"></div>
 
-        <!-- MVRV detail -->
-        <div id="detail-mvrv" style="display:none">
-            <div class="card">
-                <div class="metric-row">
-                    <div class="stat"><div class="val" id="d-mvrv-val">—</div><div class="lbl">MVRV</div></div>
-                    <div class="stat"><div class="val" id="d-mvrv-price" style="font-size:1.1rem">—</div><div class="lbl">BTC Price</div></div>
-                    <div class="stat"><div class="val" id="d-mvrv-mcap"  style="font-size:1.1rem">—</div><div class="lbl">Market Cap</div></div>
-                    <div class="stat"><div class="val" id="d-mvrv-rcap"  style="font-size:1.1rem">—</div><div class="lbl">Realized Cap</div></div>
-                </div>
-                <div class="hint">&lt;1 undervalued &nbsp;|&nbsp; 1–2 fair value &nbsp;|&nbsp; 2–3.5 caution &nbsp;|&nbsp; &gt;3.5 top zone</div>
-                <canvas id="mvrv-chart-detail" style="max-height:220px; margin-top:1rem"></canvas>
-                <div class="updated" id="d-mvrv-updated"></div>
-                <div class="detail-text" id="d-mvrv-text"></div>
-            </div>
-        </div>
-
-        <!-- SOPR detail -->
-        <div id="detail-sopr" style="display:none">
-            <div class="card">
-                <div class="metric-row">
-                    <div class="stat"><div class="val" id="d-sopr-val">—</div><div class="lbl">SOPR (today)</div></div>
-                </div>
-                <div class="hint">&lt;1 selling at loss &nbsp;|&nbsp; =1 breakeven &nbsp;|&nbsp; &gt;1 selling at profit</div>
-                <canvas id="sopr-chart-detail" style="max-height:220px"></canvas>
-                <div class="updated" id="d-sopr-updated"></div>
-                <div class="detail-text" id="d-sopr-text"></div>
-            </div>
-        </div>
-        <!-- NVT detail -->
-        <div id="detail-nvt" style="display:none">
-            <div class="card">
-                <div class="metric-row">
-                    <div class="stat"><div class="val" id="d-nvt-val">—</div><div class="lbl">NVT (28d MA)</div></div>
-                </div>
-                <div class="hint">&lt;50 undervalued &nbsp;|&nbsp; 50–100 fair &nbsp;|&nbsp; 100–150 caution &nbsp;|&nbsp; &gt;150 overvalued</div>
-                <canvas id="nvt-chart-detail" style="max-height:220px"></canvas>
-                <div class="updated" id="d-nvt-updated"></div>
-                <div class="detail-text" id="d-nvt-text"></div>
-            </div>
-        </div>
-
-        <!-- HODL detail -->
-        <div id="detail-hodl" style="display:none">
-            <div class="card">
-                <div class="metric-row">
-                    <div class="stat"><div class="val" id="d-hodl-lth">—</div><div class="lbl">LTH (&gt; 1 year)</div></div>
-                    <div class="stat"><div class="val" id="d-hodl-sth">—</div><div class="lbl">STH (&lt; 1 year)</div></div>
-                </div>
-                <div class="hint">LTH &gt; 70% strong accumulation &nbsp;|&nbsp; LTH &lt; 50% distribution phase</div>
-                <canvas id="hodl-chart-detail" style="max-height:320px"></canvas>
-                <div class="updated" id="d-hodl-updated"></div>
-                <div class="detail-text" id="d-hodl-text"></div>
-            </div>
-        </div>
-
-        <!-- CDD detail -->
-        <div id="detail-cdd" style="display:none">
-            <div class="card">
-                <div class="metric-row">
-                    <div class="stat"><div class="val" id="d-cdd-val">—</div><div class="lbl">CDD (today)</div></div>
-                    <div class="stat"><div class="val" id="d-cdd-ma">—</div><div class="lbl">90d Average</div></div>
-                </div>
-                <div class="hint">Spike above 2× 90d avg signals old coins moving — potential distribution</div>
-                <canvas id="cdd-chart-detail" style="max-height:220px"></canvas>
-                <div class="updated" id="d-cdd-updated"></div>
-                <div class="detail-text" id="d-cdd-text"></div>
-            </div>
-        </div>
-
-        <!-- Exchange Flow detail -->
-        <div id="detail-exchange_flow" style="display:none">
-            <div class="card">
-                <div class="metric-row">
-                    <div class="stat"><div class="val" id="d-ef-inflow">—</div><div class="lbl">Inflow (today)</div></div>
-                    <div class="stat"><div class="val" id="d-ef-outflow">—</div><div class="lbl">Outflow (today)</div></div>
-                    <div class="stat"><div class="val" id="d-ef-net">—</div><div class="lbl">Net Flow</div></div>
-                </div>
-                <div class="hint">Net &gt; 0 (more inflow) bearish — BTC entering exchanges to be sold &nbsp;|&nbsp; Net &lt; 0 bullish — accumulation</div>
-                <canvas id="ef-chart-detail" style="max-height:220px; margin-top:1rem"></canvas>
-                <div id="d-ef-top" style="margin-top:1rem"></div>
-                <div class="updated" id="d-ef-updated"></div>
-                <div class="detail-text" id="d-ef-text"></div>
-            </div>
-        </div>
+        <div id="detail-panels"></div>
     </div>
 
 </div>
@@ -243,26 +160,61 @@
         mvrv: {
             label: 'MVRV Ratio', acronym: 'Market Value / Realized Value', live: true, group: 'Market',
             detail: 'MVRV compares the current market capitalization to the Realized Cap — the sum of all UTXOs valued at the price when they last moved. Values below 1 indicate the market is trading below the aggregate cost basis of holders, historically a strong accumulation zone. Values above 3.5 have consistently coincided with cycle tops. MVRV is a macro cycle indicator, not a short-term trading signal.',
+            stats: [
+                { id: 'val',   label: 'MVRV' },
+                { id: 'price', label: 'BTC Price',    small: true },
+                { id: 'mcap',  label: 'Market Cap',   small: true },
+                { id: 'rcap',  label: 'Realized Cap', small: true },
+            ],
+            hint: '&lt;1 undervalued &nbsp;|&nbsp; 1–2 fair value &nbsp;|&nbsp; 2–3.5 caution &nbsp;|&nbsp; &gt;3.5 top zone',
+            chartHeight: 220,
         },
         sopr: {
             label: 'SOPR', acronym: 'Spent Output Profit Ratio', live: true, group: 'Profitability',
             detail: 'SOPR measures whether coins moved on a given day were sold at a profit or a loss relative to their acquisition price. A value above 1 means that on average, coins were moved at a gain. Values below 1 signal selling at a loss — often a sign of capitulation or an accumulation phase. A recovery of SOPR back above 1 after a sustained period below is considered a bullish signal.',
+            stats: [{ id: 'val', label: 'SOPR (today)' }],
+            hint: '&lt;1 selling at loss &nbsp;|&nbsp; =1 breakeven &nbsp;|&nbsp; &gt;1 selling at profit',
+            chartHeight: 220,
         },
         nvt: {
             label: 'NVT Ratio', acronym: 'Network Value to Transactions', live: true, group: 'Market',
             detail: 'NVT compares Bitcoin\'s market cap to its on-chain transaction volume (28-day moving average). It works like a P/E ratio for Bitcoin: a high NVT means the network is valued far above its actual usage, historically a sign of overvaluation. A low NVT signals strong utility relative to price — a potential buy zone.',
+            stats: [{ id: 'val', label: 'NVT (28d MA)' }],
+            hint: '&lt;50 undervalued &nbsp;|&nbsp; 50–100 fair &nbsp;|&nbsp; 100–150 caution &nbsp;|&nbsp; &gt;150 overvalued',
+            chartHeight: 220,
         },
         hodl: {
             label: 'HODL Waves', acronym: 'Age distribution of BTC supply', live: true, group: 'Supply',
             detail: 'HODL Waves show what percentage of Bitcoin supply has not moved within each time band. A rising Long-Term Holder (LTH) share — coins unmoved for over 1 year — signals conviction and supply contraction. Distribution phases are visible when old coins start moving, reducing the LTH percentage.',
+            stats: [
+                { id: 'lth', label: 'LTH (&gt; 1 year)' },
+                { id: 'sth', label: 'STH (&lt; 1 year)' },
+            ],
+            hint: 'LTH &gt; 70% strong accumulation &nbsp;|&nbsp; LTH &lt; 50% distribution phase',
+            chartHeight: 320,
+            chartType: 'hodl',
         },
         cdd: {
             label: 'CDD', acronym: 'Coin Days Destroyed', live: true, group: 'Supply',
             detail: 'Coin Days Destroyed weights each BTC transaction by how long the coins sat idle before moving. One coin held for 100 days and then spent destroys 100 coin-days. A spike in CDD means old, long-dormant coins are being moved — often a sign of large holders distributing near market tops.',
+            stats: [
+                { id: 'val', label: 'CDD (today)' },
+                { id: 'ma',  label: '90d Average' },
+            ],
+            hint: 'Spike above 2&times; 90d avg signals old coins moving — potential distribution',
+            chartHeight: 220,
         },
         exchange_flow: {
             label: 'Exchange Flows', acronym: 'BTC inflows & outflows to exchanges', live: true, group: 'Flows',
             detail: 'Exchange Flow tracks Bitcoin moving into and out of known exchange wallets (761 labeled addresses across 50+ exchanges, sourced from Dune Analytics). Net inflow — more BTC entering exchanges — is historically bearish, as coins are often deposited to be sold. Net outflow — BTC leaving exchanges — suggests accumulation and reduced sell pressure.',
+            stats: [
+                { id: 'inflow',  label: 'Inflow (today)' },
+                { id: 'outflow', label: 'Outflow (today)' },
+                { id: 'net',     label: 'Net Flow' },
+            ],
+            hint: 'Net &gt; 0 (more inflow) bearish — BTC entering exchanges &nbsp;|&nbsp; Net &lt; 0 bullish — accumulation',
+            chartHeight: 220,
+            extra: 'top',
         },
     };
 
@@ -294,6 +246,34 @@
                 </div>
             </div>`;
     }
+
+    function makeDetailPanel(id) {
+        const m = METRICS[id];
+        const statsHtml = (m.stats || []).map(s =>
+            `<div class="stat">
+                <div class="val" id="d-${id}-${s.id}"${s.small ? ' style="font-size:1.1rem"' : ''}>—</div>
+                <div class="lbl">${s.label}</div>
+            </div>`
+        ).join('');
+        const h = m.chartHeight || 220;
+        return `
+            <div id="detail-${id}" style="display:none">
+                <div class="card">
+                    <div class="metric-row">${statsHtml}</div>
+                    <div class="hint">${m.hint || ''}</div>
+                    <canvas id="${id}-chart-detail" style="max-height:${h}px; margin-top:1rem"></canvas>
+                    ${m.extra === 'top' ? `<div id="d-${id}-extra" style="margin-top:1rem"></div>` : ''}
+                    <div class="updated" id="d-${id}-updated"></div>
+                    <div class="detail-text" id="d-${id}-text"></div>
+                </div>
+            </div>`;
+    }
+
+    function buildDetailPanels() {
+        document.getElementById('detail-panels').innerHTML =
+            Object.keys(METRICS).map(makeDetailPanel).join('');
+    }
+    buildDetailPanels();
 
     function saveWidgetOrder() {
         const order = [...document.querySelectorAll('#view-home .home-card')].map(c => c.dataset.id);
@@ -561,10 +541,10 @@
         document.getElementById('hc-exchange_flow-val').textContent = fmt_btc(d.current_net);
         const hb = document.getElementById('hc-exchange_flow-badge');
         hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
-        document.getElementById('d-ef-inflow').textContent  = fmt_btc(d.current_inflow);
-        document.getElementById('d-ef-outflow').textContent = fmt_btc(d.current_outflow);
-        document.getElementById('d-ef-net').textContent     = fmt_btc(d.current_net);
-        document.getElementById('d-ef-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · ' + d.address_count + ' addresses';
+        document.getElementById('d-exchange_flow-inflow').textContent  = fmt_btc(d.current_inflow);
+        document.getElementById('d-exchange_flow-outflow').textContent = fmt_btc(d.current_outflow);
+        document.getElementById('d-exchange_flow-net').textContent     = fmt_btc(d.current_net);
+        document.getElementById('d-exchange_flow-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · ' + d.address_count + ' addresses';
         cardChart('hc-exchange_flow-chart', d.labels, d.net, sigColor(sig.cls), true);
         cardReady('exchange_flow');
     }).catch(() => { document.getElementById('hc-exchange_flow-val').textContent = 'error'; cardReady('exchange_flow'); });
@@ -617,9 +597,9 @@
         if (id === 'exchange_flow' && data.exchange_flow) {
             const d = data.exchange_flow;
             const sig = ef_signal(d.current_net);
-            cardChart('ef-chart-detail', d.labels, d.net, sigColor(sig.cls), false);
-            const topEl = document.getElementById('d-ef-top');
-            if (d.top_exchanges && d.top_exchanges.length) {
+            cardChart('exchange_flow-chart-detail', d.labels, d.net, sigColor(sig.cls), false);
+            const topEl = document.getElementById('d-exchange_flow-extra');
+            if (topEl && d.top_exchanges && d.top_exchanges.length) {
                 topEl.innerHTML = '<div style="font-size:0.75rem;color:#888;margin-bottom:0.5rem">Top exchanges (30d)</div>' +
                     d.top_exchanges.map(e =>
                         `<div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.2rem 0;border-bottom:1px solid #f5f5f5">
