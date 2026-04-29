@@ -28,6 +28,7 @@ def _sf_model_price(sf):
 
 def get_stf():
     con = sqlite3.connect(DB_PATH)
+    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
     cached = _cache_get(con, "stf")
     if cached:
         return cached

@@ -52,6 +52,7 @@ def _cache_set(con, key, value):
 
 def get_lth_sth():
     con = sqlite3.connect(DB_PATH)
+    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
     cached = _cache_get(con, "lth_sth")
     if cached:
         return cached
