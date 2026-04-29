@@ -362,6 +362,16 @@
         </tbody>
     </table>
 
+    <h3>Summary mode</h3>
+    <p>Add <code>?summary=true</code> to any endpoint to get only scalar fields — no time-series arrays. Useful for bots, alerts, and lightweight integrations.</p>
+    <table class="api-table" style="margin-top:0.75rem">
+        <thead><tr><th>Example</th><th>Response</th></tr></thead>
+        <tbody>
+            <tr><td>/api/mvrv</td><td>mvrv, market_cap, realized_cap, current_price, <strong>labels[], values[]</strong>, updated_at</td></tr>
+            <tr><td>/api/mvrv?summary=true</td><td>mvrv, market_cap, realized_cap, current_price, updated_at</td></tr>
+        </tbody>
+    </table>
+
     <h3>Notes</h3>
     <p>Responses are cached for <strong>24 hours</strong>. On-chain data reflects blockchain state with approximately a 1–2 day lag (BigQuery public dataset update cadence).</p>
     <p>No rate limits are currently enforced, but please be reasonable. All data is provided as-is for informational purposes.</p>
