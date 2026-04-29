@@ -38,6 +38,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f2f2f2; color: #111; display: flex; flex-direction: column; height: 100vh; overflow: hidden; font-size: 14px; }
@@ -129,6 +130,10 @@
             #view-home { grid-template-columns: 1fr 1fr; }
         }
 
+        @media (max-width: 640px) {
+            #page-donate .cp-inner > div[style*="grid"] { grid-template-columns: 1fr !important; }
+        }
+
         /* Mobile */
         @media (max-width: 640px) {
             #sidebar { position: fixed; left: 0; top: 46px; transform: translateX(-100%); height: calc(100vh - 46px); }
@@ -208,6 +213,7 @@
         <a class="nav-link active" data-page="dashboard">Dashboard</a>
         <a class="nav-link" data-page="about">Data Sources</a>
         <a class="nav-link" data-page="api">API</a>
+        <a class="nav-link" data-page="donate">Support</a>
     </div>
 </nav>
 
@@ -362,6 +368,36 @@
     <p>The source code for BTCFunk is available on <a href="https://github.com/lucarocchi/btcfunk" target="_blank">GitHub</a>.</p>
 </div>
 </div><!-- /page-api -->
+
+<!-- ── SUPPORT PAGE ── -->
+<div id="page-donate" class="content-page">
+<div class="cp-inner">
+    <h2>Support BTCFunk</h2>
+    <p class="cp-subtitle">BTCFunk is free, open, and has no ads. If you find it useful, a small donation keeps the servers running and the data flowing.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem">
+
+        <div class="source-card" style="text-align:center">
+            <div class="tag" style="background:#fff9e6;color:#b45309">⚡ Lightning</div>
+            <h4 style="margin:0.6rem 0 0.3rem">Instant · Zero fees</h4>
+            <canvas id="qr-ln" style="margin:0.75rem auto;display:block"></canvas>
+            <div style="font-size:0.72rem;color:#555;word-break:break-all;margin-bottom:0.6rem">amazingbadger664@walletofsatoshi.com</div>
+            <button onclick="copyText('amazingbadger664@walletofsatoshi.com', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
+        </div>
+
+        <div class="source-card" style="text-align:center">
+            <div class="tag" style="background:#f0faf4;color:#16a34a">₿ Bitcoin on-chain</div>
+            <h4 style="margin:0.6rem 0 0.3rem">Any amount · Any wallet</h4>
+            <canvas id="qr-btc" style="margin:0.75rem auto;display:block"></canvas>
+            <div style="font-size:0.72rem;color:#555;word-break:break-all;margin-bottom:0.6rem">3Fhqkr4mAK6SHbAD9oh4ATcYqPh6F2x43X</div>
+            <button onclick="copyText('3Fhqkr4mAK6SHbAD9oh4ATcYqPh6F2x43X', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
+        </div>
+
+    </div>
+
+    <p style="font-size:0.78rem;color:#999;margin-top:1.5rem;text-align:center">Thank you ₿</p>
+</div>
+</div><!-- /page-donate -->
 
 </div><!-- /app-body -->
 
@@ -1379,14 +1415,31 @@
         document.querySelectorAll('.group-label').forEach(el => el.style.display = q ? 'none' : '');
     });
 
+    function copyText(text, btn) {
+        navigator.clipboard.writeText(text).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = orig, 1500);
+        });
+    }
+
+    let qrGenerated = false;
+    function generateQR() {
+        if (qrGenerated) return;
+        qrGenerated = true;
+        QRCode.toCanvas(document.getElementById('qr-ln'),  'lightning:amazingbadger664@walletofsatoshi.com', { width: 160, margin: 1 });
+        QRCode.toCanvas(document.getElementById('qr-btc'), 'bitcoin:3Fhqkr4mAK6SHbAD9oh4ATcYqPh6F2x43X',        { width: 160, margin: 1 });
+    }
+
     // Page navigation
     function showPage(name) {
         document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === name));
         document.getElementById('page-dashboard').style.display = name === 'dashboard' ? 'flex' : 'none';
-        ['about', 'api'].forEach(p => {
+        ['about', 'api', 'donate'].forEach(p => {
             const el = document.getElementById('page-' + p);
             el.classList.toggle('active', p === name);
         });
+        if (name === 'donate') generateQR();
     }
     document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => showPage(l.dataset.page)));
     showPage('dashboard');
