@@ -220,12 +220,11 @@
 
 <!-- TOP NAV -->
 <nav id="topnav">
-    <div class="nav-logo">
+    <div class="nav-logo" onclick="showPage('landing')" style="cursor:pointer;">
         <button id="hamburger">☰</button>
         BTCFunk <span>Bitcoin On-Chain Analytics</span>
     </div>
     <div class="nav-links">
-        <a class="nav-link active" data-page="landing"><span class="nav-icon"><i data-feather="home"></i></span><span class="nav-text">Home</span></a>
         <a class="nav-link" data-page="dashboard"><span class="nav-icon"><i data-feather="grid"></i></span><span class="nav-text">Dashboard</span></a>
         <a class="nav-link" data-page="about"><span class="nav-icon"><i data-feather="database"></i></span><span class="nav-text">Data Sources</span></a>
         <a class="nav-link" data-page="api"><span class="nav-icon"><i data-feather="zap"></i></span><span class="nav-text">API</span></a>
@@ -1475,10 +1474,12 @@
     function showPage(name) {
         document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === name));
         document.getElementById('page-dashboard').style.display = name === 'dashboard' ? 'flex' : 'none';
+        document.getElementById('hamburger').style.display = name === 'dashboard' ? '' : 'none';
         ['landing', 'about', 'api', 'donate'].forEach(p => {
             const el = document.getElementById('page-' + p);
             el.classList.toggle('active', p === name);
         });
+        if (name !== 'dashboard') closeSidebar();
         if (name === 'donate') generateQR();
     }
     document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => showPage(l.dataset.page)));
