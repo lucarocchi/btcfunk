@@ -53,7 +53,8 @@ def get_rhodl():
     prices = {r[0]: r[1] for r in con.execute("SELECT day, price FROM btc_prices").fetchall()}
     con.close()
 
-    current_price = max(prices.values()) if prices else 0
+    from app.metrics.mvrv import _fetch_live_price
+    current_price = _fetch_live_price()
     today = datetime.now(timezone.utc).date()
 
     profit_btc = 0.0
