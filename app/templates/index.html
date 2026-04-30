@@ -180,8 +180,19 @@
         #search:focus { border-color: var(--text-6); }
         #search::placeholder { color: var(--text-6); }
         #metric-list { overflow-y: auto; flex: 1; padding: 0.5rem 0; }
-        .group-label { font-size: 0.65rem; color: var(--text-6); text-transform: uppercase; letter-spacing: 0.08em; padding: 0.9rem 1rem 0.3rem; }
-        .metric-item { padding: 0.5rem 1rem; font-size: 0.82rem; color: var(--text-2); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+        .group-label {
+            font-size: 0.72rem; color: var(--text-2); font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 0.85rem 0.85rem 0.3rem 1rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+            user-select: none;
+        }
+        .group-label:hover { color: var(--text); }
+        .group-chevron { transition: transform 0.18s; color: var(--text-5); flex-shrink: 0; }
+        .group-wrap.collapsed .group-chevron { transform: rotate(-90deg); }
+        .group-items { overflow: hidden; }
+        .group-wrap.collapsed .group-items { display: none; }
+        .metric-item { padding: 0.45rem 1rem 0.45rem 1.6rem; font-size: 0.82rem; color: var(--text-3); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
         .metric-item:hover { background: var(--surface-2); color: var(--text); }
         .metric-item.active { color: var(--text); font-weight: 600; background: var(--bg); }
         .metric-item.soon { color: var(--text-8); cursor: default; pointer-events: none; }
@@ -1088,13 +1099,22 @@
         });
         const list = document.getElementById('metric-list');
         list.innerHTML = Object.entries(groups).map(([group, items]) => `
-            <div class="group-label">${group}</div>
-            ${items.map(m => `
-                <div class="metric-item${m.live ? '' : ' soon'}" data-id="${m.id}">${m.label}
-                </div>`).join('')}
+            <div class="group-wrap" data-group="${group}">
+                <div class="group-label" onclick="toggleGroup(this.closest('.group-wrap'))">
+                    <span>${group}</span>
+                    <svg class="group-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="group-items">
+                    ${items.map(m => `<div class="metric-item${m.live ? '' : ' soon'}" data-id="${m.id}">${m.label}</div>`).join('')}
+                </div>
+            </div>
         `).join('');
         document.querySelectorAll('.metric-item:not(.soon)').forEach(el =>
             el.addEventListener('click', () => showDetail(el.dataset.id)));
+    }
+
+    function toggleGroup(wrap) {
+        wrap.classList.toggle('collapsed');
     }
     buildSidebar();
 
