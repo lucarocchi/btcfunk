@@ -40,78 +40,159 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        :root {
+            --bg:        #f2f2f2;
+            --surface:   #fff;
+            --surface-2: #f7f7f7;
+            --surface-3: #f5f5f5;
+            --border:    #ddd;
+            --border-2:  #eee;
+            --border-3:  #f0f0f0;
+            --text:      #111;
+            --text-2:    #333;
+            --text-3:    #555;
+            --text-4:    #666;
+            --text-5:    #888;
+            --text-6:    #999;
+            --text-7:    #aaa;
+            --text-8:    #bbb;
+            --text-9:    #ccc;
+            --accent:    #111;
+            --accent-fg: #fff;
+        }
+        [data-theme="dark"] {
+            --bg:        #0d0d0d;
+            --surface:   #1a1a1a;
+            --surface-2: #222;
+            --surface-3: #1e1e1e;
+            --border:    #2a2a2a;
+            --border-2:  #222;
+            --border-3:  #1e1e1e;
+            --text:      #f0f0f0;
+            --text-2:    #d0d0d0;
+            --text-3:    #b0b0b0;
+            --text-4:    #909090;
+            --text-5:    #707070;
+            --text-6:    #606060;
+            --text-7:    #505050;
+            --text-8:    #404040;
+            --text-9:    #333;
+            --accent:    #f0f0f0;
+            --accent-fg: #111;
+        }
+        [data-theme="midnight"] {
+            --bg:        #070d1a;
+            --surface:   #0d1526;
+            --surface-2: #111d33;
+            --surface-3: #0f1a2e;
+            --border:    #1e2d4a;
+            --border-2:  #162038;
+            --border-3:  #111a2e;
+            --text:      #c8d8f0;
+            --text-2:    #a0b8d8;
+            --text-3:    #7898b8;
+            --text-4:    #5878a0;
+            --text-5:    #406888;
+            --text-6:    #305070;
+            --text-7:    #204060;
+            --text-8:    #183050;
+            --text-9:    #102040;
+            --accent:    #4a9eff;
+            --accent-fg: #fff;
+        }
+        [data-theme="amber"] {
+            --bg:        #0a0800;
+            --surface:   #140f00;
+            --surface-2: #1a1400;
+            --surface-3: #161100;
+            --border:    #2a2000;
+            --border-2:  #201800;
+            --border-3:  #181200;
+            --text:      #ffb800;
+            --text-2:    #e0a000;
+            --text-3:    #c08800;
+            --text-4:    #a07000;
+            --text-5:    #806000;
+            --text-6:    #604800;
+            --text-7:    #483800;
+            --text-8:    #302800;
+            --text-9:    #201800;
+            --accent:    #ffb800;
+            --accent-fg: #0a0800;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f2f2f2; color: #111; display: flex; flex-direction: column; height: 100vh; overflow: hidden; font-size: 14px; padding-bottom: 32px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; font-size: 14px; padding-bottom: 32px; }
 
         /* TOP NAV */
-        #topnav { display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; height: 46px; min-height: 46px; background: #fff; border-bottom: 1px solid #ddd; z-index: 150; }
-        .nav-logo { font-size: 0.9rem; font-weight: 700; color: #111; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.75rem; }
-        .nav-logo span { font-weight: 400; color: #aaa; font-size: 0.72rem; }
+        #topnav { display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem; height: 46px; min-height: 46px; background: var(--surface); border-bottom: 1px solid var(--border); z-index: 150; }
+        .nav-logo { font-size: 0.9rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.75rem; }
+        .nav-logo span { font-weight: 400; color: var(--text-7); font-size: 0.72rem; }
         .nav-links { display: flex; }
-        .nav-link { padding: 0 0.9rem; font-size: 0.8rem; color: #666; text-decoration: none; height: 46px; display: flex; align-items: center; border-bottom: 2px solid transparent; cursor: pointer; }
-        .nav-link:hover { color: #111; }
-        .nav-link.active { color: #111; border-bottom-color: #111; font-weight: 500; }
+        .nav-link { padding: 0 0.9rem; font-size: 0.8rem; color: var(--text-4); text-decoration: none; height: 46px; display: flex; align-items: center; border-bottom: 2px solid transparent; cursor: pointer; }
+        .nav-link:hover { color: var(--text); }
+        .nav-link.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
 
         /* APP BODY */
         #app-body { flex: 1; display: flex; overflow: hidden; }
         #page-dashboard { display: flex; flex: 1; overflow: hidden; }
-        .content-page { display: none; flex: 1; overflow-y: auto; padding: 2.5rem 2.5rem 4rem; background: #f2f2f2; }
-        #site-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; background: #fff; border-top: 1px solid #ddd; display: flex; align-items: center; justify-content: flex-end; padding: 0 1.25rem; font-size: 0.72rem; z-index: 100; }
-        #site-footer a { color: #555; text-decoration: none; font-weight: 500; }
-        #site-footer a:hover { color: #111; }
+        .content-page { display: none; flex: 1; overflow-y: auto; padding: 2.5rem 2.5rem 4rem; background: var(--bg); }
+        #site-footer { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 1.25rem; font-size: 0.72rem; z-index: 100; }
+        #site-footer a { color: var(--text-3); text-decoration: none; font-weight: 500; }
+        #site-footer a:hover { color: var(--text); }
         .content-page.active { display: block; }
         .cp-inner { max-width: 860px; margin: 0 auto; }
-        .cp-inner h2 { font-size: 1.2rem; font-weight: 700; color: #111; margin-bottom: 0.4rem; }
-        .cp-inner h3 { font-size: 0.9rem; font-weight: 600; color: #111; margin: 1.8rem 0 0.5rem; }
-        .cp-inner p  { font-size: 0.82rem; color: #555; line-height: 1.7; margin-bottom: 0.6rem; }
-        .cp-inner code { background: #f0f0f0; border-radius: 3px; padding: 0.1rem 0.35rem; font-size: 0.78rem; color: #333; }
-        .cp-inner a { color: #111; }
-        .cp-subtitle { font-size: 0.78rem; color: #999; margin-bottom: 2rem; }
-        .source-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.2rem 1.4rem; margin-bottom: 1rem; }
-        .source-card h4 { font-size: 0.85rem; font-weight: 600; color: #111; margin-bottom: 0.35rem; }
-        .source-card p  { font-size: 0.8rem; color: #666; line-height: 1.6; margin: 0; }
-        .source-card .tag { display: inline-block; font-size: 0.65rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 3px; background: #f0f0f0; color: #666; margin-bottom: 0.4rem; }
-        .api-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
-        .api-table th { background: #f7f7f7; text-align: left; padding: 0.55rem 0.9rem; font-size: 0.72rem; color: #666; font-weight: 600; border-bottom: 1px solid #eee; }
-        .api-table td { padding: 0.5rem 0.9rem; border-bottom: 1px solid #f5f5f5; vertical-align: top; color: #333; }
+        .cp-inner h2 { font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+        .cp-inner h3 { font-size: 0.9rem; font-weight: 600; color: var(--text); margin: 1.8rem 0 0.5rem; }
+        .cp-inner p  { font-size: 0.82rem; color: var(--text-3); line-height: 1.7; margin-bottom: 0.6rem; }
+        .cp-inner code { background: var(--surface-3); border-radius: 3px; padding: 0.1rem 0.35rem; font-size: 0.78rem; color: var(--text-2); }
+        .cp-inner a { color: var(--text); }
+        .cp-subtitle { font-size: 0.78rem; color: var(--text-6); margin-bottom: 2rem; }
+        .source-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.4rem; margin-bottom: 1rem; }
+        .source-card h4 { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.35rem; }
+        .source-card p  { font-size: 0.8rem; color: var(--text-4); line-height: 1.6; margin: 0; }
+        .source-card .tag { display: inline-block; font-size: 0.65rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 3px; background: var(--surface-3); color: var(--text-4); margin-bottom: 0.4rem; }
+        .api-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
+        .api-table th { background: var(--surface-2); text-align: left; padding: 0.55rem 0.9rem; font-size: 0.72rem; color: var(--text-4); font-weight: 600; border-bottom: 1px solid var(--border-2); }
+        .api-table td { padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--border-3); vertical-align: top; color: var(--text-2); }
         .api-table tr:last-child td { border-bottom: none; }
-        .api-table td:first-child { font-family: monospace; font-size: 0.78rem; color: #111; white-space: nowrap; }
-        .api-table td a { color: #555; font-size: 0.72rem; text-decoration: none; }
-        .api-table td a:hover { color: #111; }
+        .api-table td:first-child { font-family: monospace; font-size: 0.78rem; color: var(--text); white-space: nowrap; }
+        .api-table td a { color: var(--text-3); font-size: 0.72rem; text-decoration: none; }
+        .api-table td a:hover { color: var(--text); }
 
         /* SIDEBAR */
         #sidebar {
             width: 200px; min-width: 200px;
-            background: #fff; border-right: 1px solid #ddd;
+            background: var(--surface); border-right: 1px solid var(--border);
             display: flex; flex-direction: column; height: 100vh;
             transition: transform 0.25s ease;
             z-index: 100;
         }
-        .logo { padding: 1.2rem 1rem; border-bottom: 1px solid #eee; }
-        .logo h1 { font-size: 1rem; font-weight: 700; color: #111; letter-spacing: -0.02em; }
-        .logo p  { font-size: 0.7rem; color: #888; margin-top: 0.15rem; }
-        #search-wrap { padding: 0.75rem 1rem; border-bottom: 1px solid #eee; }
+        .logo { padding: 1.2rem 1rem; border-bottom: 1px solid var(--border-2); }
+        .logo h1 { font-size: 1rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+        .logo p  { font-size: 0.7rem; color: var(--text-5); margin-top: 0.15rem; }
+        #search-wrap { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-2); }
         #search {
-            width: 100%; background: #f5f5f5; border: 1px solid #ddd;
-            color: #111; padding: 0.4rem 0.6rem; font-size: 0.8rem;
+            width: 100%; background: var(--surface-3); border: 1px solid var(--border);
+            color: var(--text); padding: 0.4rem 0.6rem; font-size: 0.8rem;
             border-radius: 5px; outline: none; font-family: inherit;
         }
-        #search:focus { border-color: #999; }
-        #search::placeholder { color: #999; }
+        #search:focus { border-color: var(--text-6); }
+        #search::placeholder { color: var(--text-6); }
         #metric-list { overflow-y: auto; flex: 1; padding: 0.5rem 0; }
-        .group-label { font-size: 0.65rem; color: #999; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.9rem 1rem 0.3rem; }
-        .metric-item { padding: 0.5rem 1rem; font-size: 0.82rem; color: #333; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
-        .metric-item:hover { background: #f7f7f7; color: #111; }
-        .metric-item.active { color: #111; font-weight: 600; background: #f2f2f2; }
-        .metric-item.soon { color: #bbb; cursor: default; pointer-events: none; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
-        .metric-item.active .dot { background: #111; }
+        .group-label { font-size: 0.65rem; color: var(--text-6); text-transform: uppercase; letter-spacing: 0.08em; padding: 0.9rem 1rem 0.3rem; }
+        .metric-item { padding: 0.5rem 1rem; font-size: 0.82rem; color: var(--text-2); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+        .metric-item:hover { background: var(--surface-2); color: var(--text); }
+        .metric-item.active { color: var(--text); font-weight: 600; background: var(--bg); }
+        .metric-item.soon { color: var(--text-8); cursor: default; pointer-events: none; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-9); flex-shrink: 0; }
+        .metric-item.active .dot { background: var(--text); }
 
         /* HAMBURGER */
         #hamburger {
             display: none;
             background: none; border: none; font-size: 1.1rem;
-            cursor: pointer; color: #555; padding: 0.2rem 0.3rem;
+            cursor: pointer; color: var(--text-3); padding: 0.2rem 0.3rem;
             align-items: center; justify-content: center;
         }
 
@@ -138,17 +219,17 @@
         }
 
         .landing-inner { max-width: 520px; margin: 5rem auto; text-align: center; padding: 0 1.5rem; }
-        .landing-btc { font-size: 2.8rem; margin: 0 0 0.5rem; color: #111; }
-        .landing-title { font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; color: #111; margin: 0 0 0.4rem; }
-        .landing-tagline { font-size: 0.95rem; color: #999; margin: 0 0 1.5rem; }
-        .landing-desc { font-size: 0.88rem; color: #555; line-height: 1.75; margin-bottom: 2rem; }
-        .landing-cta { background: #111; color: #fff; border: none; border-radius: 6px; padding: 0.75rem 2rem; font-size: 0.9rem; cursor: pointer; font-weight: 500; letter-spacing: -0.01em; }
-        .landing-cta:hover { background: #333; }
+        .landing-btc { font-size: 2.8rem; margin: 0 0 0.5rem; color: var(--text); }
+        .landing-title { font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; color: var(--text); margin: 0 0 0.4rem; }
+        .landing-tagline { font-size: 0.95rem; color: var(--text-6); margin: 0 0 1.5rem; }
+        .landing-desc { font-size: 0.88rem; color: var(--text-3); line-height: 1.75; margin-bottom: 2rem; }
+        .landing-cta { background: var(--accent); color: var(--accent-fg); border: none; border-radius: 6px; padding: 0.75rem 2rem; font-size: 0.9rem; cursor: pointer; font-weight: 500; letter-spacing: -0.01em; }
+        .landing-cta:hover { opacity: 0.85; }
         .landing-chips { margin-top: 2.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
-        .landing-chips span { background: #ebebeb; color: #666; font-size: 0.73rem; padding: 0.3rem 0.7rem; border-radius: 20px; }
-        .nav-icon { display: none; color: #666; }
+        .landing-chips span { background: var(--surface-3); color: var(--text-4); font-size: 0.73rem; padding: 0.3rem 0.7rem; border-radius: 20px; }
+        .nav-icon { display: none; color: var(--text-4); }
         .nav-icon svg { stroke: currentColor; fill: none; vertical-align: middle; }
-        .nav-link.active .nav-icon { color: #111; }
+        .nav-link.active .nav-icon { color: var(--text); }
 
         /* Mobile */
         @media (max-width: 640px) {
@@ -163,65 +244,80 @@
             .nav-link { padding: 0 0.65rem; }
         }
         .home-card {
-            background: #fff; border: 1px solid #ddd; border-radius: 8px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
             padding: 1.2rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
             display: flex; flex-direction: column;
         }
-        .home-card:hover { border-color: #999; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+        .home-card:hover { border-color: var(--text-6); box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
         .home-card.soon { cursor: default; opacity: 0.35; }
-        .home-card.soon:hover { border-color: #ddd; box-shadow: none; }
+        .home-card.soon:hover { border-color: var(--border); box-shadow: none; }
         .home-card[draggable]:not(.soon) { cursor: grab; }
         .home-card.dragging { opacity: 0.35; cursor: grabbing; }
-        .home-card.drag-over { border-color: #111; box-shadow: 0 0 0 2px #111; }
+        .home-card.drag-over { border-color: var(--text); box-shadow: 0 0 0 2px var(--text); }
         .hc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.5rem; }
-        .hc-label { font-size: 0.78rem; color: #111; font-weight: 600; letter-spacing: -0.01em; }
-        .hc-acronym { font-size: 0.68rem; color: #888; margin-top: 0.15rem; }
-        .hc-value { font-size: 2rem; font-weight: 700; color: #111; line-height: 1; margin-bottom: 0.4rem; }
-        .hc-value.loading { font-size: 1rem; color: #ccc; font-weight: 400; }
+        .hc-label { font-size: 0.78rem; color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
+        .hc-acronym { font-size: 0.68rem; color: var(--text-5); margin-top: 0.15rem; }
+        .hc-value { font-size: 2rem; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 0.4rem; }
+        .hc-value.loading { font-size: 1rem; color: var(--text-9); font-weight: 400; }
         .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; }
         .ok      { background: #f0faf4; color: #16a34a; }
         .ko      { background: #fef2f2; color: #dc2626; }
         .medium  { background: #fff7ed; color: #ea580c; }
-        .neutral { background: #f5f5f5; color: #777; }
+        .neutral { background: var(--surface-3); color: var(--text-4); }
         .hc-chart { flex: 1; min-height: 120px; margin-top: 0.8rem; position: relative; }
         .hc-loader {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
         }
         .spinner {
-            width: 20px; height: 20px; border: 2px solid #eee;
-            border-top-color: #bbb; border-radius: 50%;
+            width: 20px; height: 20px; border: 2px solid var(--border-2);
+            border-top-color: var(--text-8); border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* DETAIL VIEW */
         #view-detail { display: none; }
-        .detail-back { font-size: 0.8rem; color: #888; cursor: pointer; margin-bottom: 1.2rem; display: inline-flex; align-items: center; gap: 0.3rem; }
-        .detail-back:hover { color: #111; }
-        .detail-api  { font-size: 0.72rem; color: #888; text-decoration: none; float: right; margin-top: 0.1rem; }
-        .detail-api:hover { color: #111; }
-        .detail-title   { font-size: 1.1rem; font-weight: 700; color: #111; margin-bottom: 0.15rem; }
-        .detail-acronym { font-size: 0.78rem; color: #888; margin-bottom: 1.5rem; }
-        .detail-text    { font-size: 0.8rem; color: #666; line-height: 1.65; margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid #eee; }
-        .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+        .detail-back { font-size: 0.8rem; color: var(--text-5); cursor: pointer; margin-bottom: 1.2rem; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .detail-back:hover { color: var(--text); }
+        .detail-api  { font-size: 0.72rem; color: var(--text-5); text-decoration: none; float: right; margin-top: 0.1rem; }
+        .detail-api:hover { color: var(--text); }
+        .detail-title   { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.15rem; }
+        .detail-acronym { font-size: 0.78rem; color: var(--text-5); margin-bottom: 1.5rem; }
+        .detail-text    { font-size: 0.8rem; color: var(--text-4); line-height: 1.65; margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border-2); }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
         .metric-row { display: flex; gap: 2.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-        .stat .val  { font-size: 1.6rem; font-weight: 700; color: #111; }
-        .stat .lbl  { font-size: 0.7rem; color: #888; margin-top: 0.15rem; }
-        .hint { font-size: 0.75rem; color: #999; margin-bottom: 1rem; }
-        .updated { font-size: 0.68rem; color: #ccc; margin-top: 1rem; }
+        .stat .val  { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+        .stat .lbl  { font-size: 0.7rem; color: var(--text-5); margin-top: 0.15rem; }
+        .hint { font-size: 0.75rem; color: var(--text-6); margin-bottom: 1rem; }
+        .updated { font-size: 0.68rem; color: var(--text-9); margin-top: 1rem; }
         .view-toggle { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; }
-        .toggle-btn { padding: 0.2rem 0.65rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.72rem; cursor: pointer; background: #fff; color: #666; font-family: inherit; }
-        .toggle-btn:hover { border-color: #999; color: #111; }
-        .toggle-btn.active { background: #111; color: #fff; border-color: #111; }
+        .toggle-btn { padding: 0.2rem 0.65rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.72rem; cursor: pointer; background: var(--surface); color: var(--text-4); font-family: inherit; }
+        .toggle-btn:hover { border-color: var(--text-6); color: var(--text); }
+        .toggle-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
         .tf-selector { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; }
-        .tf-btn { padding: 0.2rem 0.55rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.68rem; cursor: pointer; background: #fff; color: #666; font-family: inherit; }
-        .tf-btn:hover { border-color: #999; color: #111; }
-        .tf-btn.active { background: #111; color: #fff; border-color: #111; }
+        .tf-btn { padding: 0.2rem 0.55rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.68rem; cursor: pointer; background: var(--surface); color: var(--text-4); font-family: inherit; }
+        .tf-btn:hover { border-color: var(--text-6); color: var(--text); }
+        .tf-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        .data-table th { text-align: left; padding: 0.35rem 0.5rem; color: #888; font-weight: 500; border-bottom: 1px solid #eee; font-size: 0.7rem; position: sticky; top: 0; background: #fff; }
-        .data-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #f5f5f5; color: #333; }
-        .data-table tbody tr:hover { background: #fafafa; }
+        .data-table th { text-align: left; padding: 0.35rem 0.5rem; color: var(--text-5); font-weight: 500; border-bottom: 1px solid var(--border-2); font-size: 0.7rem; position: sticky; top: 0; background: var(--surface); }
+        .data-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--border-3); color: var(--text-2); }
+        .data-table tbody tr:hover { background: var(--surface-2); }
         .table-wrap { max-height: 380px; overflow-y: auto; margin-top: 0.5rem; }
+
+        /* SETTINGS */
+        .theme-card { cursor: pointer; text-align: center; width: 100px; }
+        .theme-preview { border: 2px solid transparent; border-radius: 8px; padding: 10px; margin-bottom: 6px; transition: border-color 0.15s; }
+        .theme-card:hover .theme-preview { border-color: var(--text-5); }
+        .theme-card.active .theme-preview { border-color: var(--accent); }
+        .theme-name { font-size: 0.75rem; color: var(--text-3); font-weight: 500; }
+        .theme-card.active .theme-name { color: var(--accent); font-weight: 700; }
+        .widget-toggle-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-size: 0.82rem; color: var(--text-2); }
+        .toggle-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--border); border-radius: 20px; transition: background 0.2s; }
+        .toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; bottom: 3px; background: var(--surface); border-radius: 50%; transition: transform 0.2s; }
+        .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
     </style>
 </head>
 <body>
@@ -237,6 +333,7 @@
         <a class="nav-link" data-page="about"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span><span class="nav-text">Data Sources</span></a>
         <a class="nav-link" data-page="api"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="nav-text">API</span></a>
         <a class="nav-link" data-page="donate"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span><span class="nav-text">Support</span></a>
+        <a class="nav-link" data-page="settings"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span class="nav-text">Settings</span></a>
     </div>
 </nav>
 
@@ -451,6 +548,51 @@
     </div>
 </div>
 </div><!-- /page-donate -->
+
+<!-- ── SETTINGS PAGE ── -->
+<div id="page-settings" class="content-page">
+<div class="cp-inner">
+    <h2>Settings</h2>
+    <p class="cp-subtitle">Personalise your BTCFunk experience.</p>
+
+    <h3>Theme</h3>
+    <div id="theme-picker" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.75rem;margin-bottom:2rem">
+        <div class="theme-card" data-theme="light"    onclick="setTheme('light')">
+            <div class="theme-preview" style="background:#f2f2f2;border-color:#ddd">
+                <div style="background:#fff;border:1px solid #ddd;border-radius:4px;height:28px;margin-bottom:5px"></div>
+                <div style="background:#fff;border:1px solid #ddd;border-radius:4px;height:14px;width:60%"></div>
+            </div>
+            <div class="theme-name">Light</div>
+        </div>
+        <div class="theme-card" data-theme="dark"     onclick="setTheme('dark')">
+            <div class="theme-preview" style="background:#111;border-color:#2a2a2a">
+                <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;height:28px;margin-bottom:5px"></div>
+                <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:4px;height:14px;width:60%"></div>
+            </div>
+            <div class="theme-name">Dark</div>
+        </div>
+        <div class="theme-card" data-theme="midnight" onclick="setTheme('midnight')">
+            <div class="theme-preview" style="background:#070d1a;border-color:#1e2d4a">
+                <div style="background:#0d1526;border:1px solid #1e2d4a;border-radius:4px;height:28px;margin-bottom:5px"></div>
+                <div style="background:#0d1526;border:1px solid #1e2d4a;border-radius:4px;height:14px;width:60%"></div>
+            </div>
+            <div class="theme-name">Midnight</div>
+        </div>
+        <div class="theme-card" data-theme="amber"    onclick="setTheme('amber')">
+            <div class="theme-preview" style="background:#0a0800;border-color:#2a2000">
+                <div style="background:#140f00;border:1px solid #2a2000;border-radius:4px;height:28px;margin-bottom:5px"></div>
+                <div style="background:#140f00;border:1px solid #2a2000;border-radius:4px;height:14px;width:60%"></div>
+            </div>
+            <div class="theme-name">Amber</div>
+        </div>
+    </div>
+
+    <h3>Dashboard Widgets</h3>
+    <p style="font-size:0.8rem;color:var(--text-5);margin-bottom:1rem">Toggle which metrics appear on the home grid.</p>
+    <div id="widget-toggles" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;max-width:560px;margin-bottom:1.5rem"></div>
+    <button onclick="resetWidgetLayout()" style="font-size:0.78rem;padding:0.35rem 1rem;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text-4);cursor:pointer;font-family:inherit">Reset layout &amp; show all</button>
+</div>
+</div><!-- /page-settings -->
 
 </div><!-- /app-body -->
 
@@ -892,10 +1034,23 @@
         });
     }
 
+    function loadHiddenWidgets() {
+        try { return JSON.parse(localStorage.getItem('btcfunk-hidden-widgets')) || []; } catch { return []; }
+    }
+
+    function saveHiddenWidgets(hidden) {
+        localStorage.setItem('btcfunk-hidden-widgets', JSON.stringify(hidden));
+    }
+
     function buildHomeCards() {
         const saved = loadWidgetOrder();
-        const keys = saved ? [...new Set([...saved, ...Object.keys(METRICS)].filter(k => METRICS[k]))] : Object.keys(METRICS);
-        document.getElementById('view-home').innerHTML = keys.map(makeCard).join('');
+        const currentKeys = Object.keys(METRICS);
+        // Validate saved order: only use it if it contains the same keys (no stale entries)
+        const savedValid = saved && saved.length === currentKeys.length && currentKeys.every(k => saved.includes(k));
+        const orderedKeys = savedValid ? saved : currentKeys;
+        const hidden = loadHiddenWidgets();
+        const visibleKeys = orderedKeys.filter(k => !hidden.includes(k));
+        document.getElementById('view-home').innerHTML = visibleKeys.map(makeCard).join('');
         document.querySelectorAll('.home-card:not(.soon)').forEach(el =>
             el.addEventListener('click', () => {
                 if (el.dataset.loaded !== '1') return;
@@ -923,12 +1078,87 @@
     }
     buildSidebar();
 
+    // ── THEME ──────────────────────────────────────────────────────────────
+    function setTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.removeAttribute('data-theme');
+        } else {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+        localStorage.setItem('btcfunk-theme', theme);
+        document.querySelectorAll('.theme-card').forEach(c =>
+            c.classList.toggle('active', c.dataset.theme === theme));
+        // Update existing chart grid/tick colors without full re-render
+        const cc = chartColors();
+        Object.values(charts).forEach(ch => {
+            if (!ch || !ch.options.scales) return;
+            Object.values(ch.options.scales).forEach(axis => {
+                if (axis.grid && axis.grid.color !== undefined) axis.grid.color = cc.grid;
+                if (axis.ticks) axis.ticks.color = cc.tick;
+            });
+            ch.update('none');
+        });
+    }
+
+    // Apply saved theme before first chart renders
+    (function() {
+        const saved = localStorage.getItem('btcfunk-theme') || 'light';
+        if (saved !== 'light') document.documentElement.setAttribute('data-theme', saved);
+        document.querySelectorAll('.theme-card').forEach(c =>
+            c.classList.toggle('active', c.dataset.theme === saved));
+    })();
+
+    // ── WIDGET TOGGLES ─────────────────────────────────────────────────────
+    function buildWidgetToggles() {
+        const hidden = loadHiddenWidgets();
+        const container = document.getElementById('widget-toggles');
+        if (!container) return;
+        container.innerHTML = Object.entries(METRICS).map(([id, m]) => {
+            const checked = !hidden.includes(id) ? 'checked' : '';
+            return `<div class="widget-toggle-item">
+                <span>${m.label}</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" ${checked} onchange="toggleWidget('${id}', this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>`;
+        }).join('');
+    }
+
+    function toggleWidget(id, visible) {
+        let hidden = loadHiddenWidgets();
+        if (visible) {
+            hidden = hidden.filter(h => h !== id);
+        } else {
+            if (!hidden.includes(id)) hidden.push(id);
+        }
+        saveHiddenWidgets(hidden);
+        buildHomeCards();
+    }
+
+    function resetWidgetLayout() {
+        localStorage.removeItem('btcfunk-widget-order');
+        localStorage.removeItem('btcfunk-hidden-widgets');
+        buildHomeCards();
+        buildWidgetToggles();
+    }
+
+    function chartColors() {
+        const s = getComputedStyle(document.documentElement);
+        return {
+            grid: s.getPropertyValue('--border-3').trim() || '#f0f0f0',
+            tick: s.getPropertyValue('--text-6').trim()   || '#999',
+            line: s.getPropertyValue('--text').trim()     || '#111',
+        };
+    }
+
     function cardChart(id, labels, values, color, small) {
         if (charts[id]) charts[id].destroy();
         const ctx = document.getElementById(id);
         if (!ctx) return;
         ctx.style.display = 'block';
-        const ticks = small ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } } : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+        const cc = chartColors();
+        const ticks = small ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } } : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         charts[id] = new Chart(ctx, {
             type: 'line',
             data: { labels, datasets: [{ data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
@@ -936,8 +1166,8 @@
                 animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
-                    y: { ticks, grid: { color: '#f0f0f0' } }
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
+                    y: { ticks, grid: { color: cc.grid } }
                 }
             }
         });
@@ -1139,7 +1369,7 @@
         if (cls === 'ok')     return '#16a34a';
         if (cls === 'ko')     return '#dc2626';
         if (cls === 'medium') return '#ea580c';
-        return '#555';
+        return chartColors().tick;
     }
 
     let currentTAFetch = {};
@@ -1223,11 +1453,12 @@
         const ctx = document.getElementById(id);
         if (!ctx) return;
         ctx.style.display = 'block';
+        const cc = chartColors();
         const labels = bands.map(b => b.label);
         const values = bands.map(b => b.pct);
         const colors = bands.map((b, i) => {
             const age = ['< 1 day','1d – 1w','1w – 1m','1m – 3m','3m – 6m','6m – 1y'].includes(b.label);
-            return age ? '#e5e7eb' : `hsl(${210 + i * 10}, 60%, ${55 - i * 2}%)`;
+            return age ? cc.grid : `hsl(${210 + i * 10}, 60%, ${55 - i * 2}%)`;
         });
         charts[id] = new Chart(ctx, {
             type: 'bar',
@@ -1237,8 +1468,8 @@
                 animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#999', font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: '#f0f0f0' } },
-                    y: { ticks: { color: '#888', font: { size: small ? 9 : 11 } }, grid: { display: false } }
+                    x: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: cc.grid } },
+                    y: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 } }, grid: { display: false } }
                 }
             }
         });
@@ -1249,6 +1480,7 @@
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         ctx.style.display = 'block';
+        const cc = chartColors();
         const labels = bandsProfit.map(b => b.label);
         const values = bandsProfit.map(b => b.pct);
         const colors = bandsProfit.map(b => b.in_profit ? 'rgba(22,163,74,0.7)' : 'rgba(220,38,38,0.6)');
@@ -1259,8 +1491,8 @@
                 indexAxis: 'y', animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#999', font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: '#f0f0f0' } },
-                    y: { ticks: { color: '#888', font: { size: small ? 9 : 11 } }, grid: { display: false } }
+                    x: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: cc.grid } },
+                    y: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 } }, grid: { display: false } }
                 }
             }
         });
@@ -1281,18 +1513,19 @@
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         ctx.style.display = 'block';
+        const cc = chartColors();
         const ticks = small
-            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
-            : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets: [{ data: close, borderColor: '#111', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
+            data: { labels, datasets: [{ data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
             options: {
                 animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
-                    y: { ticks, grid: { color: '#f0f0f0' } }
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
+                    y: { ticks, grid: { color: cc.grid } }
                 }
             }
         });
@@ -1303,18 +1536,19 @@
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         ctx.style.display = 'block';
+        const cc = chartColors();
         const ticks = small
-            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
-            : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'bar',
-            data: { labels, datasets: [{ data: volume, backgroundColor: 'rgba(100,100,100,0.25)', borderWidth: 0 }] },
+            data: { labels, datasets: [{ data: volume, backgroundColor: 'rgba(128,128,128,0.25)', borderWidth: 0 }] },
             options: {
                 animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { display: false } },
-                    y: { ticks, grid: { color: '#f0f0f0' } }
+                    y: { ticks, grid: { color: cc.grid } }
                 }
             }
         });
@@ -1325,26 +1559,27 @@
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         ctx.style.display = 'block';
+        const cc = chartColors();
         const n = labels.length;
         const ticks = small
-            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
-            : { color: '#999', maxTicksLimit: 6, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 6, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    { data: rsi,                borderColor: '#3b82f6', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
-                    { data: Array(n).fill(70),  borderColor: 'rgba(220,38,38,0.35)',  borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false },
-                    { data: Array(n).fill(30),  borderColor: 'rgba(22,163,74,0.35)',   borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false },
+                    { data: rsi,               borderColor: '#3b82f6', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
+                    { data: Array(n).fill(70), borderColor: 'rgba(220,38,38,0.35)',  borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false },
+                    { data: Array(n).fill(30), borderColor: 'rgba(22,163,74,0.35)',  borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false },
                 ]
             },
             options: {
                 animation: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
-                    y: { ticks, grid: { color: '#f0f0f0' }, min: 0, max: 100 }
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
+                    y: { ticks, grid: { color: cc.grid }, min: 0, max: 100 }
                 }
             }
         });
@@ -1355,15 +1590,16 @@
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         ctx.style.display = 'block';
+        const cc = chartColors();
         const ticks = small
-            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
-            : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    { data: close,  borderColor: '#111',    borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price' },
+                    { data: close,  borderColor: cc.line,   borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price' },
                     { data: ema20,  borderColor: '#3b82f6', borderWidth: 1,   pointRadius: 0, fill: false, tension: 0.2, label: 'EMA 20' },
                     { data: ema50,  borderColor: '#f59e0b', borderWidth: 1,   pointRadius: 0, fill: false, tension: 0.2, label: 'EMA 50' },
                     { data: ema200, borderColor: '#ef4444', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'EMA 200' },
@@ -1371,10 +1607,10 @@
             },
             options: {
                 animation: false,
-                plugins: { legend: { display: small ? false : true, labels: { color: '#666', font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+                plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } } },
                 scales: {
-                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
-                    y: { ticks, grid: { color: '#f0f0f0' } }
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
+                    y: { ticks, grid: { color: cc.grid } }
                 }
             }
         });
@@ -1385,26 +1621,27 @@
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         ctx.style.display = 'block';
+        const cc = chartColors();
         const ticks = small
-            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
-            : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    { data: upper, borderColor: 'rgba(100,100,100,0.35)', borderWidth: 1, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(180,180,180,0.1)', tension: 0.2, label: 'Upper' },
-                    { data: lower, borderColor: 'rgba(100,100,100,0.35)', borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, label: 'Lower' },
-                    { data: mid,   borderColor: '#aaa', borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false, tension: 0.2, label: 'Mid' },
-                    { data: close, borderColor: '#111', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price' },
+                    { data: upper, borderColor: 'rgba(128,128,128,0.35)', borderWidth: 1, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(128,128,128,0.08)', tension: 0.2, label: 'Upper' },
+                    { data: lower, borderColor: 'rgba(128,128,128,0.35)', borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, label: 'Lower' },
+                    { data: mid,   borderColor: cc.tick, borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false, tension: 0.2, label: 'Mid' },
+                    { data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price' },
                 ]
             },
             options: {
                 animation: false,
-                plugins: { legend: { display: small ? false : true, labels: { color: '#666', font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+                plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } } },
                 scales: {
-                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
-                    y: { ticks, grid: { color: '#f0f0f0' } }
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
+                    y: { ticks, grid: { color: cc.grid } }
                 }
             }
         });
@@ -1959,15 +2196,16 @@
         document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.page === name));
         document.getElementById('page-dashboard').style.display = name === 'dashboard' ? 'flex' : 'none';
         document.getElementById('hamburger').style.display = name === 'dashboard' ? '' : 'none';
-        ['landing', 'about', 'api', 'donate'].forEach(p => {
+        ['landing', 'about', 'api', 'donate', 'settings'].forEach(p => {
             const el = document.getElementById('page-' + p);
-            el.classList.toggle('active', p === name);
+            if (el) el.classList.toggle('active', p === name);
         });
         if (name !== 'dashboard') closeSidebar();
         if (name === 'donate') generateQR();
+        if (name === 'settings') buildWidgetToggles();
     }
     document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => showPage(l.dataset.page)));
-    const pages = ['landing', 'dashboard', 'about', 'api', 'donate'];
+    const pages = ['landing', 'dashboard', 'about', 'api', 'donate', 'settings'];
     const hashPage = location.hash.slice(1);
     showPage(pages.includes(hashPage) ? hashPage : 'landing');
 
