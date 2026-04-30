@@ -39,7 +39,7 @@ async def index(request: Request):
 async def robots():
     return """User-agent: *
 Allow: /
-Sitemap: https://btcfunk.com/static/sitemap.xml
+Sitemap: https://btcfunk.com/sitemap.xml
 """
 
 
