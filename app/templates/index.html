@@ -282,7 +282,17 @@
         .detail-api  { font-size: 0.72rem; color: var(--text-5); text-decoration: none; float: right; margin-top: 0.1rem; }
         .detail-api:hover { color: var(--text); }
         .detail-title   { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.15rem; }
-        .detail-acronym { font-size: 0.78rem; color: var(--text-5); margin-bottom: 1.5rem; }
+        .detail-acronym { font-size: 0.78rem; color: var(--text-5); margin-bottom: 1rem; }
+        .detail-actions { display: flex; gap: 0.4rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+        .detail-action-btn {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.3rem 0.7rem; border: 1px solid var(--border); border-radius: 5px;
+            font-size: 0.73rem; color: var(--text-4); cursor: pointer;
+            background: var(--surface); font-family: inherit; text-decoration: none;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .detail-action-btn:hover { border-color: var(--text-6); color: var(--text); }
+        .detail-action-btn svg { stroke: currentColor; fill: none; flex-shrink: 0; }
         .detail-text    { font-size: 0.8rem; color: var(--text-4); line-height: 1.65; margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border-2); }
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
         .metric-row { display: flex; gap: 2.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
@@ -379,6 +389,20 @@
             <a class="detail-api" id="detail-api-link" href="#" target="_blank"></a>
             <div class="detail-title"   id="detail-title"></div>
             <div class="detail-acronym" id="detail-acronym"></div>
+            <div class="detail-actions">
+                <a class="detail-action-btn" id="detail-page-link" href="#" target="_blank">
+                    <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Read more
+                </a>
+                <button class="detail-action-btn" id="detail-share-btn" onclick="detailShare()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    <span id="detail-share-label">Share</span>
+                </button>
+                <button class="detail-action-btn" id="detail-jpeg-btn" onclick="detailSaveJpeg()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    Save JPEG
+                </button>
+            </div>
             <div id="detail-panels"></div>
         </div>
 
@@ -2015,12 +2039,47 @@
         });
     }
 
+    let currentDetailId = null;
+
+    function detailShare() {
+        const url = 'https://btcfunk.com/' + (currentDetailId || '');
+        if (navigator.share) {
+            navigator.share({ title: document.getElementById('detail-title').textContent, url }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                const lbl = document.getElementById('detail-share-label');
+                lbl.textContent = 'Copied!';
+                setTimeout(() => { lbl.textContent = 'Share'; }, 1800);
+            }).catch(() => {});
+        }
+    }
+
+    function detailSaveJpeg() {
+        if (!currentDetailId) return;
+        const canvas = document.getElementById(currentDetailId + '-chart-detail');
+        if (!canvas) return;
+        const tmp = document.createElement('canvas');
+        tmp.width  = canvas.width;
+        tmp.height = canvas.height;
+        const ctx = tmp.getContext('2d');
+        const bg = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim() || '#ffffff';
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, tmp.width, tmp.height);
+        ctx.drawImage(canvas, 0, 0);
+        const a = document.createElement('a');
+        a.download = 'btcfunk-' + currentDetailId + '.jpg';
+        a.href = tmp.toDataURL('image/jpeg', 0.92);
+        a.click();
+    }
+
     function showDetail(id) {
         if (!METRICS[id]) return;
+        currentDetailId = id;
         document.getElementById('view-home').style.display = 'none';
         document.getElementById('view-detail').style.display = 'block';
         document.getElementById('detail-title').textContent   = METRICS[id].label;
         document.getElementById('detail-acronym').textContent = METRICS[id].acronym;
+        document.getElementById('detail-page-link').href = '/' + id;
         // Reset chart/table toggle to Chart
         const canvas = document.getElementById(id + '-chart-detail');
         const tbl    = document.getElementById(id + '-table-detail');
