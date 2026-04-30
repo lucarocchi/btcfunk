@@ -237,6 +237,14 @@
             overflow-x: auto; white-space: pre; font-family: 'SF Mono', 'Fira Code', monospace;
         }
 
+        /* AD BANNER */
+        .ad-banner {
+            width: 100%; min-height: 90px; margin-bottom: 1.2rem;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--surface-2); border: 1px dashed var(--border);
+            border-radius: 6px; font-size: 0.72rem; color: var(--text-7);
+        }
+
         /* HINT */
         .hint-bar {
             font-size: 0.75rem; color: var(--text-4); background: var(--surface-3);
@@ -312,6 +320,11 @@
         <span class="value-label">Current</span>
         <span class="value-num" id="val-num">—</span>
         <span class="value-unit" id="val-unit"></span>
+    </div>
+
+    <!-- COINZILLA AD — replace placeholder with snippet once approved -->
+    <div class="ad-banner" id="ad-slot">
+        <!-- Coinzilla ad will go here -->
     </div>
 
     {% if meta.series %}
