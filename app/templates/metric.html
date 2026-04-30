@@ -363,7 +363,8 @@ async function load() {
         if (!r.ok) return;
         const d = await r.json();
 
-        const val = d[FIELD];
+        const raw = d[FIELD];
+        const val = Array.isArray(raw) ? raw[raw.length - 1] : raw;
         if (val !== undefined && val !== null) {
             document.getElementById('val-num').textContent = fmt(val);
             if (SUFFIX) document.getElementById('val-unit').textContent = '';
