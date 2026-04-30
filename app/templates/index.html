@@ -1123,7 +1123,7 @@
             if (!hidden.includes(id)) hidden.push(id);
         }
         saveHiddenWidgets(hidden);
-        location.reload();
+        buildWidgetToggles();
     }
 
     function resetWidgetLayout() {
@@ -2188,6 +2188,7 @@
             const el = document.getElementById('page-' + p);
             if (el) el.classList.toggle('active', p === name);
         });
+        if (name === 'dashboard') buildHomeCards();
         if (name !== 'dashboard') closeSidebar();
         if (name === 'donate') generateQR();
         if (name === 'settings') buildWidgetToggles();
