@@ -15,7 +15,6 @@ DB_PATH    = os.path.join(SCRIPT_DIR, "../mvrv_cache.sqlite")
 
 PAIRS = [
     {"interval": 1440, "key": "XXBTZUSD", "file": "raw/XBTUSD_1440.csv"},
-    {"interval": 720,  "key": "XXBTZUSD", "file": "raw/XBTUSD_720.csv"},
     {"interval": 240,  "key": "XXBTZUSD", "file": "raw/XBTUSD_240.csv"},
     {"interval": 60,   "key": "XXBTZUSD", "file": "raw/XBTUSD_60.csv"},
     {"interval": 15,   "key": "XXBTZUSD", "file": "raw/XBTUSD_15.csv"},
@@ -104,15 +103,16 @@ def fetch_and_sync(pair, con):
     last_dt = datetime.fromtimestamp(int(new_bars[-1][0]), tz=timezone.utc).strftime("%d/%m/%Y %H:%M")
     log(f"  tf={tf}: +{len(new_bars)} candele → {last_dt}")
 
-def resample_30m(con):
-    """Aggiorna tf=30 in SQLite resampland solo le ultime 200 candele da tf=15."""
+def _resample(con, src_tf, dst_tf, limit=200):
+    """Resampla le ultime `limit` candele da src_tf a dst_tf."""
     rows = con.execute(
-        "SELECT ts, open, high, low, close, vol, trades FROM ohlc WHERE tf = 15 ORDER BY ts DESC LIMIT 200"
+        "SELECT ts, open, high, low, close, vol, trades FROM ohlc WHERE tf = ? ORDER BY ts DESC LIMIT ?",
+        (src_tf, limit)
     ).fetchall()
     if not rows:
-        return
-    rows = sorted(rows, key=lambda x: x[0])  # riordina ascending
-    period = 30 * 60
+        return 0
+    rows = sorted(rows, key=lambda x: x[0])
+    period = dst_tf * 60
     buckets = {}
     for ts, o, h, l, c, vol, trades in rows:
         bk = (ts // period) * period
@@ -123,13 +123,22 @@ def resample_30m(con):
             if h > b[2]: b[2] = h
             if l < b[3]: b[3] = l
             b[4] = c; b[5] += vol; b[6] += trades
-    out = [(30, b[0], b[1], b[2], b[3], b[4], b[5], b[6]) for b in sorted(buckets.values(), key=lambda x: x[0])]
+    out = [(dst_tf, b[0], b[1], b[2], b[3], b[4], b[5], b[6])
+           for b in sorted(buckets.values(), key=lambda x: x[0])]
     con.executemany(
         "INSERT OR REPLACE INTO ohlc (tf, ts, open, high, low, close, vol, trades) VALUES (?,?,?,?,?,?,?,?)",
         out
     )
     con.commit()
-    log(f"  tf=30: {len(out)} candele aggiornate (resample ultimi 200x15m)")
+    return len(out)
+
+def resample_30m(con):
+    n = _resample(con, src_tf=15, dst_tf=30, limit=200)
+    log(f"  tf=30:  {n} candele aggiornate (resample ultimi 200x15m)")
+
+def resample_720m(con):
+    n = _resample(con, src_tf=240, dst_tf=720, limit=200)
+    log(f"  tf=720: {n} candele aggiornate (resample ultimi 200x240m)")
 
 def bootstrap_from_csv(con):
     """Import iniziale: legge i CSV esistenti e popola SQLite. Salta se già presente."""
@@ -169,5 +178,6 @@ if __name__ == "__main__":
     for pair in PAIRS:
         fetch_and_sync(pair, con)
     resample_30m(con)
+    resample_720m(con)
 
     con.close()
