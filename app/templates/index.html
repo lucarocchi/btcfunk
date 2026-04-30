@@ -1909,6 +1909,49 @@
         new QRCode(document.getElementById('qr-btc'), { text: 'bitcoin:bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr',        width: 160, height: 160 });
     }
 
+    // Live price ticker — polls Kraken every 30s
+    function fetchLiveTicker() {
+        fetch('https://api.kraken.com/0/public/Ticker?pair=XBTUSD')
+            .then(r => r.json())
+            .then(d => {
+                const result = d.result && d.result['XXBTZUSD'];
+                if (!result) return;
+                const p = parseFloat(result.c[0]);
+                if (!p) return;
+                // Update value displays
+                const elCard   = document.getElementById('hc-price-val');
+                const elDetail = document.getElementById('d-price-val');
+                if (elCard)   elCard.textContent   = fmt_usd(p);
+                if (elDetail) elDetail.textContent = fmt_usd(p);
+                // Update last data point in home price chart live
+                const ch = charts['hc-price-chart'];
+                if (ch && ch.data.datasets[0].data.length > 0) {
+                    const last = ch.data.datasets[0].data.length - 1;
+                    ch.data.datasets[0].data[last] = p;
+                    ch.update('none');
+                }
+                // Same for detail chart if open
+                const chd = charts['price-chart-detail'];
+                if (chd && chd.data.datasets[0].data.length > 0) {
+                    const last = chd.data.datasets[0].data.length - 1;
+                    chd.data.datasets[0].data[last] = p;
+                    chd.update('none');
+                }
+            })
+            .catch(() => {});
+    }
+    fetchLiveTicker();
+    setInterval(fetchLiveTicker, 30000);
+
+    // Full price chart refresh every 7 min (aligned with SQLite OHLC update cadence)
+    setInterval(() => {
+        const tf = currentTF['price'] || 1440;
+        fetch('/api/price?tf=' + tf).then(r => r.json()).then(pd => {
+            data.price = pd; data.volume = pd;
+            renderPriceChart('hc-price-chart', pd.labels, pd.close, true);
+        }).catch(() => {});
+    }, 7 * 60 * 1000);
+
     // Page navigation
     function showPage(name) {
         location.hash = name;
