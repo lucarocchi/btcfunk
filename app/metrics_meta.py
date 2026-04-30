@@ -294,6 +294,33 @@ METRICS_META = {
         'series':      'avg_fees',
         'related':     ['tx_count', 'hashrate', 'active_addresses'],
     },
+    'price': {
+        'page_title':  'Bitcoin Price — Live BTC/USD Chart',
+        'description': 'Live Bitcoin price in USD from Kraken (XBTUSD). Updated every 7 minutes. Multiple timeframes from 15 minutes to daily.',
+        'h1':          'Bitcoin Price',
+        'subtitle':    'BTC/USD — Kraken spot price',
+        'body':        'The Bitcoin price displayed is the BTC/USD spot price sourced from Kraken (pair XBTUSD), updated every 7 minutes. Multiple timeframes are available from 15-minute to daily candles. The close price is used as the reference for all technical indicators on BTCFunk.',
+        'hint':        'Source: Kraken XBTUSD · Updated every 7 minutes · Timeframes: 15m 30m 1h 4h 12h 1d',
+        'api':         'price',
+        'value_field': 'close',
+        'value_fmt':   ',.0f',
+        'value_prefix': '$',
+        'series':      'close',
+        'related':     ['rsi', 'ema', 'bb'],
+    },
+    'volume': {
+        'page_title':  'Bitcoin Trading Volume — BTC/USD Daily Volume',
+        'description': 'Live Bitcoin trading volume in USD from Kraken. Volume confirms price moves — breakouts on high volume are stronger signals.',
+        'h1':          'Bitcoin Trading Volume',
+        'subtitle':    'BTC/USD trading volume — Kraken',
+        'body':        'Bitcoin trading volume measures the total amount of BTC traded on Kraken (XBTUSD pair) within each candle. Volume confirms or contradicts price moves — a breakout accompanied by high volume is a stronger signal than one on low volume. Volume spikes often mark key reversals or the beginning of a new trend.',
+        'hint':        'High volume breakout = strong signal · Low volume move = weak / suspect',
+        'api':         'price',
+        'value_field': 'volume',
+        'value_fmt':   ',.0f',
+        'series':      'volume',
+        'related':     ['price', 'rsi', 'active_addresses'],
+    },
 }
 
 METRIC_LABELS = {k: v['h1'] for k, v in METRICS_META.items()}
