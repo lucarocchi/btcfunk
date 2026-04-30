@@ -213,6 +213,30 @@
             font-size: 0.85rem; color: var(--text-3); line-height: 1.75;
         }
 
+        /* QUERY */
+        .query-section { margin-bottom: 1.5rem; }
+        .query-toggle {
+            display: flex; align-items: center; gap: 0.4rem;
+            font-size: 0.73rem; font-weight: 600; color: var(--text-5);
+            text-transform: uppercase; letter-spacing: 0.07em;
+            cursor: pointer; user-select: none; margin-bottom: 0.5rem;
+            background: none; border: none; font-family: inherit; padding: 0;
+        }
+        .query-toggle:hover { color: var(--text); }
+        .query-toggle svg { transition: transform 0.18s; }
+        .query-section.open .query-toggle svg { transform: rotate(90deg); }
+        .query-box { display: none; }
+        .query-section.open .query-box { display: block; }
+        .query-source {
+            font-size: 0.72rem; color: var(--text-5); margin-bottom: 0.4rem;
+        }
+        .query-box pre {
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: 6px; padding: 1rem 1.1rem;
+            font-size: 0.75rem; color: var(--text-3); line-height: 1.65;
+            overflow-x: auto; white-space: pre; font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
         /* HINT */
         .hint-bar {
             font-size: 0.75rem; color: var(--text-4); background: var(--surface-3);
@@ -303,6 +327,19 @@
     <div class="metric-body">
         <p>{{ meta.body }}</p>
     </div>
+
+    {% if query %}
+    <div class="query-section" id="query-section">
+        <button class="query-toggle" onclick="document.getElementById('query-section').classList.toggle('open')">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            Data Source &amp; Query
+        </button>
+        <div class="query-box">
+            <p class="query-source">{{ query.source }}</p>
+            <pre>{{ query.sql }}</pre>
+        </div>
+    </div>
+    {% endif %}
 
     <a class="open-app" href="/#dashboard">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>

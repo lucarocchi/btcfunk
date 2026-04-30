@@ -324,3 +324,354 @@ METRICS_META = {
 }
 
 METRIC_LABELS = {k: v['h1'] for k, v in METRICS_META.items()}
+
+METRIC_QUERIES = {
+    'mvrv': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Realized Cap: sum each unspent output at the price when it was created
+-- Market Cap / Realized Cap = MVRV Ratio
+SELECT
+    DATE(o.block_timestamp)  AS day,
+    SUM(o.value) / 1e8       AS btc_value   -- current unspent BTC per creation day
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o
+LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
+    ON  o.transaction_hash = i.spent_transaction_hash
+    AND o.index            = i.spent_output_index
+WHERE i.transaction_hash IS NULL   -- UTXO: never spent
+GROUP BY day
+ORDER BY day""",
+    },
+    'sopr': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- SOPR = sum(value at spend time) / sum(value at creation time)
+-- Join inputs to their originating outputs to get acquisition price
+SELECT
+    DATE(i.block_timestamp)  AS spend_day,
+    DATE(o.block_timestamp)  AS creation_day,
+    SUM(o.value) / 1e8       AS btc_amount
+FROM `bigquery-public-data.crypto_bitcoin.inputs` i
+JOIN `bigquery-public-data.crypto_bitcoin.outputs` o
+    ON  i.spent_transaction_hash = o.transaction_hash
+    AND i.spent_output_index     = o.index
+WHERE o.value > 0
+GROUP BY spend_day, creation_day
+ORDER BY spend_day""",
+    },
+    'nvt': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- NVT = Market Cap / On-Chain Transaction Volume (28-day MA)
+-- Transaction volume: sum of all outputs per day
+SELECT
+    DATE(block_timestamp)  AS day,
+    SUM(value) / 1e8       AS btc_volume
+FROM `bigquery-public-data.crypto_bitcoin.outputs`
+WHERE value > 0
+GROUP BY day
+ORDER BY day""",
+    },
+    'nupl': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- NUPL = 1 - (1 / MVRV) = (Market Cap - Realized Cap) / Market Cap
+-- Uses the same UTXO query as MVRV to compute Realized Cap
+SELECT
+    DATE(o.block_timestamp)  AS day,
+    SUM(o.value) / 1e8       AS btc_value
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o
+LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
+    ON  o.transaction_hash = i.spent_transaction_hash
+    AND o.index            = i.spent_output_index
+WHERE i.transaction_hash IS NULL
+GROUP BY day
+ORDER BY day""",
+    },
+    'puell': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Puell Multiple = Daily miner revenue / 365-day MA of miner revenue
+-- Miner revenue = sum of coinbase transaction outputs per day
+SELECT
+    DATE(block_timestamp)       AS day,
+    SUM(output_value) / 1e8     AS revenue_btc
+FROM `bigquery-public-data.crypto_bitcoin.transactions`
+WHERE is_coinbase = TRUE
+GROUP BY day
+ORDER BY day""",
+    },
+    'rhodl': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- RHODL = BTC unspent 1–2 years / BTC unspent 1 day–1 week
+-- Uses UTXO set: outputs never spent, grouped by creation date
+SELECT
+    DATE(o.block_timestamp)  AS creation_day,
+    SUM(o.value) / 1e8       AS btc_value
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o
+LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
+    ON  o.transaction_hash = i.spent_transaction_hash
+    AND o.index            = i.spent_output_index
+WHERE i.transaction_hash IS NULL
+  AND o.value > 0
+GROUP BY creation_day
+ORDER BY creation_day""",
+    },
+    'supply_profit': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Supply in Profit = % of UTXOs whose creation-day price < current price
+-- Requires joining UTXO set with historical BTC/USD price series
+SELECT
+    DATE(o.block_timestamp)  AS creation_day,
+    SUM(o.value) / 1e8       AS btc_value
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o
+LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
+    ON  o.transaction_hash = i.spent_transaction_hash
+    AND o.index            = i.spent_output_index
+WHERE i.transaction_hash IS NULL
+  AND o.value > 0
+GROUP BY creation_day
+ORDER BY creation_day""",
+    },
+    'cdd': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- CDD = sum(BTC × days_since_creation) for all coins spent on a given day
+-- Age = spend_day - creation_day (in days)
+SELECT
+    DATE(i.block_timestamp)  AS spend_day,
+    DATE(o.block_timestamp)  AS creation_day,
+    SUM(o.value) / 1e8       AS btc_amount
+FROM `bigquery-public-data.crypto_bitcoin.inputs` i
+JOIN `bigquery-public-data.crypto_bitcoin.outputs` o
+    ON  i.spent_transaction_hash = o.transaction_hash
+    AND i.spent_output_index     = o.index
+WHERE o.value > 0
+GROUP BY spend_day, creation_day
+ORDER BY spend_day""",
+    },
+    'exchange_flow': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Exchange Flow: BTC moving into/out of 761 labeled exchange addresses
+-- Net flow = inflow - outflow per day
+WITH inflows AS (
+    SELECT DATE(o.block_timestamp) AS day, SUM(o.value) / 1e8 AS btc
+    FROM `bigquery-public-data.crypto_bitcoin.outputs` o,
+    UNNEST(o.addresses) AS addr
+    WHERE addr IN UNNEST(@exchange_addresses)
+    GROUP BY day
+),
+outflows AS (
+    SELECT DATE(i.block_timestamp) AS day, SUM(o.value) / 1e8 AS btc
+    FROM `bigquery-public-data.crypto_bitcoin.inputs` i
+    JOIN `bigquery-public-data.crypto_bitcoin.outputs` o
+        ON  i.spent_transaction_hash = o.transaction_hash
+        AND i.spent_output_index     = o.index,
+    UNNEST(o.addresses) AS addr
+    WHERE addr IN UNNEST(@exchange_addresses)
+    GROUP BY day
+)
+SELECT
+    COALESCE(i.day, out.day)     AS day,
+    COALESCE(i.btc,   0)         AS inflow,
+    COALESCE(out.btc, 0)         AS outflow,
+    COALESCE(i.btc, 0) - COALESCE(out.btc, 0) AS net_flow
+FROM inflows i
+FULL OUTER JOIN outflows out USING (day)
+ORDER BY day""",
+    },
+    'active_addresses': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Active Addresses: distinct receiving addresses per day
+SELECT
+    DATE(o.block_timestamp)      AS day,
+    COUNT(DISTINCT addr)         AS active_addresses
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o,
+UNNEST(o.addresses) AS addr
+GROUP BY day
+ORDER BY day""",
+    },
+    'whale_tx': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Whale Transactions: on-chain txs moving >= 10,000,000,000 satoshi (100 BTC)
+SELECT
+    DATE(block_timestamp)       AS day,
+    COUNT(*)                    AS whale_tx_count,
+    SUM(output_value) / 1e8     AS btc_volume
+FROM `bigquery-public-data.crypto_bitcoin.transactions`
+WHERE NOT is_coinbase
+  AND output_value >= 10000000000   -- 100 BTC in satoshi
+GROUP BY day
+ORDER BY day""",
+    },
+    'mvrv_zscore': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- MVRV Z-Score = (Market Cap - Realized Cap) / stddev(Market Cap)
+-- Normalized over the full history since 2013
+-- Uses the same UTXO query as MVRV for Realized Cap
+SELECT
+    DATE(o.block_timestamp)  AS day,
+    SUM(o.value) / 1e8       AS btc_value
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o
+LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
+    ON  o.transaction_hash = i.spent_transaction_hash
+    AND o.index            = i.spent_output_index
+WHERE i.transaction_hash IS NULL
+GROUP BY day
+ORDER BY day""",
+    },
+    'lth': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- LTH Supply: UTXOs unspent for more than 365 days (Long-Term Holders)
+SELECT
+    DATE(o.block_timestamp)  AS creation_day,
+    SUM(o.value) / 1e8       AS btc_value
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o
+LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
+    ON  o.transaction_hash = i.spent_transaction_hash
+    AND o.index            = i.spent_output_index
+WHERE i.transaction_hash IS NULL
+  AND o.value > 0
+  AND DATE(o.block_timestamp) <= DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+GROUP BY creation_day
+ORDER BY creation_day""",
+    },
+    'sth': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- STH Supply: UTXOs unspent for less than 365 days (Short-Term Holders)
+SELECT
+    DATE(o.block_timestamp)  AS creation_day,
+    SUM(o.value) / 1e8       AS btc_value
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o
+LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
+    ON  o.transaction_hash = i.spent_transaction_hash
+    AND o.index            = i.spent_output_index
+WHERE i.transaction_hash IS NULL
+  AND o.value > 0
+  AND DATE(o.block_timestamp) > DATE_SUB(CURRENT_DATE(), INTERVAL 365 DAY)
+GROUP BY creation_day
+ORDER BY creation_day""",
+    },
+    'stf': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Stock-to-Flow = Circulating Supply / Annual Issuance
+-- Annual issuance derived from coinbase transaction outputs
+SELECT
+    DATE(block_timestamp)       AS day,
+    SUM(output_value) / 1e8     AS daily_issuance_btc
+FROM `bigquery-public-data.crypto_bitcoin.transactions`
+WHERE is_coinbase = TRUE
+GROUP BY day
+ORDER BY day""",
+    },
+    'hashrate': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Hash Rate derived from block difficulty (bits field) and block count per day
+-- Formula: hashrate (H/s) = difficulty × 2^32 / 600; convert to EH/s (/1e18)
+SELECT
+    DATE(timestamp)    AS day,
+    ANY_VALUE(bits)    AS bits,         -- difficulty bits (compact format)
+    COUNT(*)           AS block_count   -- blocks mined that day
+FROM `bigquery-public-data.crypto_bitcoin.blocks`
+GROUP BY day
+ORDER BY day""",
+    },
+    'hodl': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- HODL Waves: UTXO set grouped by creation age bands
+-- Each band = % of circulating supply unmoved within that time window
+SELECT
+    DATE(o.block_timestamp)  AS creation_day,
+    SUM(o.value) / 1e8       AS btc_value
+FROM `bigquery-public-data.crypto_bitcoin.outputs` o
+LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
+    ON  o.transaction_hash = i.spent_transaction_hash
+    AND o.index            = i.spent_output_index
+WHERE i.transaction_hash IS NULL
+  AND o.value > 0
+GROUP BY creation_day
+ORDER BY creation_day""",
+    },
+    'tx_count': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Daily transaction count, average fee and volume
+-- Excludes coinbase (miner reward) transactions
+SELECT
+    DATE(block_timestamp)       AS day,
+    COUNT(*)                    AS tx_count,
+    SUM(output_value) / 1e8     AS volume_btc,
+    SUM(fee) / 1e8              AS fees_btc
+FROM `bigquery-public-data.crypto_bitcoin.transactions`
+WHERE NOT is_coinbase
+GROUP BY day
+ORDER BY day""",
+    },
+    'avg_fee': {
+        'source': 'Google BigQuery — bigquery-public-data.crypto_bitcoin',
+        'sql': """\
+-- Average fee per transaction = total fees / transaction count
+-- Excludes coinbase transactions; fee in BTC = fee_satoshi / 1e8
+SELECT
+    DATE(block_timestamp)                        AS day,
+    COUNT(*)                                     AS tx_count,
+    SUM(fee) / 1e8                               AS total_fees_btc,
+    (SUM(fee) / 1e8) / NULLIF(COUNT(*), 0)       AS avg_fee_btc
+FROM `bigquery-public-data.crypto_bitcoin.transactions`
+WHERE NOT is_coinbase
+GROUP BY day
+ORDER BY day""",
+    },
+    'rsi': {
+        'source': 'Kraken REST API — OHLCV data',
+        'sql': """\
+-- RSI is computed from BTC/USD OHLCV candles fetched from Kraken
+-- RSI(14) = 100 - (100 / (1 + RS)) where RS = avg_gain / avg_loss
+-- Endpoint: GET https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1440
+-- interval: 15 | 30 | 60 | 240 | 720 | 1440 (minutes)""",
+    },
+    'ema': {
+        'source': 'Kraken REST API — OHLCV data',
+        'sql': """\
+-- EMAs computed from BTC/USD close prices fetched from Kraken
+-- EMA(n) = price × k + EMA_prev × (1 - k)  where k = 2 / (n + 1)
+-- Periods: 20, 50, 200
+-- Endpoint: GET https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1440""",
+    },
+    'bb': {
+        'source': 'Kraken REST API — OHLCV data',
+        'sql': """\
+-- Bollinger Bands computed from BTC/USD close prices (Kraken)
+-- Middle band = SMA(20); Upper = SMA + 2σ; Lower = SMA - 2σ
+-- Bandwidth = (Upper - Lower) / Middle × 100
+-- Endpoint: GET https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1440""",
+    },
+    'price': {
+        'source': 'Kraken REST API — OHLCV data',
+        'sql': """\
+-- BTC/USD spot price — OHLCV candles from Kraken (pair: XBTUSD)
+-- Updated every 7 minutes; multiple timeframes available
+-- Endpoint: GET https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1440
+-- interval: 15 | 30 | 60 | 240 | 720 | 1440 (minutes)
+-- Response fields: time, open, high, low, close, vwap, volume, count""",
+    },
+    'volume': {
+        'source': 'Kraken REST API — OHLCV data',
+        'sql': """\
+-- Trading volume from Kraken BTC/USD (XBTUSD) OHLCV candles
+-- Volume = sum of BTC traded within the candle interval
+-- Endpoint: GET https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1440
+-- interval: 15 | 30 | 60 | 240 | 720 | 1440 (minutes)""",
+    },
+}

@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse, Response
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.metrics_meta import METRICS_META, METRIC_LABELS
+from app.metrics_meta import METRICS_META, METRIC_LABELS, METRIC_QUERIES
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
@@ -219,6 +219,7 @@ async def metric_page(request: Request, metric_id: str):
             "metric_id": metric_id,
             "meta": METRICS_META[metric_id],
             "related_labels": METRIC_LABELS,
+            "query": METRIC_QUERIES.get(metric_id),
         },
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
     )
