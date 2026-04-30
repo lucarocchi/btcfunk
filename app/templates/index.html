@@ -1133,14 +1133,13 @@
             if (!hidden.includes(id)) hidden.push(id);
         }
         saveHiddenWidgets(hidden);
-        buildHomeCards();
+        location.reload();
     }
 
     function resetWidgetLayout() {
         localStorage.removeItem('btcfunk-widget-order');
         localStorage.removeItem('btcfunk-hidden-widgets');
-        buildHomeCards();
-        buildWidgetToggles();
+        location.reload();
     }
 
     function chartColors() {
