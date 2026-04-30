@@ -268,6 +268,9 @@
         .hc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.5rem; }
         .hc-label { font-size: 0.78rem; color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
         .hc-acronym { font-size: 0.68rem; color: var(--text-5); margin-top: 0.15rem; }
+        .hc-page-link { color: var(--text-8); display: flex; align-items: center; flex-shrink: 0; margin-left: 0.4rem; }
+        .hc-page-link:hover { color: var(--text-4); }
+        .hc-page-link svg { stroke: currentColor; fill: none; }
         .hc-value { font-size: 2rem; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 0.4rem; }
         .hc-value.loading { font-size: 1rem; color: var(--text-9); font-weight: 400; }
         .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; }
@@ -901,7 +904,12 @@
                         <div class="hc-label">${m.label}</div>
                         <div class="hc-acronym">${m.acronym}</div>
                     </div>
-                    <span class="badge neutral" id="hc-${id}-badge">—</span>
+                    <div style="display:flex;align-items:center;gap:0.3rem">
+                        <span class="badge neutral" id="hc-${id}-badge">—</span>
+                        <a class="hc-page-link" href="/${id}" target="_blank" onclick="event.stopPropagation()" title="Open ${m.label} page">
+                            <svg width="11" height="11" viewBox="0 0 24 24" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </a>
+                    </div>
                 </div>
                 <div class="hc-value loading" id="hc-${id}-val">—</div>
                 <div class="hc-chart">
