@@ -146,13 +146,13 @@
         .cp-inner { max-width: 860px; margin: 0 auto; }
         .cp-inner h2 { font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
         .cp-inner h3 { font-size: 0.9rem; font-weight: 600; color: var(--text); margin: 1.8rem 0 0.5rem; }
-        .cp-inner p  { font-size: 0.82rem; color: var(--text-3); line-height: 1.7; margin-bottom: 0.6rem; }
+        .cp-inner p, .cp-inner .cp-p  { font-size: 0.82rem; color: var(--text-3); line-height: 1.7; margin-bottom: 0.6rem; }
         .cp-inner code { background: var(--surface-3); border-radius: 3px; padding: 0.1rem 0.35rem; font-size: 0.78rem; color: var(--text-2); }
         .cp-inner a { color: var(--text); }
         .cp-subtitle { font-size: 0.78rem; color: var(--text-6); margin-bottom: 2rem; }
         .source-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.4rem; margin-bottom: 1rem; }
         .source-card h4 { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.35rem; }
-        .source-card p  { font-size: 0.8rem; color: var(--text-4); line-height: 1.6; margin: 0; }
+        .source-card p, .source-card .cp-p  { font-size: 0.8rem; color: var(--text-4); line-height: 1.6; margin: 0; }
         .source-card .tag { display: inline-block; font-size: 0.65rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 3px; background: var(--surface-3); color: var(--text-4); margin-bottom: 0.4rem; }
         .api-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; }
         .api-table th { background: var(--surface-2); text-align: left; padding: 0.55rem 0.9rem; font-size: 0.72rem; color: var(--text-4); font-weight: 600; border-bottom: 1px solid var(--border-2); }
@@ -370,8 +370,8 @@
 <div id="page-landing" class="content-page">
     <div class="landing-inner">
         <h1 class="landing-title">BTCFunk</h1>
-        <p class="landing-tagline">Bitcoin On-Chain Analytics</p>
-        <p class="landing-desc">Monitor the most important Bitcoin on-chain signals in one place.<br>No account. No subscription. Updated daily.</p>
+        <div class="cp-p landing-tagline">Bitcoin On-Chain Analytics</div>
+        <div class="cp-p landing-desc">Monitor the most important Bitcoin on-chain signals in one place.<br>No account. No subscription. Updated daily.</div>
         <div class="landing-chips">
             <a href="/price">Price</a><a href="/volume">Volume</a><a href="/rsi">RSI</a><a href="/ema">EMA</a><a href="/bb">Bollinger Bands</a>
             <a href="/mvrv">MVRV</a><a href="/sopr">SOPR</a><a href="/nvt">NVT</a><a href="/nupl">NUPL</a><a href="/mvrv_zscore">MVRV Z-Score</a>
@@ -429,82 +429,82 @@
 <div id="page-about" class="content-page">
 <div class="cp-inner">
     <h2>Data Sources &amp; Methodology</h2>
-    <p class="cp-subtitle">Where the numbers come from and how they are calculated.</p>
+    <div class="cp-p cp-subtitle">Where the numbers come from and how they are calculated.</div>
 
     <div class="source-card">
         <div class="tag">On-Chain</div>
         <h4>Bitcoin Blockchain — Google BigQuery Public Dataset</h4>
-        <p>All on-chain metrics (MVRV realized cap, SOPR, NVT transaction volume, HODL Waves, CDD, Puell Multiple, Active Addresses, Whale Transactions, Exchange Flows) are computed directly from <code>bigquery-public-data.crypto_bitcoin</code> — Google's full mirror of the Bitcoin blockchain updated daily. Every transaction, input, and output since the genesis block (January 2009) is available.</p>
+        <div class="cp-p">All on-chain metrics (MVRV realized cap, SOPR, NVT transaction volume, HODL Waves, CDD, Puell Multiple, Active Addresses, Whale Transactions, Exchange Flows) are computed directly from <code>bigquery-public-data.crypto_bitcoin</code> — Google's full mirror of the Bitcoin blockchain updated daily. Every transaction, input, and output since the genesis block (January 2009) is available.</div>
     </div>
 
     <div class="source-card">
         <div class="tag">Price</div>
         <h4>BTC/USD Daily OHLC — Kraken API</h4>
-        <p>Historical and live BTC/USD prices are sourced from the Kraken public REST API (pair <code>XBTUSD</code>, 1440-minute interval). Data is available from October 2013. Prices are cached locally in SQLite and updated daily. The live price for MVRV market cap uses the Kraken ticker endpoint.</p>
+        <div class="cp-p">Historical and live BTC/USD prices are sourced from the Kraken public REST API (pair <code>XBTUSD</code>, 1440-minute interval). Data is available from October 2013. Prices are cached locally in SQLite and updated daily. The live price for MVRV market cap uses the Kraken ticker endpoint.</div>
     </div>
 
     <div class="source-card">
         <div class="tag">Exchange Addresses</div>
         <h4>Dune Analytics Spellbook</h4>
-        <p>The 761 labeled Bitcoin wallet addresses used in the Exchange Flow metric are sourced from the <a href="https://github.com/duneanalytics/spellbook" target="_blank">Dune Analytics Spellbook</a> (MIT license). Coverage includes 50+ exchanges: Binance, Coinbase, Kraken, OKX, Bitfinex, KuCoin, Bitstamp, Bybit, and others.</p>
+        <div class="cp-p">The 761 labeled Bitcoin wallet addresses used in the Exchange Flow metric are sourced from the <a href="https://github.com/duneanalytics/spellbook" target="_blank">Dune Analytics Spellbook</a> (MIT license). Coverage includes 50+ exchanges: Binance, Coinbase, Kraken, OKX, Bitfinex, KuCoin, Bitstamp, Bybit, and others.</div>
     </div>
 
     <h3>Update Frequency</h3>
-    <p>All metrics are cached for 24 hours. BigQuery public datasets typically reflect blockchain state with a 1–2 day lag. On-chain data queries are incremental — only new blocks since the last run are fetched, keeping costs near zero.</p>
+    <div class="cp-p">All metrics are cached for 24 hours. BigQuery public datasets typically reflect blockchain state with a 1–2 day lag. On-chain data queries are incremental — only new blocks since the last run are fetched, keeping costs near zero.</div>
 
     <h3>Metric Definitions</h3>
 
     <div class="source-card">
         <h4>MVRV Ratio</h4>
-        <p><strong>Market Value / Realized Value.</strong> Realized Cap = sum of all UTXOs valued at the BTC price on the day they were last moved. MVRV = Market Cap / Realized Cap. Values below 1 mean the market is below aggregate holder cost basis (historically a buy zone); above 3.5 historically coincides with cycle tops.</p>
+        <div class="cp-p"><strong>Market Value / Realized Value.</strong> Realized Cap = sum of all UTXOs valued at the BTC price on the day they were last moved. MVRV = Market Cap / Realized Cap. Values below 1 mean the market is below aggregate holder cost basis (historically a buy zone); above 3.5 historically coincides with cycle tops.</div>
     </div>
     <div class="source-card">
         <h4>NUPL — Net Unrealized Profit / Loss</h4>
-        <p>Derived directly from MVRV: <code>NUPL = 1 − 1/MVRV</code>. Represents the aggregate unrealized gain or loss of all holders as a fraction of market cap. Below 0 = capitulation; above 0.75 = euphoria.</p>
+        <div class="cp-p">Derived directly from MVRV: <code>NUPL = 1 − 1/MVRV</code>. Represents the aggregate unrealized gain or loss of all holders as a fraction of market cap. Below 0 = capitulation; above 0.75 = euphoria.</div>
     </div>
     <div class="source-card">
         <h4>SOPR — Spent Output Profit Ratio</h4>
-        <p>For each BTC spent on a given day: <code>SOPR = Σ(btc × price_at_spend) / Σ(btc × price_at_creation)</code>. Above 1 = coins moved at a profit on average; below 1 = selling at a loss (capitulation signal).</p>
+        <div class="cp-p">For each BTC spent on a given day: <code>SOPR = Σ(btc × price_at_spend) / Σ(btc × price_at_creation)</code>. Above 1 = coins moved at a profit on average; below 1 = selling at a loss (capitulation signal).</div>
     </div>
     <div class="source-card">
         <h4>NVT Ratio — Network Value to Transactions</h4>
-        <p><code>NVT = Market Cap / 28d-MA(daily on-chain BTC volume)</code>. Price cancels in the computation — only supply and transaction count matter. Works like a P/E ratio: high NVT = overvalued relative to actual usage.</p>
+        <div class="cp-p"><code>NVT = Market Cap / 28d-MA(daily on-chain BTC volume)</code>. Price cancels in the computation — only supply and transaction count matter. Works like a P/E ratio: high NVT = overvalued relative to actual usage.</div>
     </div>
     <div class="source-card">
         <h4>Puell Multiple</h4>
-        <p><code>Puell = Daily miner revenue / 365d-MA(daily miner revenue)</code>. Miner revenue = coinbase transaction output value (block reward + fees). When miners earn far above average, they tend to sell more — creating downward pressure.</p>
+        <div class="cp-p"><code>Puell = Daily miner revenue / 365d-MA(daily miner revenue)</code>. Miner revenue = coinbase transaction output value (block reward + fees). When miners earn far above average, they tend to sell more — creating downward pressure.</div>
     </div>
     <div class="source-card">
         <h4>HODL Waves &amp; RHODL</h4>
-        <p>The full current UTXO set is queried from BigQuery and bucketed into 12 age bands by days since last move. RHODL Ratio = BTC in 1–2y band / BTC in 1d–1w band — measures conviction of long-term holders relative to recent buyers.</p>
+        <div class="cp-p">The full current UTXO set is queried from BigQuery and bucketed into 12 age bands by days since last move. RHODL Ratio = BTC in 1–2y band / BTC in 1d–1w band — measures conviction of long-term holders relative to recent buyers.</div>
     </div>
     <div class="source-card">
         <h4>Supply in Profit</h4>
-        <p>For each HODL age band, the midpoint acquisition date is estimated and the BTC price on that date is looked up from the Kraken price history. Bands where the historical price is below the current price are counted as "in profit".</p>
+        <div class="cp-p">For each HODL age band, the midpoint acquisition date is estimated and the BTC price on that date is looked up from the Kraken price history. Bands where the historical price is below the current price are counted as "in profit".</div>
     </div>
     <div class="source-card">
         <h4>CDD — Coin Days Destroyed</h4>
-        <p><code>CDD = Σ(btc_moved × days_since_last_move)</code> per day. Weights transactions by dormancy — a spike means old, long-idle coins are moving, often a distribution signal near tops.</p>
+        <div class="cp-p"><code>CDD = Σ(btc_moved × days_since_last_move)</code> per day. Weights transactions by dormancy — a spike means old, long-idle coins are moving, often a distribution signal near tops.</div>
     </div>
     <div class="source-card">
         <h4>MVRV Z-Score</h4>
-        <p>Normalizes the MVRV signal: <code>Z = (Market Cap − Realized Cap) / stdev(all historical Market Caps)</code>. The standard deviation is computed over all daily market caps since 2013, making the Z-Score comparable across cycles despite Bitcoin's growth in absolute size.</p>
+        <div class="cp-p">Normalizes the MVRV signal: <code>Z = (Market Cap − Realized Cap) / stdev(all historical Market Caps)</code>. The standard deviation is computed over all daily market caps since 2013, making the Z-Score comparable across cycles despite Bitcoin's growth in absolute size.</div>
     </div>
     <div class="source-card">
         <h4>LTH / STH Supply &amp; Realized Price</h4>
-        <p>Long-Term and Short-Term Holder supplies are derived from HODL Wave band aggregates. LTH = bands older than 1 year; STH = bands younger than 1 year. Realized prices are estimated by weighting each band's BTC by the price at the midpoint acquisition date, approximated from the Kraken price history.</p>
+        <div class="cp-p">Long-Term and Short-Term Holder supplies are derived from HODL Wave band aggregates. LTH = bands older than 1 year; STH = bands younger than 1 year. Realized prices are estimated by weighting each band's BTC by the price at the midpoint acquisition date, approximated from the Kraken price history.</div>
     </div>
     <div class="source-card">
         <h4>Stock-to-Flow (S2F)</h4>
-        <p><code>SF = Circulating Supply / Annual Issuance</code>. Annual issuance is the sum of the last 365 days of coinbase revenue (from <code>puell_daily</code>). Model price uses PlanB's approximation: <code>10^(2.66 × log₁₀(SF) − 1.59)</code>. Historical SF is computed using a sliding window over the full puell_daily history.</p>
+        <div class="cp-p"><code>SF = Circulating Supply / Annual Issuance</code>. Annual issuance is the sum of the last 365 days of coinbase revenue (from <code>puell_daily</code>). Model price uses PlanB's approximation: <code>10^(2.66 × log₁₀(SF) − 1.59)</code>. Historical SF is computed using a sliding window over the full puell_daily history.</div>
     </div>
     <div class="source-card">
         <h4>Transaction Count &amp; Fees</h4>
-        <p>Queried daily from <code>bigquery-public-data.crypto_bitcoin.transactions</code>, excluding coinbase transactions. Volume = <code>SUM(output_value)</code> in BTC; average fee = <code>SUM(fee) / COUNT(*)</code>. Incrementally updated — only new days since the last cached row are fetched.</p>
+        <div class="cp-p">Queried daily from <code>bigquery-public-data.crypto_bitcoin.transactions</code>, excluding coinbase transactions. Volume = <code>SUM(output_value)</code> in BTC; average fee = <code>SUM(fee) / COUNT(*)</code>. Incrementally updated — only new days since the last cached row are fetched.</div>
     </div>
     <div class="source-card">
         <h4>Hash Rate</h4>
-        <p>Derived from the <code>blocks</code> table: <code>hash_rate (H/s) = AVG(difficulty) × 2³² / 600</code>, converted to EH/s by dividing by 10¹⁸. The 600-second denominator is the target block interval. A 14-day moving average smooths out variance from natural block time fluctuation.</p>
+        <div class="cp-p">Derived from the <code>blocks</code> table: <code>hash_rate (H/s) = AVG(difficulty) × 2³² / 600</code>, converted to EH/s by dividing by 10¹⁸. The 600-second denominator is the target block interval. A 14-day moving average smooths out variance from natural block time fluctuation.</div>
     </div>
 </div>
 </div><!-- /page-about -->
@@ -513,7 +513,7 @@
 <div id="page-api" class="content-page">
 <div class="cp-inner">
     <h2>API Reference</h2>
-    <p class="cp-subtitle">Free, no authentication required. All responses are JSON. Base URL: <code>https://btcfunk.com</code></p>
+    <div class="cp-p cp-subtitle">Free, no authentication required. All responses are JSON. Base URL: <code>https://btcfunk.com</code></div>
 
     <h3>Endpoints</h3>
     <table class="api-table">
@@ -539,7 +539,7 @@
     </table>
 
     <h3>Summary mode</h3>
-    <p>Add <code>?summary=true</code> to any endpoint to get only scalar fields — no time-series arrays. Useful for bots, alerts, and lightweight integrations.</p>
+    <div class="cp-p">Add <code>?summary=true</code> to any endpoint to get only scalar fields — no time-series arrays. Useful for bots, alerts, and lightweight integrations.</div>
     <table class="api-table" style="margin-top:0.75rem">
         <thead><tr><th>Example</th><th>Response</th></tr></thead>
         <tbody>
@@ -549,8 +549,8 @@
     </table>
 
     <h3>Notes</h3>
-    <p>Responses are cached for <strong>24 hours</strong>. On-chain data reflects blockchain state with approximately a 1–2 day lag (BigQuery public dataset update cadence).</p>
-    <p>No rate limits are currently enforced, but please be reasonable. All data is provided as-is for informational purposes.</p>
+    <div class="cp-p">Responses are cached for <strong>24 hours</strong>. On-chain data reflects blockchain state with approximately a 1–2 day lag (BigQuery public dataset update cadence).</div>
+    <div class="cp-p">No rate limits are currently enforced, but please be reasonable. All data is provided as-is for informational purposes.</div>
 </div>
 </div><!-- /page-api -->
 
@@ -558,7 +558,7 @@
 <div id="page-donate" class="content-page">
 <div class="cp-inner">
     <h2>Support BTCFunk</h2>
-    <p class="cp-subtitle">BTCFunk is free, open, and has no ads. If you find it useful, a small donation keeps the servers running and the data flowing.</p>
+    <div class="cp-p cp-subtitle">BTCFunk is free, open, and has no ads. If you find it useful, a small donation keeps the servers running and the data flowing.</div>
 
     <div style="max-width:320px;margin:1.5rem auto 0;text-align:center">
         <div class="source-card" style="text-align:center">
@@ -570,10 +570,10 @@
         </div>
     </div>
 
-    <p style="font-size:0.78rem;color:#999;margin-top:1.5rem;text-align:center">Thank you ₿</p>
+    <div style="font-size:0.78rem;color:#999;margin-top:1.5rem;text-align:center">Thank you ₿</div>
 
     <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid #eee;text-align:center">
-        <p style="font-size:0.78rem;color:#888;margin-bottom:0.4rem">Questions or feedback?</p>
+        <div style="font-size:0.78rem;color:#888;margin-bottom:0.4rem">Questions or feedback?</div>
         <a href="mailto:lucarocchi@outlook.it" style="font-size:0.85rem;color:#111;text-decoration:none;font-weight:500">lucarocchi@outlook.it</a>
     </div>
 </div>
@@ -583,7 +583,7 @@
 <div id="page-settings" class="content-page">
 <div class="cp-inner">
     <h2>Settings</h2>
-    <p class="cp-subtitle">Personalise your BTCFunk experience.</p>
+    <div class="cp-p cp-subtitle">Personalise your BTCFunk experience.</div>
 
     <h3>Theme</h3>
     <div id="theme-picker" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.75rem;margin-bottom:2rem">
@@ -618,7 +618,7 @@
     </div>
 
     <h3>Dashboard Widgets</h3>
-    <p style="font-size:0.8rem;color:var(--text-5);margin-bottom:1rem">Toggle which metrics appear on the home grid.</p>
+    <div style="font-size:0.8rem;color:var(--text-5);margin-bottom:1rem">Toggle which metrics appear on the home grid.</div>
     <div id="widget-toggles" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;max-width:560px;margin-bottom:1.5rem"></div>
     <button onclick="resetWidgetLayout()" style="font-size:0.78rem;padding:0.35rem 1rem;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text-4);cursor:pointer;font-family:inherit">Reset layout &amp; show all</button>
 </div>
@@ -972,7 +972,7 @@
         if (!el || el.dataset.rendered) return;
         el.dataset.rendered = '1';
         const d = data[id];
-        if (!d) { el.innerHTML = '<p style="color:#aaa;padding:1rem;font-size:0.8rem">Data not loaded yet.</p>'; return; }
+        if (!d) { el.innerHTML = '<div style="color:#aaa;padding:1rem;font-size:0.8rem">Data not loaded yet.</div>'; return; }
         const m = METRICS[id];
 
         // Band-type metrics (HODL, RHODL, Supply in Profit)
@@ -1014,7 +1014,7 @@
             hashrate:         { vals: d.values,    col: 'EH/s',         fmt: v => v != null ? v.toFixed(4) : '—' },
         };
         const cfg = cfgMap[id];
-        if (!cfg || !d.labels) { el.innerHTML = '<p style="color:#aaa;padding:1rem">No data.</p>'; return; }
+        if (!cfg || !d.labels) { el.innerHTML = '<div style="color:#aaa;padding:1rem">No data.</div>'; return; }
         const rows = d.labels.map((l, i) => [l, cfg.vals[i]]).reverse();
         el.innerHTML = `<table class="data-table">
             <thead><tr><th>Date</th><th style="text-align:right">${cfg.col}</th></tr></thead>

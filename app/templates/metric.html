@@ -209,7 +209,7 @@
             border-radius: 8px; padding: 1.4rem;
             margin-bottom: 1.5rem;
         }
-        .metric-body p {
+        .metric-body div {
             font-size: 0.85rem; color: var(--text-3); line-height: 1.75;
         }
 
@@ -313,7 +313,7 @@
 
     <header class="metric-header">
         <h1>{{ meta.h1 }}</h1>
-        <p class="metric-subtitle">{{ meta.subtitle }}</p>
+        <div class="metric-subtitle">{{ meta.subtitle }}</div>
     </header>
 
     <div class="value-card" id="value-card" style="display:none">
@@ -332,13 +332,13 @@
         <div class="spinner-wrap" id="spinner"><div class="spinner"></div></div>
         <canvas id="metric-chart" style="display:none"></canvas>
     </div>
-    <p class="chart-hint">{{ meta.hint }}</p>
+    <div class="chart-hint">{{ meta.hint }}</div>
     {% else %}
     <div class="hint-bar">{{ meta.hint }}</div>
     {% endif %}
 
     <div class="metric-body">
-        <p>{{ meta.body }}</p>
+        <div>{{ meta.body }}</div>
     </div>
 
     {% if query %}
@@ -348,7 +348,7 @@
             Data Source &amp; Query
         </button>
         <div class="query-box">
-            <p class="query-source">{{ query.source }}</p>
+            <div class="query-source">{{ query.source }}</div>
             <pre>{{ query.sql }}</pre>
         </div>
     </div>
