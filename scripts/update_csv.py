@@ -71,7 +71,11 @@ def fetch_and_sync(pair, con):
     try:
         data = requests.get(url, timeout=15).json()
     except Exception as e:
-        log(f"  tf={tf}: errore API — {e}")
+        log(f"  tf={tf}: errore HTTP — {e}")
+        return
+
+    if "result" not in data or data.get("error"):
+        log(f"  tf={tf}: API error — {data.get('error', 'no result')}")
         return
 
     bars = data["result"].get(pair["key"], [])[:-1]  # escludi candela incompleta
