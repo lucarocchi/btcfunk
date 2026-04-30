@@ -28,7 +28,10 @@ _TF = Query(1440, description="Timeframe in minutes: 15, 30, 60, 240, 720, 1440"
 
 @app.get("/")
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        "index.html", {"request": request},
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+    )
 
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
