@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request, Query
+from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from app.metrics_meta import METRICS_META, METRIC_LABELS
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
@@ -193,3 +194,31 @@ async def ema(request: Request, tf: int = _TF, summary: bool = _S):
 async def bb(request: Request, tf: int = _TF, summary: bool = _S):
     from app.metrics.bb import get_bb
     return _resp(get_bb(tf=tf), summary)
+
+
+@app.get("/sitemap.xml")
+async def sitemap_dynamic():
+    urls = ['https://btcfunk.com/'] + [f'https://btcfunk.com/{k}' for k in METRICS_META]
+    items = ''.join(
+        f'  <url><loc>{u}</loc><changefreq>daily</changefreq><priority>{"1.0" if u.endswith("/") else "0.8"}</priority></url>\n'
+        for u in urls
+    )
+    xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{items}</urlset>'
+    return Response(content=xml, media_type="application/xml",
+                    headers={"Cache-Control": "public, max-age=3600"})
+
+
+@app.get("/{metric_id}")
+async def metric_page(request: Request, metric_id: str):
+    if metric_id not in METRICS_META:
+        raise HTTPException(status_code=404)
+    return templates.TemplateResponse(
+        "metric.html",
+        {
+            "request": request,
+            "metric_id": metric_id,
+            "meta": METRICS_META[metric_id],
+            "related_labels": METRIC_LABELS,
+        },
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )

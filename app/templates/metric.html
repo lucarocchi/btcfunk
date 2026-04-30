@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ meta.page_title }} | BTCFunk</title>
+    <meta name="description" content="{{ meta.description }}">
+    <meta name="author" content="BTCFunk">
+    <link rel="canonical" href="https://btcfunk.com/{{ metric_id }}">
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website">
+    <meta property="og:url"         content="https://btcfunk.com/{{ metric_id }}">
+    <meta property="og:title"       content="{{ meta.page_title }} | BTCFunk">
+    <meta property="og:description" content="{{ meta.description }}">
+    <meta property="og:image"       content="https://btcfunk.com/static/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:url"         content="https://btcfunk.com/{{ metric_id }}">
+    <meta name="twitter:title"       content="{{ meta.page_title }} | BTCFunk">
+    <meta name="twitter:description" content="{{ meta.description }}">
+    <meta name="twitter:image"       content="https://btcfunk.com/static/og-image.png">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "{{ meta.page_title }}",
+      "url": "https://btcfunk.com/{{ metric_id }}",
+      "description": "{{ meta.description }}",
+      "isPartOf": { "@type": "WebSite", "name": "BTCFunk", "url": "https://btcfunk.com" }
+    }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg:        #f2f2f2;
+            --surface:   #fff;
+            --surface-2: #f7f7f7;
+            --surface-3: #f5f5f5;
+            --border:    #ddd;
+            --border-2:  #eee;
+            --border-3:  #f0f0f0;
+            --text:      #111;
+            --text-2:    #333;
+            --text-3:    #555;
+            --text-4:    #666;
+            --text-5:    #888;
+            --text-6:    #999;
+            --text-7:    #aaa;
+            --text-8:    #bbb;
+            --text-9:    #ccc;
+            --accent:    #111;
+            --accent-fg: #fff;
+        }
+        [data-theme="dark"] {
+            --bg:        #0d0d0d;
+            --surface:   #1a1a1a;
+            --surface-2: #222;
+            --surface-3: #1e1e1e;
+            --border:    #2a2a2a;
+            --border-2:  #222;
+            --border-3:  #1e1e1e;
+            --text:      #f0f0f0;
+            --text-2:    #d0d0d0;
+            --text-3:    #b0b0b0;
+            --text-4:    #909090;
+            --text-5:    #707070;
+            --text-6:    #606060;
+            --text-7:    #505050;
+            --text-8:    #404040;
+            --text-9:    #333;
+            --accent:    #f0f0f0;
+            --accent-fg: #111;
+        }
+        [data-theme="midnight"] {
+            --bg:        #070d1a;
+            --surface:   #0d1526;
+            --surface-2: #111d33;
+            --surface-3: #0f1a2e;
+            --border:    #1e2d4a;
+            --border-2:  #162038;
+            --border-3:  #111a2e;
+            --text:      #c8d8f0;
+            --text-2:    #a0b8d8;
+            --text-3:    #7898b8;
+            --text-4:    #5878a0;
+            --text-5:    #406888;
+            --text-6:    #305070;
+            --text-7:    #204060;
+            --text-8:    #183050;
+            --text-9:    #102040;
+            --accent:    #4a9eff;
+            --accent-fg: #fff;
+        }
+        [data-theme="amber"] {
+            --bg:        #0a0800;
+            --surface:   #140f00;
+            --surface-2: #1a1400;
+            --surface-3: #161100;
+            --border:    #2a2000;
+            --border-2:  #201800;
+            --border-3:  #181200;
+            --text:      #ffb800;
+            --text-2:    #e0a000;
+            --text-3:    #c08800;
+            --text-4:    #a07000;
+            --text-5:    #806000;
+            --text-6:    #604800;
+            --text-7:    #483800;
+            --text-8:    #302800;
+            --text-9:    #201800;
+            --accent:    #ffb800;
+            --accent-fg: #0a0800;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg); color: var(--text);
+            font-size: 14px; min-height: 100vh;
+        }
+
+        /* NAV */
+        #topnav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 1.25rem; height: 46px;
+            background: var(--surface); border-bottom: 1px solid var(--border);
+        }
+        .nav-logo {
+            font-size: 0.9rem; font-weight: 700; color: var(--text);
+            letter-spacing: -0.02em; text-decoration: none;
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .nav-logo span { font-weight: 400; color: var(--text-7); font-size: 0.72rem; }
+        .nav-links { display: flex; }
+        .nav-link {
+            padding: 0 0.9rem; font-size: 0.8rem; color: var(--text-4);
+            text-decoration: none; height: 46px; display: flex; align-items: center;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover { color: var(--text); }
+
+        /* MAIN CONTENT */
+        #wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+        /* BREADCRUMB */
+        .breadcrumb {
+            font-size: 0.75rem; color: var(--text-5); margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .breadcrumb a { color: var(--text-5); text-decoration: none; }
+        .breadcrumb a:hover { color: var(--text); }
+
+        /* HEADER */
+        .metric-header { margin-bottom: 2rem; }
+        .metric-header h1 {
+            font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em;
+            color: var(--text); margin-bottom: 0.25rem;
+        }
+        .metric-subtitle { font-size: 0.85rem; color: var(--text-5); margin-bottom: 1rem; }
+
+        /* VALUE CARD */
+        .value-card {
+            display: inline-flex; align-items: baseline; gap: 0.5rem;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.75rem 1.2rem; margin-bottom: 1.5rem;
+        }
+        .value-label { font-size: 0.75rem; color: var(--text-5); }
+        .value-num {
+            font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text);
+        }
+        .value-unit { font-size: 0.82rem; color: var(--text-5); }
+
+        /* CHART */
+        .chart-wrap {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem;
+            position: relative; height: 280px;
+        }
+        .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+        .chart-hint {
+            font-size: 0.73rem; color: var(--text-5); text-align: center;
+            padding: 0.5rem 0 0.2rem;
+        }
+
+        /* SPINNER */
+        .spinner-wrap {
+            position: absolute; inset: 0; display: flex;
+            align-items: center; justify-content: center;
+            background: var(--surface); border-radius: 8px;
+        }
+        .spinner {
+            width: 24px; height: 24px; border-radius: 50%;
+            border: 2px solid var(--border-2); border-top-color: var(--text-8);
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* BODY TEXT */
+        .metric-body {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1.4rem;
+            margin-bottom: 1.5rem;
+        }
+        .metric-body p {
+            font-size: 0.85rem; color: var(--text-3); line-height: 1.75;
+        }
+
+        /* HINT */
+        .hint-bar {
+            font-size: 0.75rem; color: var(--text-4); background: var(--surface-3);
+            border: 1px solid var(--border-2); border-radius: 6px;
+            padding: 0.5rem 0.9rem; margin-bottom: 1.5rem;
+        }
+
+        /* RELATED */
+        .related-section { margin-bottom: 2rem; }
+        .related-section h2 {
+            font-size: 0.78rem; font-weight: 600; color: var(--text-5);
+            text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.75rem;
+        }
+        .related-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .related-link {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 6px; padding: 0.5rem 0.9rem;
+            font-size: 0.8rem; color: var(--text-2); text-decoration: none;
+            transition: border-color 0.15s;
+        }
+        .related-link:hover { border-color: var(--text-6); color: var(--text); }
+
+        /* OPEN IN APP */
+        .open-app {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: var(--accent); color: var(--accent-fg);
+            border-radius: 6px; padding: 0.6rem 1.1rem;
+            font-size: 0.82rem; font-weight: 500; text-decoration: none;
+            margin-bottom: 2rem;
+        }
+        .open-app:hover { opacity: 0.85; }
+
+        /* FOOTER */
+        #site-footer {
+            border-top: 1px solid var(--border); padding: 0.75rem 1.25rem;
+            font-size: 0.72rem; color: var(--text-6);
+            display: flex; justify-content: flex-end; gap: 1.5rem;
+        }
+        #site-footer a { color: var(--text-4); text-decoration: none; }
+        #site-footer a:hover { color: var(--text); }
+
+        @media (max-width: 640px) {
+            #wrap { padding: 1.5rem 1rem 4rem; }
+            .metric-header h1 { font-size: 1.3rem; }
+            .chart-wrap { height: 220px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav id="topnav">
+    <a class="nav-logo" href="/">BTCFunk <span>Bitcoin Analytics</span></a>
+    <div class="nav-links">
+        <a class="nav-link" href="/#dashboard">Dashboard</a>
+        <a class="nav-link" href="/#api">API</a>
+    </div>
+</nav>
+
+<main id="wrap">
+
+    <div class="breadcrumb">
+        <a href="/">BTCFunk</a>
+        <span>/</span>
+        <span>{{ meta.h1 }}</span>
+    </div>
+
+    <header class="metric-header">
+        <h1>{{ meta.h1 }}</h1>
+        <p class="metric-subtitle">{{ meta.subtitle }}</p>
+    </header>
+
+    <div class="value-card" id="value-card" style="display:none">
+        <span class="value-label">Current</span>
+        <span class="value-num" id="val-num">—</span>
+        <span class="value-unit" id="val-unit"></span>
+    </div>
+
+    {% if meta.series %}
+    <div class="chart-wrap" id="chart-wrap">
+        <div class="spinner-wrap" id="spinner"><div class="spinner"></div></div>
+        <canvas id="metric-chart" style="display:none"></canvas>
+    </div>
+    <p class="chart-hint">{{ meta.hint }}</p>
+    {% else %}
+    <div class="hint-bar">{{ meta.hint }}</div>
+    {% endif %}
+
+    <div class="metric-body">
+        <p>{{ meta.body }}</p>
+    </div>
+
+    <a class="open-app" href="/#dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Open in Dashboard
+    </a>
+
+    {% if meta.related %}
+    <section class="related-section">
+        <h2>Related Indicators</h2>
+        <div class="related-links">
+            {% for rid in meta.related %}
+            <a class="related-link" href="/{{ rid }}">{{ related_labels[rid] }}</a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+</main>
+
+<footer id="site-footer">
+    <a href="/">Home</a>
+    <a href="/#api">API</a>
+    <a href="/#about">About</a>
+</footer>
+
+<script>
+(function () {
+    const saved = localStorage.getItem('btcfunk-theme');
+    if (saved && saved !== 'light') document.documentElement.setAttribute('data-theme', saved);
+})();
+
+const API   = '{{ meta.api }}';
+const FIELD = '{{ meta.value_field }}';
+const FMT   = '{{ meta.value_fmt }}';
+const SERIES = '{{ meta.series }}';
+const PREFIX = '{{ meta.get("value_prefix", "") }}';
+const SUFFIX = '{{ meta.get("value_suffix", "") }}';
+
+function fmt(v) {
+    if (v === null || v === undefined) return '—';
+    if (FMT === ',.0f') return PREFIX + Number(v).toLocaleString('en-US', {maximumFractionDigits: 0}) + SUFFIX;
+    if (FMT === ',.2f') return PREFIX + Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + SUFFIX;
+    const m = FMT.match(/\.(\d+)f/);
+    if (m) return PREFIX + Number(v).toFixed(parseInt(m[1])) + SUFFIX;
+    return PREFIX + v + SUFFIX;
+}
+
+function chartColors() {
+    const s = getComputedStyle(document.documentElement);
+    return {
+        grid: s.getPropertyValue('--border-3').trim() || '#f0f0f0',
+        tick: s.getPropertyValue('--text-6').trim()   || '#999',
+        line: s.getPropertyValue('--text').trim()     || '#111',
+    };
+}
+
+async function load() {
+    try {
+        const r = await fetch('/api/' + API);
+        if (!r.ok) return;
+        const d = await r.json();
+
+        const val = d[FIELD];
+        if (val !== undefined && val !== null) {
+            document.getElementById('val-num').textContent = fmt(val);
+            if (SUFFIX) document.getElementById('val-unit').textContent = '';
+            document.getElementById('value-card').style.display = 'inline-flex';
+        }
+
+        if (SERIES && d[SERIES] && Array.isArray(d[SERIES])) {
+            const canvas = document.getElementById('metric-chart');
+            const spinner = document.getElementById('spinner');
+            const cc = chartColors();
+            const pts = d[SERIES];
+            const labels = d.dates || pts.map((_, i) => '');
+            spinner.style.display = 'none';
+            canvas.style.display = 'block';
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: pts,
+                        borderColor: cc.line,
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        tension: 0,
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                    scales: {
+                        x: {
+                            display: labels[0] !== '',
+                            grid: { color: cc.grid },
+                            ticks: { color: cc.tick, maxTicksLimit: 6, font: { size: 10 } },
+                        },
+                        y: {
+                            grid: { color: cc.grid },
+                            ticks: { color: cc.tick, font: { size: 10 } },
+                        }
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        const sp = document.getElementById('spinner');
+        if (sp) sp.style.display = 'none';
+    }
+}
+
+load();
+</script>
+
+</body>
+</html>
