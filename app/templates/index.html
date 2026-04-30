@@ -1733,6 +1733,7 @@
         document.getElementById('d-price-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
         renderPriceChart('hc-price-chart', d.labels, d.close, true);
         cardReady('price');
+        fetchLiveTicker();
         // Volume card
         document.getElementById('hc-volume-val').textContent  = d.current_volume ? d.current_volume.toFixed(2) : '—';
         document.getElementById('hc-volume-badge').className  = 'badge neutral';
