@@ -78,7 +78,7 @@ def fetch_and_sync(pair, con):
         log(f"  tf={tf}: API error — {data.get('error', 'no result')}")
         return
 
-    bars = data["result"].get(pair["key"], [])[:-1]  # escludi candela incompleta
+    bars = data["result"].get(pair["key"], [])  # include ultima candela parziale, verrà aggiornata al prossimo run
     new_bars = [b for b in bars if int(b[0]) > since]
 
     if not new_bars:
@@ -105,12 +105,13 @@ def fetch_and_sync(pair, con):
     log(f"  tf={tf}: +{len(new_bars)} candele → {last_dt}")
 
 def resample_30m(con):
-    """Rigenera tf=30 in SQLite da tf=15."""
+    """Aggiorna tf=30 in SQLite resampland solo le ultime 200 candele da tf=15."""
     rows = con.execute(
-        "SELECT ts, open, high, low, close, vol, trades FROM ohlc WHERE tf = 15 ORDER BY ts"
+        "SELECT ts, open, high, low, close, vol, trades FROM ohlc WHERE tf = 15 ORDER BY ts DESC LIMIT 200"
     ).fetchall()
     if not rows:
         return
+    rows = sorted(rows, key=lambda x: x[0])  # riordina ascending
     period = 30 * 60
     buckets = {}
     for ts, o, h, l, c, vol, trades in rows:
@@ -128,7 +129,7 @@ def resample_30m(con):
         out
     )
     con.commit()
-    log(f"  tf=30: {len(out)} candele (resample da tf=15)")
+    log(f"  tf=30: {len(out)} candele aggiornate (resample ultimi 200x15m)")
 
 def bootstrap_from_csv(con):
     """Import iniziale: legge i CSV esistenti e popola SQLite. Salta se già presente."""
