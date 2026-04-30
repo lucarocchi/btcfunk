@@ -1,4 +1,3 @@
-import csv
 import os
 import sqlite3
 import json
@@ -8,7 +7,6 @@ from google.cloud import bigquery
 
 DB_PATH = "mvrv_cache.sqlite"
 CACHE_TTL_HOURS = 24
-KRAKEN_CSV = os.path.join(os.path.dirname(__file__), "../data/raw/XBTUSD_1440.csv")
 
 _bq_client = None
 
@@ -58,22 +56,23 @@ def _cache_set(con, key, value):
     con.commit()
 
 
-def _import_csv(con):
+def _import_from_ohlc(con):
+    """Seed btc_prices from ohlc table (tf=1440) if empty."""
     count = con.execute("SELECT COUNT(*) FROM btc_prices").fetchone()[0]
     if count > 0:
         return
-    rows = []
-    with open(KRAKEN_CSV) as f:
-        for line in csv.reader(f):
-            ts, _, _, _, close = int(line[0]), line[1], line[2], line[3], line[4]
-            day = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
-            rows.append((day, float(close)))
-    con.executemany("INSERT OR REPLACE INTO btc_prices (day, price) VALUES (?, ?)", rows)
-    con.commit()
+    rows = con.execute(
+        "SELECT DATE(ts, 'unixepoch') AS day, close FROM ohlc WHERE tf = 1440 ORDER BY ts"
+    ).fetchall()
+    if rows:
+        con.executemany("INSERT OR REPLACE INTO btc_prices (day, price) VALUES (?, ?)", rows)
+        con.commit()
 
 
 def _update_prices(con):
     row = con.execute("SELECT MAX(day) FROM btc_prices").fetchone()
+    if not row[0]:
+        return
     last_day = datetime.strptime(row[0], "%Y-%m-%d").replace(tzinfo=timezone.utc)
     since = int(last_day.timestamp())
     r = requests.get(
@@ -130,13 +129,12 @@ def _fetch_live_price():
 def get_mvrv():
     con = _init_db()
 
-    # realized_cap and circulating_supply are expensive (BigQuery) — cache 24h
     cached_rc = _cache_get(con, "realized_cap")
     if cached_rc and "circulating_supply" in cached_rc:
         realized_cap = cached_rc["realized_cap"]
         circulating_supply = cached_rc["circulating_supply"]
     else:
-        _import_csv(con)
+        _import_from_ohlc(con)
         _update_prices(con)
         prices = _get_prices(con)
         utxos = _fetch_utxos()
@@ -150,7 +148,6 @@ def get_mvrv():
     current_price = _fetch_live_price()
     market_cap = circulating_supply * current_price
 
-    # Historical MVRV (last 365 days, approximate with current realized cap)
     cutoff = (datetime.now(timezone.utc) - timedelta(days=365)).strftime("%Y-%m-%d")
     prices = _get_prices(con)
     hist = sorted((d, p) for d, p in prices.items() if d >= cutoff)
