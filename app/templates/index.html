@@ -1115,14 +1115,14 @@
         }).join('');
     }
 
+    let gridNeedsRebuild = false;
+
     function toggleWidget(id, visible) {
         let hidden = loadHiddenWidgets();
-        if (visible) {
-            hidden = hidden.filter(h => h !== id);
-        } else {
-            if (!hidden.includes(id)) hidden.push(id);
-        }
+        if (visible) hidden = hidden.filter(h => h !== id);
+        else if (!hidden.includes(id)) hidden.push(id);
         saveHiddenWidgets(hidden);
+        gridNeedsRebuild = true;
         buildWidgetToggles();
     }
 
@@ -2188,7 +2188,7 @@
             const el = document.getElementById('page-' + p);
             if (el) el.classList.toggle('active', p === name);
         });
-        if (name === 'dashboard') buildHomeCards();
+        if (name === 'dashboard' && gridNeedsRebuild) { gridNeedsRebuild = false; location.reload(); return; }
         if (name !== 'dashboard') closeSidebar();
         if (name === 'donate') generateQR();
         if (name === 'settings') buildWidgetToggles();
