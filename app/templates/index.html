@@ -520,17 +520,7 @@
     <h2>Support BTCFunk</h2>
     <p class="cp-subtitle">BTCFunk is free, open, and has no ads. If you find it useful, a small donation keeps the servers running and the data flowing.</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem">
-
-        <div class="source-card" style="text-align:center">
-            <div class="tag" style="background:#fff9e6;color:#b45309">⚡ Lightning</div>
-            <h4 style="margin:0.6rem 0 0.3rem">Instant · Zero fees</h4>
-            <div id="qr-ln" style="margin:0.75rem auto;display:inline-block"></div>
-            <div style="font-size:0.72rem;color:#555;word-break:break-all;margin-bottom:0.6rem">amazingbadger664@walletofsatoshi.com</div>
-            <button onclick="copyText('amazingbadger664@walletofsatoshi.com', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
-            <p style="font-size:0.68rem;color:#aaa;margin-top:0.6rem;line-height:1.5">Works with any Lightning wallet.<br>Kraken &amp; exchanges require a BOLT11 invoice — generate one directly in Wallet of Satoshi.</p>
-        </div>
-
+    <div style="max-width:320px;margin:1.5rem auto 0;text-align:center">
         <div class="source-card" style="text-align:center">
             <div class="tag" style="background:#f0faf4;color:#16a34a">₿ Bitcoin on-chain</div>
             <h4 style="margin:0.6rem 0 0.3rem">Any amount · Any wallet</h4>
@@ -538,7 +528,6 @@
             <div style="font-size:0.72rem;color:#555;word-break:break-all;margin-bottom:0.6rem">bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr</div>
             <button onclick="copyText('bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
         </div>
-
     </div>
 
     <p style="font-size:0.78rem;color:#999;margin-top:1.5rem;text-align:center">Thank you ₿</p>
@@ -2143,8 +2132,7 @@
     function generateQR() {
         if (qrGenerated) return;
         qrGenerated = true;
-        new QRCode(document.getElementById('qr-ln'),  { text: 'lightning:amazingbadger664@walletofsatoshi.com', width: 160, height: 160 });
-        new QRCode(document.getElementById('qr-btc'), { text: 'bitcoin:bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr',        width: 160, height: 160 });
+        new QRCode(document.getElementById('qr-btc'), { text: 'bitcoin:bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr', width: 160, height: 160 });
     }
 
     // Live price ticker — polls Kraken every 30s
