@@ -982,13 +982,19 @@
         </table>`;
     }
 
+    const ls = {
+        get(k)    { try { return localStorage.getItem(k); }          catch { return null; } },
+        set(k, v) { try { localStorage.setItem(k, v); }              catch {} },
+        del(k)    { try { localStorage.removeItem(k); }              catch {} },
+    };
+
     function saveWidgetOrder() {
         const order = [...document.querySelectorAll('#view-home .home-card')].map(c => c.dataset.id);
-        localStorage.setItem('btcfunk-widget-order', JSON.stringify(order));
+        ls.set('btcfunk-widget-order', JSON.stringify(order));
     }
 
     function loadWidgetOrder() {
-        try { return JSON.parse(localStorage.getItem('btcfunk-widget-order')); } catch { return null; }
+        try { return JSON.parse(ls.get('btcfunk-widget-order')); } catch { return null; }
     }
 
     function initDragDrop() {
@@ -1025,11 +1031,11 @@
     }
 
     function loadHiddenWidgets() {
-        try { return JSON.parse(localStorage.getItem('btcfunk-hidden-widgets')) || []; } catch { return []; }
+        try { return JSON.parse(ls.get('btcfunk-hidden-widgets')) || []; } catch { return []; }
     }
 
     function saveHiddenWidgets(hidden) {
-        localStorage.setItem('btcfunk-hidden-widgets', JSON.stringify(hidden));
+        ls.set('btcfunk-hidden-widgets', JSON.stringify(hidden));
     }
 
     function buildHomeCards() {
@@ -1075,7 +1081,7 @@
         } else {
             document.documentElement.setAttribute('data-theme', theme);
         }
-        localStorage.setItem('btcfunk-theme', theme);
+        ls.set('btcfunk-theme', theme);
         document.querySelectorAll('.theme-card').forEach(c =>
             c.classList.toggle('active', c.dataset.theme === theme));
         // Update existing chart grid/tick colors without full re-render
@@ -1092,7 +1098,7 @@
 
     // Apply saved theme before first chart renders
     (function() {
-        const saved = localStorage.getItem('btcfunk-theme') || 'light';
+        const saved = ls.get('btcfunk-theme') || 'light';
         if (saved !== 'light') document.documentElement.setAttribute('data-theme', saved);
         document.querySelectorAll('.theme-card').forEach(c =>
             c.classList.toggle('active', c.dataset.theme === saved));
@@ -1127,8 +1133,8 @@
     }
 
     function resetWidgetLayout() {
-        localStorage.removeItem('btcfunk-widget-order');
-        localStorage.removeItem('btcfunk-hidden-widgets');
+        ls.del('btcfunk-widget-order');
+        ls.del('btcfunk-hidden-widgets');
         location.reload();
     }
 
