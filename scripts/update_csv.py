@@ -1,13 +1,15 @@
 """
-Aggiorna i CSV storici con le candele più recenti da Kraken API.
+Aggiorna i CSV storici con le candele più recenti da Kraken API,
+poi sincronizza tutto su SQLite (tabella ohlc).
 Eseguire giornalmente via cron.
 """
-import csv, json, os
+import csv, json, os, sqlite3
 import requests
 from datetime import datetime, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR   = os.path.join(SCRIPT_DIR, "../app/data")
+DB_PATH    = os.path.join(SCRIPT_DIR, "../mvrv_cache.sqlite")
 
 PAIRS = [
     {"ohlc_pair": "XBTUSD", "ohlc_key": "XXBTZUSD", "interval": 1440, "file": "raw/XBTUSD_1440.csv"},
@@ -57,12 +59,11 @@ def fetch_and_append(pair):
     log(f"  {pair['file']}: +{len(new_bars)} candele → ultima {last_dt}")
 
 def resample_from_15m():
-    """Rigenera 30min e 60min dal CSV 15min aggiornato."""
+    """Rigenera 30min dal CSV 15min aggiornato."""
     src = os.path.join(DATA_DIR, "raw/XBTUSD_15.csv")
     if not os.path.exists(src):
         log("⚠️ raw/XBTUSD_15.csv non trovato — skip resample")
         return
-    # 60min e 240min vengono aggiornati direttamente dall'API Kraken — non sovrascrivere
     targets = {"raw/XBTUSD_30.csv": 2}
     bars_15 = []
     with open(src) as f:
@@ -91,43 +92,31 @@ def resample_from_15m():
         log(f"  {filename}: {len(out)} candele (resample da 15min)")
 
 def check_and_fill_gaps(min_days=20):
-    """
-    Verifica che le ultime min_days candele daily siano contigue (nessun gap).
-    Se trova buchi, scarica le candele mancanti da Kraken e le inserisce.
-    """
     path = os.path.join(DATA_DIR, "raw/XBTUSD_1440.csv")
     if not os.path.exists(path):
         log("⚠️ check_and_fill_gaps: CSV non trovato")
         return
-
-    # Leggi tutte le candele
     rows = []
     with open(path, newline="") as f:
         for row in csv.reader(f):
             try: rows.append((int(row[0]), row))
             except: pass
     rows.sort(key=lambda x: x[0])
-
     if len(rows) < min_days:
         log(f"⚠️ check_and_fill_gaps: solo {len(rows)} candele nel CSV")
         return
-
-    # Controlla gap negli ultimi min_days + buffer
     recent = rows[-(min_days + 5):]
-    expected_interval = 86400  # 1 giorno in secondi
+    expected_interval = 86400
     gaps = []
     for i in range(1, len(recent)):
         diff = recent[i][0] - recent[i-1][0]
-        if diff > expected_interval + 3600:  # tolleranza 1h per DST etc.
+        if diff > expected_interval + 3600:
             missing_ts = recent[i-1][0] + expected_interval
             gaps.append(missing_ts)
             log(f"⚠️ Gap trovato: manca candela intorno a {datetime.fromtimestamp(missing_ts, tz=timezone.utc).strftime('%Y-%m-%d')}")
-
     if not gaps:
         log(f"  CSV daily: nessun gap negli ultimi {min_days} giorni ✓")
         return
-
-    # Scarica le candele mancanti — usa since del primo gap - 2 giorni
     since = gaps[0] - 86400 * 2
     url = f"https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1440&since={since}"
     try:
@@ -147,9 +136,7 @@ def check_and_fill_gaps(min_days=20):
     except Exception as e:
         log(f"⚠️ Errore fetch gap: {e}")
 
-
 def check_daily_freshness():
-    """Verifica che il CSV daily abbia la candela di ieri."""
     path = os.path.join(DATA_DIR, "raw/XBTUSD_1440.csv")
     last = last_ts(path)
     if last == 0:
@@ -164,11 +151,64 @@ def check_daily_freshness():
     else:
         log(f"  CSV daily OK: ultima candela {last_dt}")
 
+# ── SQLite sync ──────────────────────────────────────────────────────────────
+
+def _init_ohlc(con):
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS ohlc (
+            tf     INTEGER NOT NULL,
+            ts     INTEGER NOT NULL,
+            open   REAL,
+            high   REAL,
+            low    REAL,
+            close  REAL,
+            vol    REAL,
+            trades INTEGER,
+            PRIMARY KEY (tf, ts)
+        )
+    """)
+    con.execute("CREATE INDEX IF NOT EXISTS idx_ohlc_tf_ts ON ohlc (tf, ts)")
+    con.commit()
+
+def sync_csv_to_sqlite(con, tf, path):
+    if not os.path.exists(path):
+        log(f"  SQLite sync skip: {path} non trovato")
+        return
+    rows = []
+    with open(path, newline="") as f:
+        for row in csv.reader(f):
+            try:
+                rows.append((tf, int(row[0]), float(row[1]), float(row[2]),
+                              float(row[3]), float(row[4]), float(row[5]), int(row[6])))
+            except:
+                pass
+    con.executemany(
+        "INSERT OR REPLACE INTO ohlc (tf, ts, open, high, low, close, vol, trades) VALUES (?,?,?,?,?,?,?,?)",
+        rows
+    )
+    con.commit()
+    log(f"  SQLite ohlc tf={tf}: {len(rows)} righe sincronizzate")
+
 if __name__ == "__main__":
     log("=== Update CSV storici ===")
     for pair in PAIRS:
         fetch_and_append(pair)
     resample_from_15m()
-    check_and_fill_gaps(min_days=20)  # garantisce 20 candele continue per BB
+    check_and_fill_gaps(min_days=20)
     check_daily_freshness()
+
+    log("=== Sync SQLite ===")
+    con = sqlite3.connect(DB_PATH)
+    _init_ohlc(con)
+    tf_map = [
+        (1440, "raw/XBTUSD_1440.csv"),
+        (720,  "raw/XBTUSD_720.csv"),
+        (240,  "raw/XBTUSD_240.csv"),
+        (60,   "raw/XBTUSD_60.csv"),
+        (30,   "raw/XBTUSD_30.csv"),
+        (15,   "raw/XBTUSD_15.csv"),
+    ]
+    for tf, fname in tf_map:
+        sync_csv_to_sqlite(con, tf, os.path.join(DATA_DIR, fname))
+    con.close()
     log("Done.")
