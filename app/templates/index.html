@@ -213,6 +213,10 @@
         .toggle-btn { padding: 0.2rem 0.65rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.72rem; cursor: pointer; background: #fff; color: #666; font-family: inherit; }
         .toggle-btn:hover { border-color: #999; color: #111; }
         .toggle-btn.active { background: #111; color: #fff; border-color: #111; }
+        .tf-selector { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; }
+        .tf-btn { padding: 0.2rem 0.55rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.68rem; cursor: pointer; background: #fff; color: #666; font-family: inherit; }
+        .tf-btn:hover { border-color: #999; color: #111; }
+        .tf-btn.active { background: #111; color: #fff; border-color: #111; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         .data-table th { text-align: left; padding: 0.35rem 0.5rem; color: #888; font-weight: 500; border-bottom: 1px solid #eee; font-size: 0.7rem; position: sticky; top: 0; background: #fff; }
         .data-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #f5f5f5; color: #333; }
@@ -455,7 +459,65 @@
 </footer>
 
 <script>
+    const TF_LABELS = { 15: '15m', 30: '30m', 60: '1H', 240: '4H', 1440: '1D' };
+
     const METRICS = {
+        price: {
+            label: 'Price', acronym: 'BTC/USD — Kraken OHLCV', live: true, group: 'Price & TA',
+            detail: 'Live BTC/USD price from Kraken (pair XBTUSD), updated every 7 minutes. Available in multiple timeframes from 15 minutes to daily. The close price is used as the reference for all technical indicators.',
+            stats: [{ id: 'val', label: 'BTC Price' }],
+            hint: '',
+            chartHeight: 220,
+            chartType: 'price',
+            tfSelector: [15, 30, 60, 240, 1440],
+        },
+        volume: {
+            label: 'Volume', acronym: 'BTC/USD trading volume — Kraken', live: true, group: 'Price & TA',
+            api: 'price',
+            detail: 'BTC/USD trading volume from Kraken. Volume confirms or contradicts price moves — a breakout on high volume is stronger than one on low volume. Volume spikes often mark key reversals or the start of a new trend.',
+            stats: [{ id: 'val', label: 'Volume (current candle)' }],
+            hint: 'Breakout + high volume = strong signal &nbsp;|&nbsp; Rally + low volume = weak signal',
+            chartHeight: 180,
+            chartType: 'volume',
+            tfSelector: [15, 30, 60, 240, 1440],
+        },
+        rsi: {
+            label: 'RSI', acronym: 'Relative Strength Index (14)', live: true, group: 'Price & TA',
+            detail: 'RSI measures the speed and magnitude of recent price changes on a 0–100 scale. Values above 70 signal overbought conditions; below 30 oversold. In bull markets RSI tends to hold between 40–90; in bear markets 10–60. The 14-period is the classic setting used across all timeframes.',
+            stats: [{ id: 'val', label: 'RSI (14)' }],
+            hint: '&lt;30 oversold &nbsp;|&nbsp; 30–50 bearish &nbsp;|&nbsp; 50–70 bullish &nbsp;|&nbsp; &gt;70 overbought',
+            chartHeight: 180,
+            chartType: 'rsi',
+            tfSelector: [15, 30, 60, 240, 1440],
+        },
+        ema: {
+            label: 'EMA', acronym: 'Exponential Moving Averages (20 / 50 / 200)', live: true, group: 'Price & TA',
+            detail: 'EMAs weight recent prices more than older ones, making them more responsive to current conditions. EMA 20 tracks short-term momentum, EMA 50 the medium-term trend, EMA 200 the macro trend. Price above EMA 200 defines a bull market. A golden cross (EMA 50 crossing above EMA 200) is a classic buy signal; a death cross the opposite.',
+            stats: [
+                { id: 'price', label: 'BTC Price' },
+                { id: 'e20',   label: 'EMA 20',  small: true },
+                { id: 'e50',   label: 'EMA 50',  small: true },
+                { id: 'e200',  label: 'EMA 200', small: true },
+            ],
+            hint: 'Price above EMA 200 = bull market &nbsp;|&nbsp; Golden cross (50/200) = buy signal &nbsp;|&nbsp; Death cross = bearish',
+            chartHeight: 220,
+            chartType: 'ema',
+            tfSelector: [15, 30, 60, 240, 1440],
+        },
+        bb: {
+            label: 'Bollinger Bands', acronym: 'Price + 20-period SMA ± 2σ', live: true, group: 'Price & TA',
+            detail: 'Bollinger Bands wrap price between a 20-period SMA (middle band) and upper/lower bands at ±2 standard deviations. Price touching the upper band signals overbought; lower band oversold. Bandwidth measures volatility — a squeeze (very narrow bands) often precedes a strong directional breakout.',
+            stats: [
+                { id: 'price', label: 'BTC Price' },
+                { id: 'upper', label: 'Upper Band', small: true },
+                { id: 'lower', label: 'Lower Band', small: true },
+                { id: 'bw',    label: 'Bandwidth',  small: true },
+            ],
+            hint: 'Price near upper = overbought &nbsp;|&nbsp; Price near lower = oversold &nbsp;|&nbsp; Squeeze = breakout incoming',
+            chartHeight: 220,
+            chartType: 'bb',
+            tfSelector: [15, 30, 60, 240, 1440],
+        },
         mvrv: {
             label: 'MVRV Ratio', acronym: 'Market Value / Realized Value', live: true, group: 'Market',
             detail: 'MVRV compares the current market capitalization to the Realized Cap — the sum of all UTXOs valued at the price when they last moved. Values below 1 indicate the market is trading below the aggregate cost basis of holders, historically a strong accumulation zone. Values above 3.5 have consistently coincided with cycle tops. MVRV is a macro cycle indicator, not a short-term trading signal.',
@@ -652,7 +714,8 @@
         },
     };
 
-    let data = { mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null };
+    let data = { price: null, volume: null, rsi: null, ema: null, bb: null, mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null };
+    let currentTF = { price: 1440, volume: 1440, rsi: 1440, ema: 1440, bb: 1440 };
     let charts = {};
     let dragSrc = null;
 
@@ -665,7 +728,7 @@
                 <div class="hc-value" style="font-size:1rem;color:#ccc;margin-top:0.5rem">coming soon</div>
             </div>`;
         return `
-            <div class="home-card" data-id="${id}" id="hc-${id}-card" draggable="true" style="pointer-events:none">
+            <div class="home-card" data-id="${id}" id="hc-${id}-card" draggable="true" data-loaded="0" style="cursor:default">
                 <div class="hc-top">
                     <div>
                         <div class="hc-label">${m.label}</div>
@@ -690,6 +753,9 @@
             </div>`
         ).join('');
         const h = m.chartHeight || 220;
+        const tfHtml = m.tfSelector
+            ? `<div class="tf-selector" id="tf-${id}">${m.tfSelector.map(tf => `<button class="tf-btn${tf === 1440 ? ' active' : ''}" onclick="loadDetailTF('${id}',${tf},this)">${TF_LABELS[tf]}</button>`).join('')}</div>`
+            : '';
         return `
             <div id="detail-${id}" style="display:none">
                 <div class="card">
@@ -699,6 +765,7 @@
                         <button class="toggle-btn active" onclick="toggleDetailView('${id}','chart',this)">Chart</button>
                         <button class="toggle-btn"        onclick="toggleDetailView('${id}','table',this)">Table</button>
                     </div>
+                    ${tfHtml}
                     <canvas id="${id}-chart-detail" style="max-height:${h}px"></canvas>
                     <div id="${id}-table-detail" class="table-wrap" style="display:none"></div>
                     ${m.extra === 'top' ? `<div id="d-${id}-extra" style="margin-top:1rem"></div>` : ''}
@@ -754,6 +821,11 @@
 
         // Time-series metrics
         const cfgMap = {
+            price:            { vals: d.close,     col: 'Price (USD)',   fmt: v => v != null ? fmt_usd(v)   : '—' },
+            volume:           { vals: d.volume,    col: 'Volume',        fmt: v => v != null ? v.toFixed(4) : '—' },
+            rsi:              { vals: d.rsi,       col: 'RSI (14)',      fmt: v => v != null ? v.toFixed(2) : '—' },
+            ema:              { vals: d.ema20,     col: 'EMA 20',        fmt: v => v != null ? fmt_usd(v)   : '—' },
+            bb:               { vals: d.bb_upper,  col: 'BB Upper',      fmt: v => v != null ? fmt_usd(v)   : '—' },
             mvrv:             { vals: d.values,    col: 'MVRV',         fmt: v => v != null ? v.toFixed(4) : '—' },
             sopr:             { vals: d.values,    col: 'SOPR',         fmt: v => v != null ? v.toFixed(4) : '—' },
             nvt:              { vals: d.values,    col: 'NVT',          fmt: v => v != null ? v.toFixed(1)  : '—' },
@@ -825,7 +897,10 @@
         const keys = saved ? [...new Set([...saved, ...Object.keys(METRICS)].filter(k => METRICS[k]))] : Object.keys(METRICS);
         document.getElementById('view-home').innerHTML = keys.map(makeCard).join('');
         document.querySelectorAll('.home-card:not(.soon)').forEach(el =>
-            el.addEventListener('click', () => showDetail(el.dataset.id)));
+            el.addEventListener('click', () => {
+                if (el.dataset.loaded !== '1') return;
+                showDetail(el.dataset.id);
+            }));
         initDragDrop();
     }
     buildHomeCards();
@@ -1038,11 +1113,109 @@
         return            { label: 'LOW STH',  cls: 'ok' };
     }
 
+    function rsi_signal(v) {
+        if (v === null || v === undefined) return { label: '—', cls: 'neutral' };
+        if (v > 70)  return { label: 'OVERBOUGHT', cls: 'ko' };
+        if (v < 30)  return { label: 'OVERSOLD',   cls: 'ok' };
+        if (v >= 50) return { label: 'BULLISH',    cls: 'neutral' };
+        return           { label: 'BEARISH',    cls: 'medium' };
+    }
+
+    function ema_signal(sig) {
+        if (!sig) return { label: '—', cls: 'neutral' };
+        if (sig === 'bullish') return { label: 'BULLISH', cls: 'ok' };
+        if (sig === 'bearish') return { label: 'BEARISH', cls: 'ko' };
+        return { label: 'MIXED', cls: 'medium' };
+    }
+
+    function bb_signal(sig) {
+        if (!sig) return { label: '—', cls: 'neutral' };
+        if (sig === 'overbought') return { label: 'OVERBOUGHT', cls: 'ko' };
+        if (sig === 'oversold')   return { label: 'OVERSOLD',   cls: 'ok' };
+        return { label: 'NEUTRAL', cls: 'neutral' };
+    }
+
     function sigColor(cls) {
         if (cls === 'ok')     return '#16a34a';
         if (cls === 'ko')     return '#dc2626';
         if (cls === 'medium') return '#ea580c';
         return '#555';
+    }
+
+    let currentTAFetch = {};
+
+    async function fetchAndRenderTA(id, tf) {
+        const apiId = METRICS[id].api || id;
+        const d = await fetch('/api/' + apiId + '?tf=' + tf).then(r => r.json());
+        if (id === 'price' || id === 'volume') {
+            data.price  = d;
+            data.volume = d;
+            // update stats
+            document.getElementById('d-price-val').textContent  = d.current_price  ? fmt_usd(d.current_price)  : '—';
+            document.getElementById('d-volume-val').textContent = d.current_volume ? d.current_volume.toFixed(2) : '—';
+            document.getElementById('d-price-updated').textContent  = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+            document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+            if (id === 'price')  renderPriceChart('price-chart-detail',  d.labels, d.close, false);
+            if (id === 'volume') renderVolumeChart('volume-chart-detail', d.labels, d.volume, false);
+        } else if (id === 'rsi') {
+            data.rsi = d;
+            document.getElementById('d-rsi-val').textContent     = d.current !== null ? d.current.toFixed(1) : '—';
+            document.getElementById('d-rsi-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+            renderRsiChart('rsi-chart-detail', d.labels, d.rsi, false);
+        } else if (id === 'ema') {
+            data.ema = d;
+            const p = data.price && data.price.tf === tf ? data.price : null;
+            document.getElementById('d-ema-price').textContent   = p ? fmt_usd(p.current_price) : '—';
+            document.getElementById('d-ema-e20').textContent     = d.ema20_val  ? fmt_usd(d.ema20_val)  : '—';
+            document.getElementById('d-ema-e50').textContent     = d.ema50_val  ? fmt_usd(d.ema50_val)  : '—';
+            document.getElementById('d-ema-e200').textContent    = d.ema200_val ? fmt_usd(d.ema200_val) : '—';
+            document.getElementById('d-ema-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+            const close = p ? p.close : [];
+            renderEmaChart('ema-chart-detail', d.labels, close, d.ema20, d.ema50, d.ema200, false);
+        } else if (id === 'bb') {
+            data.bb = d;
+            const p = data.price && data.price.tf === tf ? data.price : null;
+            document.getElementById('d-bb-price').textContent    = p ? fmt_usd(p.current_price) : '—';
+            document.getElementById('d-bb-upper').textContent    = d.upper_val ? fmt_usd(d.upper_val) : '—';
+            document.getElementById('d-bb-lower').textContent    = d.lower_val ? fmt_usd(d.lower_val) : '—';
+            document.getElementById('d-bb-bw').textContent       = d.bandwidth_val !== null ? d.bandwidth_val.toFixed(1) + '%' : '—';
+            document.getElementById('d-bb-updated').textContent  = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+            const close = p ? p.close : [];
+            renderBbChart('bb-chart-detail', d.labels, close, d.bb_upper, d.bb_mid, d.bb_lower, false);
+        }
+    }
+
+    function loadDetailTF(id, tf, btn) {
+        document.querySelectorAll('#tf-' + id + ' .tf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTF[id] = tf;
+        if (id === 'ema' || id === 'bb') {
+            Promise.all([
+                fetch('/api/price?tf=' + tf).then(r => r.json()),
+                fetch('/api/' + id    + '?tf=' + tf).then(r => r.json()),
+            ]).then(([pd, ind]) => {
+                data.price = pd; data.volume = pd;
+                if (id === 'ema') {
+                    data.ema = ind;
+                    document.getElementById('d-ema-price').textContent   = fmt_usd(pd.current_price);
+                    document.getElementById('d-ema-e20').textContent     = ind.ema20_val  ? fmt_usd(ind.ema20_val)  : '—';
+                    document.getElementById('d-ema-e50').textContent     = ind.ema50_val  ? fmt_usd(ind.ema50_val)  : '—';
+                    document.getElementById('d-ema-e200').textContent    = ind.ema200_val ? fmt_usd(ind.ema200_val) : '—';
+                    document.getElementById('d-ema-updated').textContent = 'Updated: ' + new Date(ind.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+                    renderEmaChart('ema-chart-detail', ind.labels, pd.close, ind.ema20, ind.ema50, ind.ema200, false);
+                } else {
+                    data.bb = ind;
+                    document.getElementById('d-bb-price').textContent   = fmt_usd(pd.current_price);
+                    document.getElementById('d-bb-upper').textContent   = ind.upper_val ? fmt_usd(ind.upper_val) : '—';
+                    document.getElementById('d-bb-lower').textContent   = ind.lower_val ? fmt_usd(ind.lower_val) : '—';
+                    document.getElementById('d-bb-bw').textContent      = ind.bandwidth_val !== null ? ind.bandwidth_val.toFixed(1) + '%' : '—';
+                    document.getElementById('d-bb-updated').textContent = 'Updated: ' + new Date(ind.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+                    renderBbChart('bb-chart-detail', ind.labels, pd.close, ind.bb_upper, ind.bb_mid, ind.bb_lower, false);
+                }
+            });
+        } else {
+            fetchAndRenderTA(id, tf);
+        }
     }
 
     function renderHodlChart(id, bands, small) {
@@ -1094,12 +1267,147 @@
     }
 
     function cardReady(id) {
+        const card = document.getElementById('hc-' + id + '-card');
         document.getElementById('hc-' + id + '-loader').style.display = 'none';
         document.getElementById('hc-' + id + '-chart').style.display = 'block';
-        document.getElementById('hc-' + id + '-card').style.pointerEvents = '';
         document.getElementById('hc-' + id + '-val').classList.remove('loading');
+        if (card) { card.dataset.loaded = '1'; card.style.cursor = ''; }
         const ch = charts['hc-' + id + '-chart'];
         if (ch) requestAnimationFrame(() => ch.resize());
+    }
+
+    function renderPriceChart(canvasId, labels, close, small) {
+        if (charts[canvasId]) charts[canvasId].destroy();
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        ctx.style.display = 'block';
+        const ticks = small
+            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
+            : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+        charts[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ data: close, borderColor: '#111', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
+            options: {
+                animation: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
+                    y: { ticks, grid: { color: '#f0f0f0' } }
+                }
+            }
+        });
+    }
+
+    function renderVolumeChart(canvasId, labels, volume, small) {
+        if (charts[canvasId]) charts[canvasId].destroy();
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        ctx.style.display = 'block';
+        const ticks = small
+            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
+            : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+        charts[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ data: volume, backgroundColor: 'rgba(100,100,100,0.25)', borderWidth: 0 }] },
+            options: {
+                animation: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { display: false } },
+                    y: { ticks, grid: { color: '#f0f0f0' } }
+                }
+            }
+        });
+    }
+
+    function renderRsiChart(canvasId, labels, rsi, small) {
+        if (charts[canvasId]) charts[canvasId].destroy();
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        ctx.style.display = 'block';
+        const n = labels.length;
+        const ticks = small
+            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
+            : { color: '#999', maxTicksLimit: 6, font: { size: 11 } };
+        charts[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { data: rsi,                borderColor: '#3b82f6', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
+                    { data: Array(n).fill(70),  borderColor: 'rgba(220,38,38,0.35)',  borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false },
+                    { data: Array(n).fill(30),  borderColor: 'rgba(22,163,74,0.35)',   borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false },
+                ]
+            },
+            options: {
+                animation: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
+                    y: { ticks, grid: { color: '#f0f0f0' }, min: 0, max: 100 }
+                }
+            }
+        });
+    }
+
+    function renderEmaChart(canvasId, labels, close, ema20, ema50, ema200, small) {
+        if (charts[canvasId]) charts[canvasId].destroy();
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        ctx.style.display = 'block';
+        const ticks = small
+            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
+            : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+        charts[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { data: close,  borderColor: '#111',    borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price' },
+                    { data: ema20,  borderColor: '#3b82f6', borderWidth: 1,   pointRadius: 0, fill: false, tension: 0.2, label: 'EMA 20' },
+                    { data: ema50,  borderColor: '#f59e0b', borderWidth: 1,   pointRadius: 0, fill: false, tension: 0.2, label: 'EMA 50' },
+                    { data: ema200, borderColor: '#ef4444', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'EMA 200' },
+                ]
+            },
+            options: {
+                animation: false,
+                plugins: { legend: { display: small ? false : true, labels: { color: '#666', font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+                scales: {
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
+                    y: { ticks, grid: { color: '#f0f0f0' } }
+                }
+            }
+        });
+    }
+
+    function renderBbChart(canvasId, labels, close, upper, mid, lower, small) {
+        if (charts[canvasId]) charts[canvasId].destroy();
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        ctx.style.display = 'block';
+        const ticks = small
+            ? { color: '#999', maxTicksLimit: 4, font: { size: 10 } }
+            : { color: '#999', maxTicksLimit: 8, font: { size: 11 } };
+        charts[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { data: upper, borderColor: 'rgba(100,100,100,0.35)', borderWidth: 1, pointRadius: 0, fill: '+1', backgroundColor: 'rgba(180,180,180,0.1)', tension: 0.2, label: 'Upper' },
+                    { data: lower, borderColor: 'rgba(100,100,100,0.35)', borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, label: 'Lower' },
+                    { data: mid,   borderColor: '#aaa', borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: false, tension: 0.2, label: 'Mid' },
+                    { data: close, borderColor: '#111', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price' },
+                ]
+            },
+            options: {
+                animation: false,
+                plugins: { legend: { display: small ? false : true, labels: { color: '#666', font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+                scales: {
+                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: '#f0f0f0' } },
+                    y: { ticks, grid: { color: '#f0f0f0' } }
+                }
+            }
+        });
     }
 
     // Load MVRV
@@ -1382,6 +1690,89 @@
         cardReady('hashrate');
     }).catch(() => { document.getElementById('hc-hashrate-val').textContent = 'error'; cardReady('hashrate'); });
 
+    // Load Price + Volume + EMA + BB (shared price fetch)
+    function tryRenderEmaCard() {
+        if (!data.price || !data.ema) return;
+        const p = data.price; const e = data.ema;
+        const sig = ema_signal(e.signal);
+        document.getElementById('hc-ema-val').textContent = p.current_price ? fmt_usd(p.current_price) : '—';
+        const hb = document.getElementById('hc-ema-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-ema-price').textContent = p.current_price ? fmt_usd(p.current_price) : '—';
+        document.getElementById('d-ema-e20').textContent   = e.ema20_val  ? fmt_usd(e.ema20_val)  : '—';
+        document.getElementById('d-ema-e50').textContent   = e.ema50_val  ? fmt_usd(e.ema50_val)  : '—';
+        document.getElementById('d-ema-e200').textContent  = e.ema200_val ? fmt_usd(e.ema200_val) : '—';
+        document.getElementById('d-ema-updated').textContent = 'Updated: ' + new Date(e.updated_at).toLocaleString('en-GB');
+        renderEmaChart('hc-ema-chart', e.labels, p.close, e.ema20, e.ema50, e.ema200, true);
+        cardReady('ema');
+    }
+
+    function tryRenderBbCard() {
+        if (!data.price || !data.bb) return;
+        const p = data.price; const b = data.bb;
+        const sig = bb_signal(b.signal);
+        document.getElementById('hc-bb-val').textContent = p.current_price ? fmt_usd(p.current_price) : '—';
+        const hb = document.getElementById('hc-bb-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-bb-price').textContent = p.current_price ? fmt_usd(p.current_price) : '—';
+        document.getElementById('d-bb-upper').textContent = b.upper_val ? fmt_usd(b.upper_val) : '—';
+        document.getElementById('d-bb-lower').textContent = b.lower_val ? fmt_usd(b.lower_val) : '—';
+        document.getElementById('d-bb-bw').textContent    = b.bandwidth_val !== null ? b.bandwidth_val.toFixed(1) + '%' : '—';
+        document.getElementById('d-bb-updated').textContent = 'Updated: ' + new Date(b.updated_at).toLocaleString('en-GB');
+        renderBbChart('hc-bb-chart', b.labels, p.close, b.bb_upper, b.bb_mid, b.bb_lower, true);
+        cardReady('bb');
+    }
+
+    fetch('/api/price?tf=1440').then(r => r.json()).then(d => {
+        data.price = d; data.volume = d;
+        // Price card
+        document.getElementById('hc-price-val').textContent  = d.current_price  ? fmt_usd(d.current_price)  : '—';
+        document.getElementById('hc-price-badge').className  = 'badge neutral';
+        document.getElementById('hc-price-badge').textContent = '—';
+        document.getElementById('d-price-val').textContent   = d.current_price  ? fmt_usd(d.current_price)  : '—';
+        document.getElementById('d-price-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        renderPriceChart('hc-price-chart', d.labels, d.close, true);
+        cardReady('price');
+        // Volume card
+        document.getElementById('hc-volume-val').textContent  = d.current_volume ? d.current_volume.toFixed(2) : '—';
+        document.getElementById('hc-volume-badge').className  = 'badge neutral';
+        document.getElementById('hc-volume-badge').textContent = '—';
+        document.getElementById('d-volume-val').textContent   = d.current_volume ? d.current_volume.toFixed(2) : '—';
+        document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        renderVolumeChart('hc-volume-chart', d.labels, d.volume, true);
+        cardReady('volume');
+        tryRenderEmaCard();
+        tryRenderBbCard();
+    }).catch(() => {
+        document.getElementById('hc-price-val').textContent  = 'error'; cardReady('price');
+        document.getElementById('hc-volume-val').textContent = 'error'; cardReady('volume');
+    });
+
+    // Load RSI
+    fetch('/api/rsi?tf=1440').then(r => r.json()).then(d => {
+        data.rsi = d;
+        const sig = rsi_signal(d.current);
+        document.getElementById('hc-rsi-val').textContent = d.current !== null ? d.current.toFixed(1) : '—';
+        const hb = document.getElementById('hc-rsi-badge');
+        hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
+        document.getElementById('d-rsi-val').textContent     = d.current !== null ? d.current.toFixed(1) : '—';
+        document.getElementById('d-rsi-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        renderRsiChart('hc-rsi-chart', d.labels, d.rsi, true);
+        cardReady('rsi');
+    }).catch(() => { document.getElementById('hc-rsi-val').textContent = 'error'; cardReady('rsi'); });
+
+    // Load EMA
+    fetch('/api/ema?tf=1440').then(r => r.json()).then(d => {
+        data.ema = d;
+        tryRenderEmaCard();
+    }).catch(() => { document.getElementById('hc-ema-val').textContent = 'error'; cardReady('ema'); });
+
+    // Load BB
+    fetch('/api/bb?tf=1440').then(r => r.json()).then(d => {
+        data.bb = d;
+        tryRenderBbCard();
+    }).catch(() => { document.getElementById('hc-bb-val').textContent = 'error'; cardReady('bb'); });
+
     // Navigation
     function showHome() {
         document.getElementById('view-home').style.display = 'grid';
@@ -1408,7 +1799,7 @@
         document.getElementById('detail-api-link').textContent = '{ } /api/' + apiId;
         const dt = document.getElementById('d-' + id + '-text');
         if (dt) dt.textContent = METRICS[id].detail;
-        ['mvrv','sopr','nvt','hodl','cdd','exchange_flow','nupl','rhodl','supply_profit','puell','active_addresses','whale_tx','mvrv_zscore','lth','sth','stf','tx_count','avg_fee','hashrate'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
+        ['price','volume','rsi','ema','bb','mvrv','sopr','nvt','hodl','cdd','exchange_flow','nupl','rhodl','supply_profit','puell','active_addresses','whale_tx','mvrv_zscore','lth','sth','stf','tx_count','avg_fee','hashrate'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
         if (id === 'mvrv' && data.mvrv)
             cardChart('mvrv-chart-detail', data.mvrv.labels, data.mvrv.values, sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
@@ -1461,6 +1852,36 @@
             cardChart('avg_fee-chart-detail', data.avg_fee.labels, data.avg_fee.avg_fees, '#888', false);
         if (id === 'hashrate' && data.hashrate)
             cardChart('hashrate-chart-detail', data.hashrate.labels, data.hashrate.values, sigColor(hashrate_signal(data.hashrate.hashrate_eh, data.hashrate.ma14_eh).cls), false);
+        // TA metrics — always re-fetch on detail open (TF may have changed)
+        if (id === 'price')  fetchAndRenderTA('price',  currentTF['price']  || 1440);
+        if (id === 'volume') fetchAndRenderTA('volume', currentTF['volume'] || 1440);
+        if (id === 'rsi')    fetchAndRenderTA('rsi',    currentTF['rsi']    || 1440);
+        if (id === 'ema' || id === 'bb') {
+            const tf = currentTF[id] || 1440;
+            Promise.all([
+                fetch('/api/price?tf=' + tf).then(r => r.json()),
+                fetch('/api/' + id + '?tf=' + tf).then(r => r.json()),
+            ]).then(([pd, ind]) => {
+                data.price = pd; data.volume = pd;
+                if (id === 'ema') {
+                    data.ema = ind;
+                    document.getElementById('d-ema-price').textContent   = fmt_usd(pd.current_price);
+                    document.getElementById('d-ema-e20').textContent     = ind.ema20_val  ? fmt_usd(ind.ema20_val)  : '—';
+                    document.getElementById('d-ema-e50').textContent     = ind.ema50_val  ? fmt_usd(ind.ema50_val)  : '—';
+                    document.getElementById('d-ema-e200').textContent    = ind.ema200_val ? fmt_usd(ind.ema200_val) : '—';
+                    document.getElementById('d-ema-updated').textContent = 'Updated: ' + new Date(ind.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+                    renderEmaChart('ema-chart-detail', ind.labels, pd.close, ind.ema20, ind.ema50, ind.ema200, false);
+                } else {
+                    data.bb = ind;
+                    document.getElementById('d-bb-price').textContent   = fmt_usd(pd.current_price);
+                    document.getElementById('d-bb-upper').textContent   = ind.upper_val ? fmt_usd(ind.upper_val) : '—';
+                    document.getElementById('d-bb-lower').textContent   = ind.lower_val ? fmt_usd(ind.lower_val) : '—';
+                    document.getElementById('d-bb-bw').textContent      = ind.bandwidth_val !== null ? ind.bandwidth_val.toFixed(1) + '%' : '—';
+                    document.getElementById('d-bb-updated').textContent = 'Updated: ' + new Date(ind.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+                    renderBbChart('bb-chart-detail', ind.labels, pd.close, ind.bb_upper, ind.bb_mid, ind.bb_lower, false);
+                }
+            });
+        }
     }
 
     document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => showDetail(el.dataset.id)));

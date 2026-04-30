@@ -136,3 +136,30 @@ async def tx_stats(summary: bool = _S):
 async def hashrate(summary: bool = _S):
     from app.metrics.hashrate import get_hashrate
     return _resp(get_hashrate(), summary)
+
+
+_TF = Query(1440, description="Timeframe in minutes: 15, 30, 60, 240, 720, 1440")
+
+
+@app.get("/api/price")
+async def price(tf: int = _TF, summary: bool = _S):
+    from app.metrics.price import get_price
+    return _resp(get_price(tf=tf), summary)
+
+
+@app.get("/api/rsi")
+async def rsi(tf: int = _TF, summary: bool = _S):
+    from app.metrics.rsi import get_rsi
+    return _resp(get_rsi(tf=tf), summary)
+
+
+@app.get("/api/ema")
+async def ema(tf: int = _TF, summary: bool = _S):
+    from app.metrics.ema import get_ema
+    return _resp(get_ema(tf=tf), summary)
+
+
+@app.get("/api/bb")
+async def bb(tf: int = _TF, summary: bool = _S):
+    from app.metrics.bb import get_bb
+    return _resp(get_bb(tf=tf), summary)
