@@ -333,6 +333,11 @@
         .tf-selector, .range-selector, .overlay-selector { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; align-items: center; }
         .overlay-label { font-size: 0.65rem; color: var(--text-5); margin-right: 0.1rem; }
         .tf-btn { padding: 0.2rem 0.55rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.68rem; cursor: pointer; background: var(--surface); color: var(--text-4); font-family: inherit; }
+        .active-tab { background: var(--text) !important; color: var(--bg) !important; border-color: var(--text) !important; }
+        #home-tabs { display: flex; }
+        .star-btn { background: none; border: none; cursor: pointer; padding: 0; line-height: 1; color: var(--text-9); transition: color 0.15s; }
+        .star-btn.starred { color: #f59e0b; }
+        .star-btn:hover { color: #f59e0b; }
         .tf-btn:hover { border-color: var(--text-6); color: var(--text); }
         .tf-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
@@ -408,6 +413,10 @@
     <div id="main">
 
         <!-- HOME (popolato da JS) -->
+        <div id="home-tabs" style="display:none;gap:0.4rem;margin-bottom:0.75rem">
+            <button id="tab-all" class="tf-btn active-tab" onclick="setTab('all')">All</button>
+            <button id="tab-fav" class="tf-btn" onclick="setTab('favorites')">Favorites</button>
+        </div>
         <div id="view-home"></div>
 
         <!-- DETAIL -->
@@ -421,6 +430,10 @@
                     <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     Read more
                 </a>
+                <button class="detail-action-btn" id="detail-fav-btn" onclick="toggleFavDetail()">
+                    <svg id="detail-fav-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span id="detail-fav-label">Favorite</span>
+                </button>
                 <button class="detail-action-btn" id="detail-share-btn" onclick="detailShare()">
                     <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                     <span id="detail-share-label">Share</span>
@@ -927,7 +940,12 @@
                         <a class="hc-page-link" href="/${id}" target="_blank" onclick="event.stopPropagation()">${m.label}</a>
                         <div class="hc-acronym">${m.acronym}</div>
                     </div>
-                    <span class="badge neutral" id="hc-${id}-badge">—</span>
+                    <div style="display:flex;align-items:center;gap:0.4rem">
+                        <span class="badge neutral" id="hc-${id}-badge">—</span>
+                        <button class="star-btn ${isFav(id) ? 'starred' : ''}" onclick="toggleFav('${id}',this);event.stopPropagation()" title="Add to favorites">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="${isFav(id) ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="hc-value loading" id="hc-${id}-val">—</div>
                 <div class="hc-chart">
@@ -1072,6 +1090,56 @@
         set(k, v) { try { localStorage.setItem(k, v); }              catch {} },
         del(k)    { try { localStorage.removeItem(k); }              catch {} },
     };
+
+    let currentTab = 'all';
+
+    function getFavs() {
+        try { return JSON.parse(localStorage.getItem('btcfunk-favs') || '[]'); } catch { return []; }
+    }
+    function isFav(id) { return getFavs().includes(id); }
+    function toggleFav(id, btn) {
+        const favs = getFavs();
+        const idx = favs.indexOf(id);
+        if (idx === -1) { favs.push(id); btn.classList.add('starred'); btn.querySelector('polygon,svg').setAttribute('fill','currentColor'); }
+        else            { favs.splice(idx, 1); btn.classList.remove('starred'); btn.querySelector('polygon,svg').setAttribute('fill','none'); }
+        localStorage.setItem('btcfunk-favs', JSON.stringify(favs));
+        if (currentTab === 'favorites') applyTab();
+    }
+    function toggleFavDetail() {
+        const id = currentDetailId;
+        if (!id) return;
+        const favs = getFavs();
+        const idx = favs.indexOf(id);
+        if (idx === -1) favs.push(id); else favs.splice(idx, 1);
+        localStorage.setItem('btcfunk-favs', JSON.stringify(favs));
+        updateDetailFavBtn(id);
+        // aggiorna anche la stellina sulla card home se visibile
+        const cardBtn = document.querySelector(`#hc-${id}-card .star-btn`);
+        if (cardBtn) {
+            const starred = favs.includes(id);
+            cardBtn.classList.toggle('starred', starred);
+            cardBtn.querySelector('svg').setAttribute('fill', starred ? 'currentColor' : 'none');
+        }
+    }
+    function updateDetailFavBtn(id) {
+        const starred = isFav(id);
+        document.getElementById('detail-fav-icon').setAttribute('fill', starred ? '#f59e0b' : 'none');
+        document.getElementById('detail-fav-icon').style.color = starred ? '#f59e0b' : '';
+        document.getElementById('detail-fav-label').textContent = starred ? 'Favorited' : 'Favorite';
+    }
+
+    function setTab(tab) {
+        currentTab = tab;
+        document.getElementById('tab-all').classList.toggle('active-tab', tab === 'all');
+        document.getElementById('tab-fav').classList.toggle('active-tab', tab === 'favorites');
+        applyTab();
+    }
+    function applyTab() {
+        const favs = getFavs();
+        document.querySelectorAll('#view-home .home-card').forEach(card => {
+            card.style.display = (currentTab === 'all' || favs.includes(card.dataset.id)) ? '' : 'none';
+        });
+    }
 
     function saveWidgetOrder() {
         const order = [...document.querySelectorAll('#view-home .home-card')].map(c => c.dataset.id);
@@ -2191,6 +2259,7 @@
     // Navigation
     function showHome() {
         document.getElementById('view-home').style.display = 'grid';
+        document.getElementById('home-tabs').style.display = 'flex';
         document.getElementById('view-detail').style.display = 'none';
         document.querySelectorAll('.metric-item').forEach(el => {
             el.classList.toggle('active', ['mvrv','sopr'].includes(el.dataset.id));
@@ -2372,6 +2441,7 @@
         }
         currentDetailId = id;
         document.getElementById('view-home').style.display = 'none';
+        document.getElementById('home-tabs').style.display = 'none';
         document.getElementById('view-detail').style.display = 'block';
         document.getElementById('detail-title').textContent   = METRICS[id].label;
         document.getElementById('detail-acronym').textContent = METRICS[id].acronym;
@@ -2389,6 +2459,7 @@
         if (dt) dt.textContent = METRICS[id].detail;
         Object.keys(METRICS).forEach(k => { const el = document.getElementById('detail-' + k); if (el) el.style.display = k === id ? 'block' : 'none'; });
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+        updateDetailFavBtn(id);
         renderDetailChart(id);
         // TA metrics — always re-fetch on detail open (TF may have changed)
         if (id === 'price')  fetchAndRenderTA('price',  currentTF['price']  || 1440);
