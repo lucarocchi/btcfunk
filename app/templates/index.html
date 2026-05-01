@@ -2099,7 +2099,8 @@
         document.getElementById('d-ema-e50').textContent   = e.ema50_val  ? fmt_usd(e.ema50_val)  : '—';
         document.getElementById('d-ema-e200').textContent  = e.ema200_val ? fmt_usd(e.ema200_val) : '—';
         document.getElementById('d-ema-updated').textContent = 'Updated: ' + new Date(e.updated_at).toLocaleString('en-GB');
-        renderEmaChart('hc-ema-chart', e.labels, p.close, e.ema20, e.ema50, e.ema200, true);
+        const eSlice = e.labels.length > 365 ? e.labels.length - 365 : 0;
+        renderEmaChart('hc-ema-chart', e.labels.slice(eSlice), (p._hcClose || p.close).slice(-e.labels.slice(eSlice).length), e.ema20.slice(eSlice), e.ema50.slice(eSlice), e.ema200.slice(eSlice), true);
         cardReady('ema');
     }
 
@@ -2115,7 +2116,8 @@
         document.getElementById('d-bb-lower').textContent = b.lower_val ? fmt_usd(b.lower_val) : '—';
         document.getElementById('d-bb-bw').textContent    = b.bandwidth_val !== null ? b.bandwidth_val.toFixed(1) + '%' : '—';
         document.getElementById('d-bb-updated').textContent = 'Updated: ' + new Date(b.updated_at).toLocaleString('en-GB');
-        renderBbChart('hc-bb-chart', b.labels, p.close, b.bb_upper, b.bb_mid, b.bb_lower, true);
+        const bSlice = b.labels.length > 365 ? b.labels.length - 365 : 0;
+        renderBbChart('hc-bb-chart', b.labels.slice(bSlice), (p._hcClose || p.close).slice(-b.labels.slice(bSlice).length), b.bb_upper.slice(bSlice), b.bb_mid.slice(bSlice), b.bb_lower.slice(bSlice), true);
         cardReady('bb');
     }
 
@@ -2125,7 +2127,7 @@
         document.getElementById('hc-price-badge').className  = 'badge neutral';
         document.getElementById('hc-price-badge').textContent = '—';
         document.getElementById('d-price-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        renderPriceChart('hc-price-chart', d.labels, d.close, true);
+        renderPriceChart('hc-price-chart', d._hcLabels || d.labels, d._hcClose || d.close, true);
         cardReady('price');
         if (livePrice) applyLivePrice(livePrice); else fetchLiveTicker();
         // Volume card
@@ -2134,8 +2136,11 @@
         document.getElementById('hc-volume-badge').textContent = '—';
         document.getElementById('d-volume-val').textContent   = fmt_vol(d.current_volume);
         document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        const volSlice = d.labels.length > 365 ? d.labels.length - 365 : 0;
-        renderVolumeChart('hc-volume-chart', d.labels.slice(volSlice), d.volume.slice(volSlice), true);
+        const hcSlice = d.labels.length > 365 ? d.labels.length - 365 : 0;
+        d._hcLabels = d.labels.slice(hcSlice);
+        d._hcClose  = d.close.slice(hcSlice);
+        d._hcVol    = d.volume.slice(hcSlice);
+        renderVolumeChart('hc-volume-chart', d._hcLabels, d._hcVol, true);
         cardReady('volume');
         tryRenderEmaCard();
         tryRenderBbCard();
@@ -2153,7 +2158,8 @@
         hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
         document.getElementById('d-rsi-val').textContent     = d.current !== null ? d.current.toFixed(1) : '—';
         document.getElementById('d-rsi-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        renderRsiChart('hc-rsi-chart', d.labels, d.rsi, true);
+        const rSlice = d.labels.length > 365 ? d.labels.length - 365 : 0;
+        renderRsiChart('hc-rsi-chart', d.labels.slice(rSlice), d.rsi.slice(rSlice), true);
         cardReady('rsi');
     }).catch(() => { document.getElementById('hc-rsi-val').textContent = 'error'; cardReady('rsi'); });
 
