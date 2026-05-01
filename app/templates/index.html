@@ -979,6 +979,24 @@
 
     function makeDetailPanel(id) {
         const m = METRICS[id];
+        if (m.noChart) return `
+            <div id="detail-${id}" style="display:none">
+                <div class="card">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
+                        <div class="stat"><div class="val" id="d-${id}-fee_next">—</div><div class="lbl">sat/vB next block</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-fee_30min">—</div><div class="lbl">sat/vB ~30 min</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-fee_1h">—</div><div class="lbl">sat/vB ~1 hour</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-tx_count">—</div><div class="lbl">Pending transactions</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-size_mb">—</div><div class="lbl">Mempool size (MB)</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-total_fees">—</div><div class="lbl">Total fees (BTC)</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-hashrate_eh">—</div><div class="lbl">Hashrate (EH/s)</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-difficulty">—</div><div class="lbl">Difficulty (T)</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-block_height">—</div><div class="lbl">Block height</div></div>
+                    </div>
+                    <div class="hint">${m.hint || ''}</div>
+                    <div class="updated" id="d-${id}-updated"></div>
+                </div>
+            </div>`;
         const statsHtml = (m.stats || []).map(s =>
             `<div class="stat">
                 <div class="val" id="d-${id}-${s.id}"${s.small ? ' style="font-size:1.1rem"' : ''}>—</div>
@@ -2187,11 +2205,16 @@
     function renderMempool(d) {
         const fields = ['fee_next','fee_30min','fee_1h','tx_count','size_mb','total_fees','hashrate_eh','difficulty','block_height'];
         fields.forEach(f => {
-            const el = document.getElementById('hc-mempool-' + f);
-            if (el) el.textContent = d[f] != null ? d[f] : '—';
+            const v = d[f] != null ? d[f] : '—';
+            const hc = document.getElementById('hc-mempool-' + f);
+            const dt = document.getElementById('d-mempool-' + f);
+            if (hc) hc.textContent = v;
+            if (dt) dt.textContent = v;
         });
-        document.getElementById('hc-mempool-badge').className = 'badge neutral';
-        document.getElementById('hc-mempool-badge').textContent = d.fee_next != null ? d.fee_next + ' sat/vB' : '—';
+        const badge = document.getElementById('hc-mempool-badge');
+        if (badge) { badge.className = 'badge neutral'; badge.textContent = d.fee_next != null ? d.fee_next + ' sat/vB' : '—'; }
+        const upd = document.getElementById('d-mempool-updated');
+        if (upd && d.updated_at) upd.textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
         cardReady('mempool');
     }
     fetch('/api/mempool').then(r => r.json()).then(d => {
