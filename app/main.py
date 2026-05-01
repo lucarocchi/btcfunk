@@ -175,6 +175,13 @@ async def dxy(request: Request, summary: bool = _S):
     return _resp(get_dxy(), summary)
 
 
+@app.get("/api/mempool")
+@limiter.limit("60/minute")
+async def mempool(request: Request):
+    from app.metrics.mempool import get_mempool
+    return get_mempool()
+
+
 @app.get("/api/price")
 @limiter.limit("100/minute")
 async def price(request: Request, tf: int = _TF, summary: bool = _S):
