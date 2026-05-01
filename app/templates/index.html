@@ -903,7 +903,7 @@
             stats: [{ id: 'val', label: 'DXY' }],
             hint: 'DXY rising = dollar strong = BTC headwind &nbsp;|&nbsp; DXY falling = dollar weak = BTC tailwind',
             chartHeight: 340,
-            overlayButtons: ['price'],
+            overlayButtons: ['price_5y'],
         },
     };
 
@@ -2074,6 +2074,8 @@
     fetch('/api/dxy').then(r => r.json()).then(d => {
         data.dxy = d;
         overlayCache.dxy = d;
+        if (d.btc_labels && d.btc_close)
+            overlayCache.price_5y = { labels: d.btc_labels, values: d.btc_close };
         document.getElementById('hc-dxy-val').textContent = d.current ? d.current.toFixed(2) : '—';
         document.getElementById('d-dxy-val').textContent  = d.current ? d.current.toFixed(2) : '—';
         document.getElementById('d-dxy-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
@@ -2252,15 +2254,16 @@
     const overlayCache = {};
 
     const OVERLAY_CFG = {
-        price: { label: 'Price', color: '#f59e0b', yConfig: {}, getValues: d => d.close },
-        rsi:   { label: 'RSI',   color: '#3b82f6', yConfig: { min: 0, max: 100 }, getValues: d => d.rsi },
-        dxy:   { label: 'DXY',   color: '#8b5cf6', yConfig: {}, getValues: d => d.values },
+        price:    { label: 'Price',     color: '#f59e0b', yConfig: {}, getValues: d => d.close },
+        rsi:      { label: 'RSI',       color: '#3b82f6', yConfig: { min: 0, max: 100 }, getValues: d => d.rsi },
+        dxy:      { label: 'DXY',       color: '#8b5cf6', yConfig: {}, getValues: d => d.values },
+        price_5y: { label: 'BTC Price', color: '#f59e0b', yConfig: {}, getValues: d => d.values },
     };
 
     async function fetchOverlayIfNeeded(ovId) {
         if (overlayCache[ovId]) return;
         const apiMap = { rsi: '/api/rsi?tf=1440', price: '/api/price?tf=1440', dxy: '/api/dxy' };
-        overlayCache[ovId] = await fetch(apiMap[ovId] || '/api/price?tf=1440').then(r => r.json());
+        if (apiMap[ovId]) overlayCache[ovId] = await fetch(apiMap[ovId]).then(r => r.json());
     }
 
     function alignOverlay(primaryLabels, ovId) {
