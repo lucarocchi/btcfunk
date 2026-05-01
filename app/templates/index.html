@@ -1351,6 +1351,12 @@
     }
 
     function cardChart(id, labels, values, color, small, ovDatasets = []) {
+        const today = new Date().toISOString().slice(0, 10);
+        if (labels.length && labels[labels.length - 1] < today) {
+            labels = [...labels, today];
+            values = [...values, null];
+            ovDatasets = ovDatasets.map(ov => ({ ...ov, values: [...ov.values, null] }));
+        }
         if (charts[id]) charts[id].destroy();
         const ctx = document.getElementById(id);
         if (!ctx) return;
