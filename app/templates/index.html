@@ -2235,9 +2235,13 @@
         const badge = document.getElementById('hc-mempool-badge');
         if (badge) { badge.className = 'badge ' + sig.cls; badge.textContent = sig.label; }
         // hint sotto i valori fee nel detail
+        const sigColors = { ok: '#16a34a', medium: '#d97706', ko: '#dc2626', neutral: '' };
         ['fee_next','fee_30min','fee_1h'].forEach(f => {
+            const sig  = feeSig(d[f]);
             const hint = document.getElementById('d-mempool-' + f + '-hint');
-            if (hint) hint.textContent = feeSig(d[f]).hint;
+            if (hint) hint.textContent = sig.hint;
+            const val = document.getElementById('d-mempool-' + f);
+            if (val) val.style.color = sigColors[sig.cls] || '';
         });
         const sizeHint = document.getElementById('d-mempool-size_mb-hint');
         if (sizeHint) sizeHint.textContent = mempoolSizeSig(d.size_mb);
