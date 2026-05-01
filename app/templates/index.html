@@ -1668,6 +1668,8 @@
             ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
             : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         const hasOv = !small && ovDatasets.length > 0;
+        const sorted = [...volume].filter(v => v != null).sort((a, b) => a - b);
+        const p95 = sorted[Math.floor(sorted.length * 0.95)] || sorted[sorted.length - 1] || 1;
         const datasets = [
             { type: 'bar',  data: volume, backgroundColor: 'rgba(128,128,128,0.25)', borderWidth: 0, yAxisID: 'y', label: 'Volume' },
             ...ovDatasets.map(ov => ({ type: 'line', data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label, spanGaps: true }))
@@ -1684,7 +1686,7 @@
                 },
                 scales: {
                     x:  { ticks: { ...ticks, maxRotation: 0 }, grid: { display: false } },
-                    y:  { position: 'left',  ticks, grid: { color: cc.grid } },
+                    y:  { position: 'left', ticks, grid: { color: cc.grid }, suggestedMax: p95 * 1.1 },
                     ...(hasOv ? { y2: { position: 'right', ticks: { ...ticks, color: ovDatasets[0].color }, grid: { display: false } } } : {})
                 }
             }
