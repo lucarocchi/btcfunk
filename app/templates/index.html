@@ -291,6 +291,10 @@
         .medium  { background: #fff7ed; color: #ea580c; }
         .neutral { background: var(--surface-3); color: var(--text-4); }
         .hc-chart { flex: 1; min-height: 120px; margin-top: 0.8rem; position: relative; }
+        .hc-stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-top: 0.8rem; }
+        .hc-stat-item { background: var(--surface-2); border-radius: 6px; padding: 0.5rem 0.6rem; }
+        .hc-stat-val { font-size: 0.95rem; font-weight: 600; color: var(--text); font-family: ui-monospace, monospace; }
+        .hc-stat-lbl { font-size: 0.62rem; color: var(--text-5); margin-top: 0.15rem; }
         .hc-loader {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
         }
@@ -918,9 +922,15 @@
             chartHeight: 340,
             overlayButtons: ['price_5y'],
         },
+        mempool: {
+            label: 'Mempool', acronym: 'Bitcoin network mempool — live', live: true, group: 'Network',
+            detail: 'Real-time snapshot of the Bitcoin mempool from a full node. Shows pending transactions, fee rates for different confirmation targets, current hashrate and difficulty.',
+            noChart: true,
+            hint: 'Low fees = network quiet &nbsp;|&nbsp; High fees = congestion / high demand',
+        },
     };
 
-    let data = { price: null, volume: null, rsi: null, ema: null, bb: null, mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null, dxy: null };
+    let data = { price: null, volume: null, rsi: null, ema: null, bb: null, mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null, dxy: null, mempool: null };
     let currentTF = { price: 1440, volume: 1440, rsi: 1440, ema: 1440, bb: 1440 };
     let charts = {};
     let dragSrc = null;
@@ -947,11 +957,23 @@
                         </button>
                     </div>
                 </div>
+                ${m.noChart ? `
+                <div class="hc-stats-grid" id="hc-${id}-grid">
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-fee_next">—</div><div class="hc-stat-lbl">sat/vB next block</div></div>
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-fee_30min">—</div><div class="hc-stat-lbl">sat/vB ~30 min</div></div>
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-fee_1h">—</div><div class="hc-stat-lbl">sat/vB ~1 hour</div></div>
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-tx_count">—</div><div class="hc-stat-lbl">pending txs</div></div>
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-size_mb">—</div><div class="hc-stat-lbl">MB mempool</div></div>
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-total_fees">—</div><div class="hc-stat-lbl">total fees BTC</div></div>
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-hashrate_eh">—</div><div class="hc-stat-lbl">EH/s hashrate</div></div>
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-difficulty">—</div><div class="hc-stat-lbl">difficulty (T)</div></div>
+                    <div class="hc-stat-item"><div class="hc-stat-val" id="hc-${id}-block_height">—</div><div class="hc-stat-lbl">block height</div></div>
+                </div>` : `
                 <div class="hc-value loading" id="hc-${id}-val">—</div>
                 <div class="hc-chart">
                     <div class="hc-loader" id="hc-${id}-loader"><div class="spinner"></div></div>
                     <canvas id="hc-${id}-chart" style="display:none"></canvas>
-                </div>
+                </div>`}
             </div>`;
     }
 
@@ -2161,6 +2183,22 @@
         cardChart('hc-dxy-chart', d.labels, d.values, '#8b5cf6', true);
         cardReady('dxy');
     }).catch(() => { document.getElementById('hc-dxy-val').textContent = 'error'; cardReady('dxy'); });
+
+    function renderMempool(d) {
+        const fields = ['fee_next','fee_30min','fee_1h','tx_count','size_mb','total_fees','hashrate_eh','difficulty','block_height'];
+        fields.forEach(f => {
+            const el = document.getElementById('hc-mempool-' + f);
+            if (el) el.textContent = d[f] != null ? d[f] : '—';
+        });
+        document.getElementById('hc-mempool-badge').className = 'badge neutral';
+        document.getElementById('hc-mempool-badge').textContent = d.fee_next != null ? d.fee_next + ' sat/vB' : '—';
+        cardReady('mempool');
+    }
+    fetch('/api/mempool').then(r => r.json()).then(d => {
+        data.mempool = d;
+        renderMempool(d);
+    }).catch(() => { cardReady('mempool'); });
+    setInterval(() => fetch('/api/mempool').then(r=>r.json()).then(d => { data.mempool=d; renderMempool(d); }).catch(()=>{}), 60000);
 
     // Load Price + Volume + EMA + BB (shared price fetch)
     function tryRenderEmaCard() {
