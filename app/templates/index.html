@@ -1247,7 +1247,7 @@
         if (!ctx) return;
         ctx.style.display = 'block';
         const cc = chartColors();
-        const ticks = small ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis } : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
+        const ticks = small ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } } : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         const hasOv = !small && ovDatasets.length > 0;
         const datasets = [
             { data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y', label: id },
@@ -1255,7 +1255,7 @@
         ];
         const scales = {
             x:  { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
-            y:  { position: 'left',  ticks, grid: { color: cc.grid } },
+            y:  { position: 'left', ticks: { ...ticks, callback: fmtAxis }, grid: { color: cc.grid } },
             ...(hasOv ? { y2: { position: 'right', ticks: { ...ticks, color: ovDatasets[0].color }, grid: { display: false }, ...(ovDatasets[0].yConfig || {}) } } : {})
         };
         charts[id] = new Chart(ctx, {
@@ -1592,7 +1592,7 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: cc.grid } },
-                    y: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 } }, grid: { display: false } }
+                    y: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 }, callback: fmtAxis }, grid: { display: false } }
                 }
             }
         });
@@ -1615,7 +1615,7 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 }, callback: v => v + '%' }, grid: { color: cc.grid } },
-                    y: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 } }, grid: { display: false } }
+                    y: { ticks: { color: cc.tick, font: { size: small ? 9 : 11 }, callback: fmtAxis }, grid: { display: false } }
                 }
             }
         });
@@ -1638,8 +1638,8 @@
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
-            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         const hasOv = !small && ovDatasets.length > 0;
         const datasets = [
             { data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price', yAxisID: 'y' },
@@ -1647,7 +1647,7 @@
         ];
         const scales = {
             x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
-            y: { position: 'left', ticks, grid: { color: cc.grid } },
+            y: { position: 'left', ticks: { ...ticks, callback: fmtAxis }, grid: { color: cc.grid } },
             ...(hasOv ? { y2: { position: 'right', ticks: { ...ticks, color: ovDatasets[0].color }, grid: { display: false } } } : {})
         };
         charts[canvasId] = new Chart(ctx, {
@@ -1672,8 +1672,8 @@
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
-            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         const hasOv = !small && ovDatasets.length > 0;
         const sorted = [...volume].filter(v => v != null).sort((a, b) => a - b);
         const p95 = sorted[Math.floor(sorted.length * 0.95)] || sorted[sorted.length - 1] || 1;
@@ -1693,7 +1693,7 @@
                 },
                 scales: {
                     x:  { ticks: { ...ticks, maxRotation: 0 }, grid: { display: false } },
-                    y:  { position: 'left', ticks, grid: { color: cc.grid }, suggestedMax: p95 * 1.1 },
+                    y:  { position: 'left', ticks: { ...ticks, callback: fmtAxis }, grid: { color: cc.grid }, suggestedMax: p95 * 1.1 },
                     ...(hasOv ? { y2: { position: 'right', ticks: { ...ticks, color: ovDatasets[0].color }, grid: { display: false } } } : {})
                 }
             }
@@ -1708,8 +1708,8 @@
         const cc = chartColors();
         const n = labels.length;
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
-            : { color: cc.tick, maxTicksLimit: 6, font: { size: 11 }, callback: fmtAxis };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 6, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
@@ -1743,8 +1743,8 @@
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
-            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
@@ -1762,7 +1762,7 @@
                 plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
-                    y: { ticks, grid: { color: cc.grid } }
+                    y: { ticks: { ...ticks, callback: fmtAxis }, grid: { color: cc.grid } }
                 }
             }
         });
@@ -1775,8 +1775,8 @@
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
-            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
@@ -1794,7 +1794,7 @@
                 plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
-                    y: { ticks, grid: { color: cc.grid } }
+                    y: { ticks: { ...ticks, callback: fmtAxis }, grid: { color: cc.grid } }
                 }
             }
         });
