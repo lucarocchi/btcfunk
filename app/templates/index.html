@@ -1247,7 +1247,7 @@
         if (!ctx) return;
         ctx.style.display = 'block';
         const cc = chartColors();
-        const ticks = small ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } } : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
+        const ticks = small ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis } : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
         const hasOv = !small && ovDatasets.length > 0;
         const datasets = [
             { data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y', label: id },
@@ -1271,6 +1271,13 @@
                 scales,
             }
         });
+    }
+
+    function fmtAxis(v) {
+        if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(1).replace(/\.0$/,'') + 'B';
+        if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
+        if (Math.abs(v) >= 1e3) return (v/1e3).toFixed(1).replace(/\.0$/,'') + 'K';
+        return v;
     }
 
     function fmt_usd(n) {
@@ -1631,8 +1638,8 @@
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
-            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
         const hasOv = !small && ovDatasets.length > 0;
         const datasets = [
             { data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price', yAxisID: 'y' },
@@ -1665,8 +1672,8 @@
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
-            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
         const hasOv = !small && ovDatasets.length > 0;
         const sorted = [...volume].filter(v => v != null).sort((a, b) => a - b);
         const p95 = sorted[Math.floor(sorted.length * 0.95)] || sorted[sorted.length - 1] || 1;
@@ -1701,8 +1708,8 @@
         const cc = chartColors();
         const n = labels.length;
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
-            : { color: cc.tick, maxTicksLimit: 6, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
+            : { color: cc.tick, maxTicksLimit: 6, font: { size: 11 }, callback: fmtAxis };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
@@ -1736,8 +1743,8 @@
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
-            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
@@ -1768,8 +1775,8 @@
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small
-            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
-            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
+            ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 }, callback: fmtAxis }
+            : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 }, callback: fmtAxis };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
