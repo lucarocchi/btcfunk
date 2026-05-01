@@ -947,7 +947,7 @@
             <div class="home-card" data-id="${id}" id="hc-${id}-card" draggable="true" data-loaded="0" style="cursor:default">
                 <div class="hc-top">
                     <div>
-                        <a class="hc-page-link" href="/${id}" target="_blank" onclick="event.stopPropagation()">${m.label}</a>
+                        ${m.noChart ? `<span class="hc-page-link">${m.label}</span>` : `<a class="hc-page-link" href="/${id}" target="_blank" onclick="event.stopPropagation()">${m.label}</a>`}
                         <div class="hc-acronym">${m.acronym}</div>
                     </div>
                     <div style="display:flex;align-items:center;gap:0.4rem">
@@ -1732,10 +1732,14 @@
 
     function cardReady(id) {
         const card = document.getElementById('hc-' + id + '-card');
-        document.getElementById('hc-' + id + '-loader').style.display = 'none';
-        document.getElementById('hc-' + id + '-chart').style.display = 'block';
-        document.getElementById('hc-' + id + '-val').classList.remove('loading');
         if (card) { card.dataset.loaded = '1'; card.style.cursor = ''; }
+        if (METRICS[id] && METRICS[id].noChart) return;
+        const loader = document.getElementById('hc-' + id + '-loader');
+        const canvas = document.getElementById('hc-' + id + '-chart');
+        const val    = document.getElementById('hc-' + id + '-val');
+        if (loader) loader.style.display = 'none';
+        if (canvas) canvas.style.display = 'block';
+        if (val)    val.classList.remove('loading');
         const ch = charts['hc-' + id + '-chart'];
         if (ch) requestAnimationFrame(() => ch.resize());
     }
@@ -2580,6 +2584,7 @@
     }
 
     function renderDetailChart(id) {
+        if (METRICS[id] && METRICS[id].noChart) return;
         // sync range buttons to current range
         const rangePanel = document.getElementById('range-' + id);
         if (rangePanel) rangePanel.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.dataset.range === currentDetailRange));
