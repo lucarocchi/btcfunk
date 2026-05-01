@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 DB_PATH = "mvrv_cache.sqlite"
 
 
-def get_price(tf: int = 1440, limit: int = 500):
+def get_price(tf: int = 1440):
+    limit = 9999 if tf >= 1440 else 720
     con = sqlite3.connect(DB_PATH)
     rows = con.execute(
         "SELECT ts, open, high, low, close, vol FROM ohlc WHERE tf = ? ORDER BY ts DESC LIMIT ?",

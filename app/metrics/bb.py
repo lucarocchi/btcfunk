@@ -19,7 +19,8 @@ def _calc_bb(closes, period=20, std_dev=2):
     return upper, mid, lower
 
 
-def get_bb(tf: int = 1440, period: int = 20, limit: int = 500):
+def get_bb(tf: int = 1440, period: int = 20):
+    limit = 9999 if tf >= 1440 else 720
     con = sqlite3.connect(DB_PATH)
     rows = con.execute(
         "SELECT ts, close FROM ohlc WHERE tf = ? ORDER BY ts DESC LIMIT ?",

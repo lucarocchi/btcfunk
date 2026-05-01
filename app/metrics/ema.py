@@ -17,7 +17,8 @@ def _calc_ema(closes, period):
     return result
 
 
-def get_ema(tf: int = 1440, limit: int = 500):
+def get_ema(tf: int = 1440):
+    limit = 9999 if tf >= 1440 else 720
     con = sqlite3.connect(DB_PATH)
     rows = con.execute(
         "SELECT ts, close FROM ohlc WHERE tf = ? ORDER BY ts DESC LIMIT ?",

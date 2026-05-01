@@ -24,7 +24,8 @@ def _calc_rsi(closes, period=14):
     return rsi
 
 
-def get_rsi(tf: int = 1440, period: int = 14, limit: int = 500):
+def get_rsi(tf: int = 1440, period: int = 14):
+    limit = 9999 if tf >= 1440 else 720
     con = sqlite3.connect(DB_PATH)
     rows = con.execute(
         "SELECT ts, close FROM ohlc WHERE tf = ? ORDER BY ts DESC LIMIT ?",
