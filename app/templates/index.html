@@ -2123,11 +2123,15 @@
 
     fetch('/api/price?tf=1440').then(r => r.json()).then(d => {
         data.price = d; data.volume = d;
+        const hcSlice = d.labels.length > 365 ? d.labels.length - 365 : 0;
+        d._hcLabels = d.labels.slice(hcSlice);
+        d._hcClose  = d.close.slice(hcSlice);
+        d._hcVol    = d.volume.slice(hcSlice);
         // Price card
         document.getElementById('hc-price-badge').className  = 'badge neutral';
         document.getElementById('hc-price-badge').textContent = '—';
         document.getElementById('d-price-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        renderPriceChart('hc-price-chart', d._hcLabels || d.labels, d._hcClose || d.close, true);
+        renderPriceChart('hc-price-chart', d._hcLabels, d._hcClose, true);
         cardReady('price');
         if (livePrice) applyLivePrice(livePrice); else fetchLiveTicker();
         // Volume card
@@ -2136,10 +2140,6 @@
         document.getElementById('hc-volume-badge').textContent = '—';
         document.getElementById('d-volume-val').textContent   = fmt_vol(d.current_volume);
         document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        const hcSlice = d.labels.length > 365 ? d.labels.length - 365 : 0;
-        d._hcLabels = d.labels.slice(hcSlice);
-        d._hcClose  = d.close.slice(hcSlice);
-        d._hcVol    = d.volume.slice(hcSlice);
         renderVolumeChart('hc-volume-chart', d._hcLabels, d._hcVol, true);
         cardReady('volume');
         tryRenderEmaCard();
