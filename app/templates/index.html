@@ -2134,7 +2134,8 @@
         document.getElementById('hc-volume-badge').textContent = '—';
         document.getElementById('d-volume-val').textContent   = fmt_vol(d.current_volume);
         document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        renderVolumeChart('hc-volume-chart', d.labels, d.volume, true);
+        const volSlice = d.labels.length > 365 ? d.labels.length - 365 : 0;
+        renderVolumeChart('hc-volume-chart', d.labels.slice(volSlice), d.volume.slice(volSlice), true);
         cardReady('volume');
         tryRenderEmaCard();
         tryRenderBbCard();
