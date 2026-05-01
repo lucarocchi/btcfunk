@@ -903,7 +903,6 @@
             stats: [{ id: 'val', label: 'DXY' }],
             hint: 'DXY rising = dollar strong = BTC headwind &nbsp;|&nbsp; DXY falling = dollar weak = BTC tailwind',
             chartHeight: 340,
-            overlays: ['price'],
         },
     };
 
@@ -1250,7 +1249,7 @@
         const hasOv = !small && ovDatasets.length > 0;
         const datasets = [
             { data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y', label: id },
-            ...ovDatasets.map(ov => ({ data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label }))
+            ...ovDatasets.map(ov => ({ data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label, spanGaps: true }))
         ];
         const scales = {
             x:  { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
@@ -1635,7 +1634,7 @@
         const hasOv = !small && ovDatasets.length > 0;
         const datasets = [
             { data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price', yAxisID: 'y' },
-            ...ovDatasets.map(ov => ({ data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label }))
+            ...ovDatasets.map(ov => ({ data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label, spanGaps: true }))
         ];
         const scales = {
             x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
@@ -1669,7 +1668,7 @@
         const hasOv = !small && ovDatasets.length > 0;
         const datasets = [
             { type: 'bar',  data: volume, backgroundColor: 'rgba(128,128,128,0.25)', borderWidth: 0, yAxisID: 'y', label: 'Volume' },
-            ...ovDatasets.map(ov => ({ type: 'line', data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label }))
+            ...ovDatasets.map(ov => ({ type: 'line', data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label, spanGaps: true }))
         ];
         charts[canvasId] = new Chart(ctx, {
             type: 'bar',
