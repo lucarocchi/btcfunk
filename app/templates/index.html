@@ -983,15 +983,15 @@
             <div id="detail-${id}" style="display:none">
                 <div class="card">
                     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
-                        <div class="stat"><div class="val" id="d-${id}-fee_next">—</div><div class="lbl">sat/vB next block</div></div>
-                        <div class="stat"><div class="val" id="d-${id}-fee_30min">—</div><div class="lbl">sat/vB ~30 min</div></div>
-                        <div class="stat"><div class="val" id="d-${id}-fee_1h">—</div><div class="lbl">sat/vB ~1 hour</div></div>
-                        <div class="stat"><div class="val" id="d-${id}-tx_count">—</div><div class="lbl">Pending transactions</div></div>
-                        <div class="stat"><div class="val" id="d-${id}-size_mb">—</div><div class="lbl">Mempool size (MB)</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-fee_next">—</div><div class="lbl">sat/vB next block</div><div style="font-size:0.65rem;color:var(--text-5);margin-top:0.15rem" id="d-${id}-fee_next-hint"></div></div>
+                        <div class="stat"><div class="val" id="d-${id}-fee_30min">—</div><div class="lbl">sat/vB ~30 min</div><div style="font-size:0.65rem;color:var(--text-5);margin-top:0.15rem" id="d-${id}-fee_30min-hint"></div></div>
+                        <div class="stat"><div class="val" id="d-${id}-fee_1h">—</div><div class="lbl">sat/vB ~1 hour</div><div style="font-size:0.65rem;color:var(--text-5);margin-top:0.15rem" id="d-${id}-fee_1h-hint"></div></div>
+                        <div class="stat"><div class="val" id="d-${id}-tx_count">—</div><div class="lbl">Pending transactions</div><div style="font-size:0.65rem;color:var(--text-5);margin-top:0.15rem">&lt; 5K low · 5-50K normal · &gt; 50K high</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-size_mb">—</div><div class="lbl">Mempool size (MB)</div><div style="font-size:0.65rem;color:var(--text-5);margin-top:0.15rem" id="d-${id}-size_mb-hint"></div></div>
                         <div class="stat"><div class="val" id="d-${id}-total_fees">—</div><div class="lbl">Total fees (BTC)</div></div>
-                        <div class="stat"><div class="val" id="d-${id}-hashrate_eh">—</div><div class="lbl">Hashrate (EH/s)</div></div>
-                        <div class="stat"><div class="val" id="d-${id}-difficulty">—</div><div class="lbl">Difficulty (T)</div></div>
-                        <div class="stat"><div class="val" id="d-${id}-block_height">—</div><div class="lbl">Block height</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-hashrate_eh">—</div><div class="lbl">Hashrate (EH/s)</div><div style="font-size:0.65rem;color:var(--text-5);margin-top:0.15rem">ATH ~900 EH/s</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-difficulty">—</div><div class="lbl">Difficulty (T)</div><div style="font-size:0.65rem;color:var(--text-5);margin-top:0.15rem">Adjusts every ~2 weeks</div></div>
+                        <div class="stat"><div class="val" id="d-${id}-block_height">—</div><div class="lbl">Block height</div><div style="font-size:0.65rem;color:var(--text-5);margin-top:0.15rem">~144 blocks/day</div></div>
                     </div>
                     <div class="hint">${m.hint || ''}</div>
                     <div class="updated" id="d-${id}-updated"></div>
@@ -2202,6 +2202,22 @@
         cardReady('dxy');
     }).catch(() => { document.getElementById('hc-dxy-val').textContent = 'error'; cardReady('dxy'); });
 
+    function feeSig(sat) {
+        if (sat == null) return { label: '—', cls: 'neutral', hint: '' };
+        if (sat < 2)   return { label: 'VERY LOW',  cls: 'green',  hint: 'Network idle — ideal time to transact' };
+        if (sat < 10)  return { label: 'LOW',        cls: 'green',  hint: 'Quiet network — good time to send' };
+        if (sat < 30)  return { label: 'MEDIUM',     cls: 'neutral',hint: 'Normal activity' };
+        if (sat < 100) return { label: 'HIGH',        cls: 'red',    hint: 'Busy — consider waiting' };
+        return             { label: 'CONGESTED',  cls: 'red',    hint: 'Heavy congestion — fees very high' };
+    }
+    function mempoolSizeSig(mb) {
+        if (mb == null) return '';
+        if (mb < 5)   return 'Empty';
+        if (mb < 50)  return 'Normal';
+        if (mb < 150) return 'Busy';
+        return 'Congested';
+    }
+
     function renderMempool(d) {
         const fields = ['fee_next','fee_30min','fee_1h','tx_count','size_mb','total_fees','hashrate_eh','difficulty','block_height'];
         fields.forEach(f => {
@@ -2211,8 +2227,16 @@
             if (hc) hc.textContent = v;
             if (dt) dt.textContent = v;
         });
+        const sig = feeSig(d.fee_next);
         const badge = document.getElementById('hc-mempool-badge');
-        if (badge) { badge.className = 'badge neutral'; badge.textContent = d.fee_next != null ? d.fee_next + ' sat/vB' : '—'; }
+        if (badge) { badge.className = 'badge ' + sig.cls; badge.textContent = sig.label; }
+        // hint sotto i valori fee nel detail
+        ['fee_next','fee_30min','fee_1h'].forEach(f => {
+            const hint = document.getElementById('d-mempool-' + f + '-hint');
+            if (hint) hint.textContent = feeSig(d[f]).hint;
+        });
+        const sizeHint = document.getElementById('d-mempool-size_mb-hint');
+        if (sizeHint) sizeHint.textContent = mempoolSizeSig(d.size_mb);
         const upd = document.getElementById('d-mempool-updated');
         if (upd && d.updated_at) upd.textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
         cardReady('mempool');
