@@ -427,6 +427,10 @@ async function load() {
         }
 
         if (SERIES && d[SERIES] && Array.isArray(d[SERIES])) {
+            Chart.Tooltip.positioners.topRight = function() {
+                const { right, top } = this.chart.chartArea;
+                return { x: right, y: top, xAlign: 'right', yAlign: 'top' };
+            };
             const canvas = document.getElementById('metric-chart');
             const spinner = document.getElementById('spinner');
             const cc = chartColors();
@@ -451,7 +455,7 @@ async function load() {
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
-                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, position: 'topRight', bodyFont: { family: 'ui-monospace, SFMono-Regular, Menlo, monospace', size: 12 }, titleFont: { family: 'ui-monospace, SFMono-Regular, Menlo, monospace', size: 12 } } },
                     scales: {
                         x: {
                             display: labels[0] !== '',
