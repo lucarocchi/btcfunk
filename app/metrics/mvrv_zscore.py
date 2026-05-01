@@ -1,29 +1,11 @@
-import sqlite3, json, statistics
+import sqlite3, statistics
 from datetime import datetime, timezone, timedelta
 
 DB_PATH = "btcfunk.sqlite"
-CACHE_TTL_HOURS = 24
-
-
-def _cache_get(con, key):
-    row = con.execute("SELECT value, updated_at FROM cache WHERE key=?", (key,)).fetchone()
-    if not row: return None
-    age = (datetime.now(timezone.utc) - datetime.fromisoformat(row[1])).total_seconds() / 3600
-    return json.loads(row[0]) if age < CACHE_TTL_HOURS else None
-
-
-def _cache_set(con, key, value):
-    con.execute("INSERT OR REPLACE INTO cache (key,value,updated_at) VALUES (?,?,?)",
-                (key, json.dumps(value), datetime.now(timezone.utc).isoformat()))
-    con.commit()
 
 
 def get_mvrv_zscore():
     con = sqlite3.connect(DB_PATH)
-    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
-    cached = _cache_get(con, "mvrv_zscore")
-    if cached:
-        return cached
 
     from app.metrics.mvrv import get_mvrv
     d = get_mvrv()
@@ -45,7 +27,7 @@ def get_mvrv_zscore():
     labels = [x[0] for x in hist]
     values = [round((supply * x[1] - realized_cap) / std, 4) for x in hist]
 
-    result = {
+    return {
         "z_score":      z,
         "market_cap":   current_mc,
         "realized_cap": realized_cap,
@@ -53,5 +35,3 @@ def get_mvrv_zscore():
         "values":       values,
         "updated_at":   datetime.now(timezone.utc).isoformat(),
     }
-    _cache_set(con, "mvrv_zscore", result)
-    return result

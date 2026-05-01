@@ -1,29 +1,14 @@
-import sqlite3, json, requests
+import sqlite3, requests
 from datetime import datetime, timezone, timedelta
 
 DB_PATH = "btcfunk.sqlite"
-CACHE_TTL_HOURS = 24
 
 
 def _init_db():
     con = sqlite3.connect(DB_PATH)
-    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
     con.execute("CREATE TABLE IF NOT EXISTS btc_prices (day TEXT PRIMARY KEY, price REAL)")
     con.commit()
     return con
-
-
-def _cache_get(con, key):
-    row = con.execute("SELECT value, updated_at FROM cache WHERE key=?", (key,)).fetchone()
-    if not row: return None
-    age = (datetime.now(timezone.utc) - datetime.fromisoformat(row[1])).total_seconds() / 3600
-    return json.loads(row[0]) if age < CACHE_TTL_HOURS else None
-
-
-def _cache_set(con, key, value):
-    con.execute("INSERT OR REPLACE INTO cache (key,value,updated_at) VALUES (?,?,?)",
-                (key, json.dumps(value), datetime.now(timezone.utc).isoformat()))
-    con.commit()
 
 
 def _import_from_ohlc(con):
@@ -68,21 +53,15 @@ def _fetch_live_price():
 def get_mvrv():
     con = _init_db()
 
-    cached_rc = _cache_get(con, "realized_cap")
-    if cached_rc and "circulating_supply" in cached_rc:
-        realized_cap       = cached_rc["realized_cap"]
-        circulating_supply = cached_rc["circulating_supply"]
-    else:
-        _import_from_ohlc(con)
-        _update_prices(con)
-        prices = _get_prices(con)
-        utxos = {r[0]: float(r[1]) for r in
-                 con.execute("SELECT creation_day, btc_value FROM utxo_snapshot").fetchall()}
-        if not utxos:
-            return {"error": "utxo_snapshot vuota — esegui migrate_history.py"}
-        circulating_supply = sum(utxos.values())
-        realized_cap = sum(btc * prices.get(day, 0) for day, btc in utxos.items())
-        _cache_set(con, "realized_cap", {"realized_cap": realized_cap, "circulating_supply": circulating_supply})
+    _import_from_ohlc(con)
+    _update_prices(con)
+    prices = _get_prices(con)
+    utxos = {r[0]: float(r[1]) for r in
+             con.execute("SELECT creation_day, btc_value FROM utxo_snapshot").fetchall()}
+    if not utxos:
+        return {"error": "utxo_snapshot vuota — esegui migrate_history.py"}
+    circulating_supply = sum(utxos.values())
+    realized_cap = sum(btc * prices.get(day, 0) for day, btc in utxos.items())
 
     current_price = _fetch_live_price()
     market_cap    = circulating_supply * current_price

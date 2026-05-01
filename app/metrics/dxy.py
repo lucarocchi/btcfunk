@@ -1,41 +1,7 @@
-import sqlite3
-import json
 import requests
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 DB_PATH = "btcfunk.sqlite"
-CACHE_TTL_HOURS = 24
-
-
-def _init_db():
-    con = sqlite3.connect(DB_PATH)
-    con.execute("""CREATE TABLE IF NOT EXISTS cache (
-        key TEXT PRIMARY KEY, value TEXT, updated_at TEXT
-    )""")
-    con.commit()
-    con.close()
-
-
-def _get_cached(key):
-    con = sqlite3.connect(DB_PATH)
-    row = con.execute("SELECT value, updated_at FROM cache WHERE key=?", (key,)).fetchone()
-    con.close()
-    if not row:
-        return None
-    updated = datetime.fromisoformat(row[1])
-    if datetime.now(timezone.utc) - updated > timedelta(hours=CACHE_TTL_HOURS):
-        return None
-    return json.loads(row[0])
-
-
-def _set_cached(key, value):
-    con = sqlite3.connect(DB_PATH)
-    con.execute(
-        "INSERT OR REPLACE INTO cache (key, value, updated_at) VALUES (?, ?, ?)",
-        (key, json.dumps(value), datetime.now(timezone.utc).isoformat())
-    )
-    con.commit()
-    con.close()
 
 
 def _fetch_yahoo(ticker):
@@ -58,15 +24,10 @@ def _fetch_yahoo(ticker):
 
 
 def get_dxy():
-    _init_db()
-    cached = _get_cached('dxy')
-    if cached:
-        return cached
-
     dxy_labels, dxy_values = _fetch_yahoo("DX-Y.NYB")
     btc_labels, btc_values = _fetch_yahoo("BTC-USD")
 
-    out = {
+    return {
         "labels": dxy_labels,
         "values": dxy_values,
         "current": dxy_values[-1] if dxy_values else None,
@@ -74,5 +35,3 @@ def get_dxy():
         "btc_close": btc_values,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    _set_cached('dxy', out)
-    return out

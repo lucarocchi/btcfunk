@@ -1,8 +1,7 @@
-import sqlite3, json
+import sqlite3
 from datetime import datetime, timezone, date
 
 DB_PATH = "btcfunk.sqlite"
-CACHE_TTL_HOURS = 24
 
 BANDS = [
     ("< 1 day",   0,    1),
@@ -20,24 +19,8 @@ BANDS = [
 ]
 
 
-def _cache_get(con, key):
-    row = con.execute("SELECT value, updated_at FROM cache WHERE key=?", (key,)).fetchone()
-    if not row: return None
-    age = (datetime.now(timezone.utc) - datetime.fromisoformat(row[1])).total_seconds() / 3600
-    return json.loads(row[0]) if age < CACHE_TTL_HOURS else None
-
-
-def _cache_set(con, key, value):
-    con.execute("INSERT OR REPLACE INTO cache (key,value,updated_at) VALUES (?,?,?)",
-                (key, json.dumps(value), datetime.now(timezone.utc).isoformat()))
-    con.commit()
-
-
 def get_hodl():
     con = sqlite3.connect(DB_PATH)
-    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
-    cached = _cache_get(con, "hodl")
-    if cached: return cached
 
     utxos = {r[0]: float(r[1]) for r in
              con.execute("SELECT creation_day, btc_value FROM utxo_snapshot").fetchall()}
@@ -71,12 +54,10 @@ def get_hodl():
     lth_pct = sum(b["pct"] for b in bands if b["label"] in
                   {"1y – 2y", "2y – 3y", "3y – 5y", "5y – 7y", "7y – 10y", "> 10y"})
 
-    result = {
+    return {
         "lth_pct":    round(lth_pct, 2),
         "sth_pct":    round(100 - lth_pct, 2),
         "total_btc":  round(total_btc, 2),
         "bands":      bands,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    _cache_set(con, "hodl", result)
-    return result

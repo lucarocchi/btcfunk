@@ -1,8 +1,7 @@
-import sqlite3, json
+import sqlite3
 from datetime import datetime, timezone, timedelta
 
 DB_PATH = "btcfunk.sqlite"
-CACHE_TTL_HOURS = 24
 
 BANDS_META = [
     ("< 1 day",   0,    1),
@@ -37,25 +36,8 @@ def _nearest_price(prices, target):
     return best
 
 
-def _cache_get(con, key):
-    row = con.execute("SELECT value, updated_at FROM cache WHERE key=?", (key,)).fetchone()
-    if not row: return None
-    age = (datetime.now(timezone.utc) - datetime.fromisoformat(row[1])).total_seconds() / 3600
-    return json.loads(row[0]) if age < CACHE_TTL_HOURS else None
-
-
-def _cache_set(con, key, value):
-    con.execute("INSERT OR REPLACE INTO cache (key,value,updated_at) VALUES (?,?,?)",
-                (key, json.dumps(value), datetime.now(timezone.utc).isoformat()))
-    con.commit()
-
-
 def get_lth_sth():
     con = sqlite3.connect(DB_PATH)
-    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
-    cached = _cache_get(con, "lth_sth")
-    if cached:
-        return cached
 
     from app.metrics.hodl import get_hodl
     d = get_hodl()
@@ -79,7 +61,7 @@ def get_lth_sth():
             sth_btc += btc
             sth_rc  += btc * price
 
-    result = {
+    return {
         "lth_supply":         round(lth_btc, 2),
         "sth_supply":         round(sth_btc, 2),
         "lth_realized_price": round(lth_rc / lth_btc, 2) if lth_btc else None,
@@ -88,5 +70,3 @@ def get_lth_sth():
         "bands":              d["bands"],
         "updated_at":         d["updated_at"],
     }
-    _cache_set(con, "lth_sth", result)
-    return result

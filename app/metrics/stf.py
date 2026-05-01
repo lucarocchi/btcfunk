@@ -1,22 +1,8 @@
-import sqlite3, json, math
+import sqlite3, math
 from collections import deque
 from datetime import datetime, timezone, timedelta
 
 DB_PATH = "btcfunk.sqlite"
-CACHE_TTL_HOURS = 24
-
-
-def _cache_get(con, key):
-    row = con.execute("SELECT value, updated_at FROM cache WHERE key=?", (key,)).fetchone()
-    if not row: return None
-    age = (datetime.now(timezone.utc) - datetime.fromisoformat(row[1])).total_seconds() / 3600
-    return json.loads(row[0]) if age < CACHE_TTL_HOURS else None
-
-
-def _cache_set(con, key, value):
-    con.execute("INSERT OR REPLACE INTO cache (key,value,updated_at) VALUES (?,?,?)",
-                (key, json.dumps(value), datetime.now(timezone.utc).isoformat()))
-    con.commit()
 
 
 def _sf_model_price(sf):
@@ -28,10 +14,6 @@ def _sf_model_price(sf):
 
 def get_stf():
     con = sqlite3.connect(DB_PATH)
-    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
-    cached = _cache_get(con, "stf")
-    if cached:
-        return cached
 
     row = con.execute(
         "SELECT SUM(revenue) FROM puell_daily WHERE day >= date('now', '-365 days')"
@@ -71,7 +53,7 @@ def get_stf():
             labels.append(day)
             values.append(round(supply / win_sum, 2))
 
-    result = {
+    return {
         "sf":              sf,
         "model_price":     model_price,
         "current_price":   current_price,
@@ -81,5 +63,3 @@ def get_stf():
         "values":          values,
         "updated_at":      datetime.now(timezone.utc).isoformat(),
     }
-    _cache_set(con, "stf", result)
-    return result

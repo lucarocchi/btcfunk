@@ -1,28 +1,7 @@
-import sqlite3, json
+import sqlite3
 from datetime import datetime, timezone
 
 DB_PATH = "btcfunk.sqlite"
-CACHE_TTL_HOURS = 24
-
-
-def _init_db():
-    con = sqlite3.connect(DB_PATH)
-    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
-    con.commit()
-    return con
-
-
-def _cache_get(con, key):
-    row = con.execute("SELECT value, updated_at FROM cache WHERE key=?", (key,)).fetchone()
-    if not row: return None
-    age = (datetime.now(timezone.utc) - datetime.fromisoformat(row[1])).total_seconds() / 3600
-    return json.loads(row[0]) if age < CACHE_TTL_HOURS else None
-
-
-def _cache_set(con, key, value):
-    con.execute("INSERT OR REPLACE INTO cache (key,value,updated_at) VALUES (?,?,?)",
-                (key, json.dumps(value), datetime.now(timezone.utc).isoformat()))
-    con.commit()
 
 
 def _moving_avg(values_dict, n):
@@ -35,9 +14,7 @@ def _moving_avg(values_dict, n):
 
 
 def get_active_addresses():
-    con = _init_db()
-    cached = _cache_get(con, "active_addresses")
-    if cached: return cached
+    con = sqlite3.connect(DB_PATH)
 
     rows = con.execute("""
         SELECT day, count FROM active_addr_daily
@@ -53,12 +30,10 @@ def get_active_addresses():
     ma30 = _moving_avg({r[0]: r[1] for r in all_rows}, 30)
     ma30_current = round(ma30.get(labels[-1], 0)) if labels else None
 
-    result = {
+    return {
         "current":    current,
         "ma30":       ma30_current,
         "labels":     labels,
         "values":     values,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    _cache_set(con, "active_addresses", result)
-    return result
