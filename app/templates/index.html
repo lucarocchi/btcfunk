@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2JPSF1TSMB"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-2JPSF1TSMB');
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="format-detection" content="telephone=no">
@@ -322,7 +330,8 @@
         .toggle-btn { padding: 0.2rem 0.65rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.72rem; cursor: pointer; background: var(--surface); color: var(--text-4); font-family: inherit; }
         .toggle-btn:hover { border-color: var(--text-6); color: var(--text); }
         .toggle-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
-        .tf-selector, .range-selector { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; align-items: center; }
+        .tf-selector, .range-selector, .overlay-selector { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; align-items: center; }
+        .overlay-label { font-size: 0.65rem; color: var(--text-5); margin-right: 0.1rem; }
         .tf-btn { padding: 0.2rem 0.55rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.68rem; cursor: pointer; background: var(--surface); color: var(--text-4); font-family: inherit; }
         .tf-btn:hover { border-color: var(--text-6); color: var(--text); }
         .tf-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
@@ -419,10 +428,6 @@
                 <button class="detail-action-btn" id="detail-jpeg-btn" onclick="detailSaveJpeg()">
                     <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     Save JPEG
-                </button>
-                <button class="detail-action-btn" id="detail-reset-zoom" onclick="resetDetailZoom()">
-                    <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    Reset zoom
                 </button>
             </div>
             <div id="detail-panels"></div>
@@ -645,7 +650,7 @@
             detail: 'Live BTC/USD price from Kraken (pair XBTUSD), updated every 7 minutes. Available in multiple timeframes from 15 minutes to daily. The close price is used as the reference for all technical indicators.',
             stats: [{ id: 'val', label: 'BTC Price' }],
             hint: '',
-            chartHeight: 220,
+            chartHeight: 340,
             chartType: 'price',
             tfSelector: [15, 30, 60, 240, 1440],
         },
@@ -655,16 +660,17 @@
             detail: 'BTC/USD trading volume from Kraken. Volume confirms or contradicts price moves — a breakout on high volume is stronger than one on low volume. Volume spikes often mark key reversals or the start of a new trend.',
             stats: [{ id: 'val', label: 'Volume (current candle)' }],
             hint: 'Breakout + high volume = strong signal &nbsp;|&nbsp; Rally + low volume = weak signal',
-            chartHeight: 180,
+            chartHeight: 280,
             chartType: 'volume',
             tfSelector: [15, 30, 60, 240, 1440],
+            overlays: ['price'],
         },
         rsi: {
             label: 'RSI', acronym: 'Relative Strength Index (14)', live: true, group: 'Price & TA',
             detail: 'RSI measures the speed and magnitude of recent price changes on a 0–100 scale. Values above 70 signal overbought conditions; below 30 oversold. In bull markets RSI tends to hold between 40–90; in bear markets 10–60. The 14-period is the classic setting used across all timeframes.',
             stats: [{ id: 'val', label: 'RSI (14)' }],
             hint: '&lt;30 oversold &nbsp;|&nbsp; 30–50 bearish &nbsp;|&nbsp; 50–70 bullish &nbsp;|&nbsp; &gt;70 overbought',
-            chartHeight: 180,
+            chartHeight: 280,
             chartType: 'rsi',
             tfSelector: [15, 30, 60, 240, 1440],
         },
@@ -678,7 +684,7 @@
                 { id: 'e200',  label: 'EMA 200', small: true },
             ],
             hint: 'Price above EMA 200 = bull market &nbsp;|&nbsp; Golden cross (50/200) = buy signal &nbsp;|&nbsp; Death cross = bearish',
-            chartHeight: 220,
+            chartHeight: 340,
             chartType: 'ema',
             tfSelector: [15, 30, 60, 240, 1440],
         },
@@ -692,7 +698,7 @@
                 { id: 'bw',    label: 'Bandwidth',  small: true },
             ],
             hint: 'Price near upper = overbought &nbsp;|&nbsp; Price near lower = oversold &nbsp;|&nbsp; Squeeze = breakout incoming',
-            chartHeight: 220,
+            chartHeight: 340,
             chartType: 'bb',
             tfSelector: [15, 30, 60, 240, 1440],
         },
@@ -706,21 +712,21 @@
                 { id: 'rcap',  label: 'Realized Cap', small: true },
             ],
             hint: '&lt;1 undervalued &nbsp;|&nbsp; 1–2 fair value &nbsp;|&nbsp; 2–3.5 caution &nbsp;|&nbsp; &gt;3.5 top zone',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         sopr: {
             label: 'SOPR', acronym: 'Spent Output Profit Ratio', live: true, group: 'Profitability',
             detail: 'SOPR measures whether coins moved on a given day were sold at a profit or a loss relative to their acquisition price. A value above 1 means that on average, coins were moved at a gain. Values below 1 signal selling at a loss — often a sign of capitulation or an accumulation phase. A recovery of SOPR back above 1 after a sustained period below is considered a bullish signal.',
             stats: [{ id: 'val', label: 'SOPR (today)' }],
             hint: '&lt;1 selling at loss &nbsp;|&nbsp; =1 breakeven &nbsp;|&nbsp; &gt;1 selling at profit',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         nvt: {
             label: 'NVT Ratio', acronym: 'Network Value to Transactions', live: true, group: 'Market',
             detail: 'NVT compares Bitcoin\'s market cap to its on-chain transaction volume (28-day moving average). It works like a P/E ratio for Bitcoin: a high NVT means the network is valued far above its actual usage, historically a sign of overvaluation. A low NVT signals strong utility relative to price — a potential buy zone.',
             stats: [{ id: 'val', label: 'NVT (28d MA)' }],
             hint: '&lt;50 undervalued &nbsp;|&nbsp; 50–100 fair &nbsp;|&nbsp; 100–150 caution &nbsp;|&nbsp; &gt;150 overvalued',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         hodl: {
             label: 'HODL Waves', acronym: 'Age distribution of BTC supply', live: true, group: 'Supply',
@@ -730,7 +736,7 @@
                 { id: 'sth', label: 'STH (&lt; 1 year)' },
             ],
             hint: 'LTH &gt; 70% strong accumulation &nbsp;|&nbsp; LTH &lt; 50% distribution phase',
-            chartHeight: 320,
+            chartHeight: 420,
             chartType: 'hodl',
         },
         cdd: {
@@ -741,7 +747,7 @@
                 { id: 'ma',  label: '90d Average' },
             ],
             hint: 'Spike above 2&times; 90d avg signals old coins moving — potential distribution',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         exchange_flow: {
             label: 'Exchange Flows', acronym: 'BTC inflows & outflows to exchanges', live: true, group: 'Flows',
@@ -752,7 +758,7 @@
                 { id: 'net',     label: 'Net Flow' },
             ],
             hint: 'Net &gt; 0 (more inflow) bearish — BTC entering exchanges &nbsp;|&nbsp; Net &lt; 0 bullish — accumulation',
-            chartHeight: 220,
+            chartHeight: 340,
             extra: 'top',
         },
         nupl: {
@@ -763,14 +769,14 @@
                 { id: 'rp',  label: 'Realized Price', small: true },
             ],
             hint: '&lt;0 capitulation &nbsp;|&nbsp; 0–0.25 hope &nbsp;|&nbsp; 0.25–0.5 optimism &nbsp;|&nbsp; 0.5–0.75 belief &nbsp;|&nbsp; &gt;0.75 euphoria',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         rhodl: {
             label: 'RHODL Ratio', acronym: 'Ratio HODLed 1–2y vs 1d–1w supply', live: true, group: 'Supply',
             detail: 'The RHODL Ratio compares the BTC held for 1–2 years to the BTC held for just 1 day–1 week. A high ratio means long-term holders dominate supply — bullish conviction. A low ratio means recent buyers dominate — typical of early bear markets when LTH have distributed and new buyers have not yet accumulated. It signals cycle phases without relying on price.',
             stats: [{ id: 'val', label: 'RHODL Ratio' }],
             hint: 'High ratio: LTH conviction &nbsp;|&nbsp; Low ratio: STH dominant — early bear or opportunity',
-            chartHeight: 320,
+            chartHeight: 420,
             chartType: 'hodl_profit',
         },
         supply_profit: {
@@ -778,7 +784,7 @@
             detail: 'Supply in Profit measures what percentage of the circulating Bitcoin supply has an acquisition price below the current market price — meaning those coins are currently sitting on an unrealized gain. When nearly all supply is in profit (>90%) the market is historically near cycle tops. When supply in profit falls below 50%, it signals widespread capitulation and potential accumulation zones.',
             stats: [{ id: 'val', label: '% in Profit' }],
             hint: '&gt;90% euphoria / top zone &nbsp;|&nbsp; 50–75% fair &nbsp;|&nbsp; &lt;50% capitulation / buy zone',
-            chartHeight: 320,
+            chartHeight: 420,
             chartType: 'hodl_profit',
         },
         puell: {
@@ -789,7 +795,7 @@
                 { id: 'revenue', label: 'Daily Revenue',  small: true },
             ],
             hint: '&lt;0.5 bottom zone &nbsp;|&nbsp; 0.5–2 fair &nbsp;|&nbsp; 2–4 caution &nbsp;|&nbsp; &gt;4 top zone',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         active_addresses: {
             label: 'Active Addresses', acronym: 'Unique addresses transacting per day', live: true, group: 'Network',
@@ -799,7 +805,7 @@
                 { id: 'ma',  label: '30d Average', small: true },
             ],
             hint: 'Rising addresses = growing adoption &nbsp;|&nbsp; Divergence from price = warning signal',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         whale_tx: {
             label: 'Whale Transactions', acronym: 'Transactions > 100 BTC per day', live: true, group: 'Network',
@@ -809,7 +815,7 @@
                 { id: 'vol', label: 'Volume (BTC)',  small: true },
             ],
             hint: 'Spike + rising exchange inflow = distribution risk &nbsp;|&nbsp; Spike + outflow = accumulation',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         mvrv_zscore: {
             label: 'MVRV Z-Score', acronym: 'Market cap distance from realized cap in std devs', live: true, group: 'Market',
@@ -820,7 +826,7 @@
                 { id: 'rcap', label: 'Realized Cap', small: true },
             ],
             hint: '&lt;0 buy zone &nbsp;|&nbsp; 0–3 fair &nbsp;|&nbsp; 3–7 caution &nbsp;|&nbsp; &gt;7 top zone',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         lth: {
             label: 'LTH Supply', acronym: 'Long-Term Holder supply (> 1 year)', live: true, group: 'Supply',
@@ -831,7 +837,7 @@
                 { id: 'rp',     label: 'LTH Realized Price', small: true },
             ],
             hint: 'Growing LTH supply = accumulation &nbsp;|&nbsp; Declining LTH = distribution phase',
-            chartHeight: 320,
+            chartHeight: 420,
             chartType: 'hodl',
         },
         sth: {
@@ -843,7 +849,7 @@
                 { id: 'rp',     label: 'STH Realized Price', small: true },
             ],
             hint: 'Price below STH realized price = capitulation risk for recent buyers',
-            chartHeight: 320,
+            chartHeight: 420,
             chartType: 'hodl',
         },
         stf: {
@@ -855,7 +861,7 @@
                 { id: 'dev',   label: 'Deviation',   small: true },
             ],
             hint: 'Price near/below model = scarcity undervalued &nbsp;|&nbsp; Large premium = extended vs model',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         tx_count: {
             label: 'Tx Count', acronym: 'Daily on-chain transactions', live: true, group: 'Network',
@@ -866,7 +872,7 @@
                 { id: 'ma',  label: '30d Average', small: true },
             ],
             hint: 'Rising count + rising price = fundamental growth &nbsp;|&nbsp; Divergence = speculative caution',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         avg_fee: {
             label: 'Avg Fee', acronym: 'Average transaction fee (BTC)', live: true, group: 'Network',
@@ -877,7 +883,7 @@
                 { id: 'vol', label: 'Volume (BTC)', small: true },
             ],
             hint: 'Fee spike = high block space demand &nbsp;|&nbsp; Low fee = network underutilized',
-            chartHeight: 220,
+            chartHeight: 340,
         },
         hashrate: {
             label: 'Hash Rate', acronym: 'Network mining power (EH/s)', live: true, group: 'Mining',
@@ -888,7 +894,7 @@
                 { id: 'blocks', label: 'Blocks (today)',    small: true },
             ],
             hint: 'Rising hashrate = security growth &nbsp;|&nbsp; Decline = miner stress / potential bottom',
-            chartHeight: 220,
+            chartHeight: 340,
         },
     };
 
@@ -930,9 +936,16 @@
                 <div class="lbl">${s.label}</div>
             </div>`
         ).join('');
-        const h = m.chartHeight || 220;
+        const h = m.chartHeight || 340;
+        const chartControls = `<span style="display:flex;gap:0.15rem;margin-left:auto">
+            <button class="tf-btn" onclick="chartNav('start')" title="Jump to start">⏮</button>
+            <button class="tf-btn" onclick="chartNav('back')"  title="Pan back">‹</button>
+            <button class="tf-btn" onclick="chartNav('fwd')"   title="Pan forward">›</button>
+            <button class="tf-btn" onclick="chartNav('end')"   title="Jump to today">⏭</button>
+            <button class="tf-btn" style="opacity:0.6;margin-left:0.25rem" onclick="resetDetailZoom()" title="Reset zoom">↺</button>
+        </span>`;
         const tfHtml = m.tfSelector
-            ? `<div class="tf-selector" id="tf-${id}">${m.tfSelector.map(tf => `<button class="tf-btn${tf === 1440 ? ' active' : ''}" onclick="loadDetailTF('${id}',${tf},this)">${TF_LABELS[tf]}</button>`).join('')}</div>`
+            ? `<div class="tf-selector" id="tf-${id}">${m.tfSelector.map(tf => `<button class="tf-btn${tf === 1440 ? ' active' : ''}" onclick="loadDetailTF('${id}',${tf},this)">${TF_LABELS[tf]}</button>`).join('')}${chartControls}</div>`
             : '';
         const rangeHtml = !m.tfSelector && !m.chartType
             ? `<div class="range-selector" id="range-${id}">
@@ -940,6 +953,14 @@
                 <button class="tf-btn" data-range="5Y" onclick="changeRange('5Y',this)">5Y</button>
                 <button class="tf-btn" data-range="2Y" onclick="changeRange('2Y',this)">2Y</button>
                 <button class="tf-btn" data-range="1Y" onclick="changeRange('1Y',this)">1Y</button>
+                ${chartControls}
+               </div>`
+            : '';
+        const availableOverlays = !m.tfSelector && !m.chartType ? ['price', 'rsi'] : (m.overlays || []);
+        const overlayHtml = availableOverlays.length > 0
+            ? `<div class="overlay-selector" id="overlays-${id}">
+                <span class="overlay-label">overlay</span>
+                ${availableOverlays.map(ov => `<button class="tf-btn" data-overlay="${ov}" onclick="toggleOverlay('${ov}',this)">+ ${ov[0].toUpperCase()+ov.slice(1)}</button>`).join('')}
                </div>`
             : '';
         return `
@@ -951,7 +972,7 @@
                         <button class="toggle-btn active" onclick="toggleDetailView('${id}','chart',this)">Chart</button>
                         <button class="toggle-btn"        onclick="toggleDetailView('${id}','table',this)">Table</button>
                     </div>
-                    ${tfHtml}${rangeHtml}
+                    ${tfHtml}${rangeHtml}${overlayHtml}
                     <canvas id="${id}-chart-detail" style="max-height:${h}px"></canvas>
                     <div id="${id}-table-detail" class="table-wrap" style="display:none"></div>
                     ${m.extra === 'top' ? `<div id="d-${id}-extra" style="margin-top:1rem"></div>` : ''}
@@ -1210,23 +1231,34 @@
         };
     }
 
-    function cardChart(id, labels, values, color, small) {
+    function cardChart(id, labels, values, color, small, ovDatasets = []) {
         if (charts[id]) charts[id].destroy();
         const ctx = document.getElementById(id);
         if (!ctx) return;
         ctx.style.display = 'block';
         const cc = chartColors();
         const ticks = small ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } } : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
+        const hasOv = !small && ovDatasets.length > 0;
+        const datasets = [
+            { data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y', label: id },
+            ...ovDatasets.map(ov => ({ data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label }))
+        ];
+        const scales = {
+            x:  { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
+            y:  { position: 'left',  ticks, grid: { color: cc.grid } },
+            ...(hasOv ? { y2: { position: 'right', ticks: { ...ticks, color: ovDatasets[0].color }, grid: { display: false }, ...(ovDatasets[0].yConfig || {}) } } : {})
+        };
         charts[id] = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets: [{ data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
+            data: { labels, datasets },
             options: {
                 animation: false,
-                plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
-                scales: {
-                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
-                    y: { ticks, grid: { color: cc.grid } }
-                }
+                ...hoverOpts(small),
+                plugins: {
+                    legend: { display: hasOv, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8, filter: i => i.datasetIndex > 0 } },
+                    ...(small ? {} : zoomCfg())
+                },
+                scales,
             }
         });
     }
@@ -1328,6 +1360,15 @@
         if (net > 0)     return { label: 'INFLOW',        cls: 'medium' };
         if (net > -5000) return { label: 'OUTFLOW',       cls: 'ok' };
         return               { label: 'STRONG OUT',   cls: 'ok' };
+    }
+
+    function fmt_vol(n) {
+        if (n === null || n === undefined) return '—';
+        if (n >= 1e6) return (n/1e6).toFixed(2) + 'M BTC';
+        if (n >= 1e3) return (n/1e3).toFixed(1) + 'K BTC';
+        if (n >= 1)   return n.toFixed(2) + ' BTC';
+        if (n >= 0.01) return n.toFixed(4) + ' BTC';
+        return n.toFixed(6) + ' BTC';
     }
 
     function fmt_btc(n) {
@@ -1440,11 +1481,14 @@
             data.volume = d;
             // update stats
             document.getElementById('d-price-val').textContent  = d.current_price  ? fmt_usd(d.current_price)  : '—';
-            document.getElementById('d-volume-val').textContent = d.current_volume ? d.current_volume.toFixed(2) : '—';
+            document.getElementById('d-volume-val').textContent = fmt_vol(d.current_volume);
             document.getElementById('d-price-updated').textContent  = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
             document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
             if (id === 'price')  renderPriceChart('price-chart-detail',  d.labels, d.close, false);
-            if (id === 'volume') renderVolumeChart('volume-chart-detail', d.labels, d.volume, false);
+            if (id === 'volume') {
+                const priceOv = currentDetailOverlays.has('price') ? [{ label: 'Price', values: d.close, color: '#f59e0b' }] : [];
+                renderVolumeChart('volume-chart-detail', d.labels, d.volume, false, priceOv);
+            }
         } else if (id === 'rsi') {
             data.rsi = d;
             document.getElementById('d-rsi-val').textContent     = d.current !== null ? d.current.toFixed(1) : '—';
@@ -1577,9 +1621,10 @@
             : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets: [{ data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
+            data: { labels, datasets: [{ data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price' }] },
             options: {
                 animation: false,
+                ...hoverOpts(small),
                 plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
@@ -1589,7 +1634,7 @@
         });
     }
 
-    function renderVolumeChart(canvasId, labels, volume, small) {
+    function renderVolumeChart(canvasId, labels, volume, small, ovDatasets = []) {
         if (charts[canvasId]) charts[canvasId].destroy();
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
@@ -1598,15 +1643,25 @@
         const ticks = small
             ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
             : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
+        const hasOv = !small && ovDatasets.length > 0;
+        const datasets = [
+            { type: 'bar',  data: volume, backgroundColor: 'rgba(128,128,128,0.25)', borderWidth: 0, yAxisID: 'y', label: 'Volume' },
+            ...ovDatasets.map(ov => ({ type: 'line', data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label }))
+        ];
         charts[canvasId] = new Chart(ctx, {
             type: 'bar',
-            data: { labels, datasets: [{ data: volume, backgroundColor: 'rgba(128,128,128,0.25)', borderWidth: 0 }] },
+            data: { labels, datasets },
             options: {
                 animation: false,
-                plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
+                ...hoverOpts(small),
+                plugins: {
+                    legend: { display: hasOv, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8, filter: i => i.datasetIndex > 0 } },
+                    ...(small ? {} : zoomCfg())
+                },
                 scales: {
-                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { display: false } },
-                    y: { ticks, grid: { color: cc.grid } }
+                    x:  { ticks: { ...ticks, maxRotation: 0 }, grid: { display: false } },
+                    y:  { position: 'left',  ticks, grid: { color: cc.grid } },
+                    ...(hasOv ? { y2: { position: 'right', ticks: { ...ticks, color: ovDatasets[0].color }, grid: { display: false } } } : {})
                 }
             }
         });
@@ -1634,7 +1689,12 @@
             },
             options: {
                 animation: false,
-                plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
+                ...hoverOpts(small),
+                plugins: {
+                    legend: { display: false },
+                    tooltip: small ? {} : { filter: item => item.datasetIndex === 0 },
+                    ...(small ? {} : zoomCfg())
+                },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
                     y: { ticks, grid: { color: cc.grid }, min: 0, max: 100 }
@@ -1665,6 +1725,7 @@
             },
             options: {
                 animation: false,
+                ...hoverOpts(small),
                 plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
@@ -1696,6 +1757,7 @@
             },
             options: {
                 animation: false,
+                ...hoverOpts(small),
                 plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
@@ -2030,10 +2092,10 @@
         cardReady('price');
         fetchLiveTicker();
         // Volume card
-        document.getElementById('hc-volume-val').textContent  = d.current_volume ? d.current_volume.toFixed(2) : '—';
+        document.getElementById('hc-volume-val').textContent  = fmt_vol(d.current_volume);
         document.getElementById('hc-volume-badge').className  = 'badge neutral';
         document.getElementById('hc-volume-badge').textContent = '—';
-        document.getElementById('d-volume-val').textContent   = d.current_volume ? d.current_volume.toFixed(2) : '—';
+        document.getElementById('d-volume-val').textContent   = fmt_vol(d.current_volume);
         document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
         renderVolumeChart('hc-volume-chart', d.labels, d.volume, true);
         cardReady('volume');
@@ -2096,6 +2158,49 @@
         };
     }
 
+    Chart.register({
+        id: 'crosshair',
+        afterDraw(chart) {
+            if (chart.options.indexAxis === 'y') return;
+            if (!chart.tooltip._active || !chart.tooltip._active.length) return;
+            const x = chart.tooltip._active[0].element.x;
+            const { top, bottom } = chart.chartArea;
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, top);
+            ctx.lineTo(x, bottom);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(120,120,120,0.3)';
+            ctx.setLineDash([3, 3]);
+            ctx.stroke();
+            ctx.restore();
+        }
+    });
+
+    function hoverOpts(small) {
+        return small ? {} : { interaction: { mode: 'index', intersect: false } };
+    }
+
+    function chartNav(dir) {
+        const canvasId = currentDetailId + '-chart-detail';
+        const ch = charts[canvasId];
+        if (!ch || !ch.zoomScale) return;
+        const xScale = ch.scales.x;
+        if (!xScale) return;
+        const n = ch.data.labels.length;
+        const curMin = isFinite(xScale.min) ? xScale.min : 0;
+        const curMax = isFinite(xScale.max) ? xScale.max : n - 1;
+        const visible = Math.max(1, Math.round(curMax - curMin));
+        const step = Math.max(1, Math.round(visible * 0.25));
+        let newMin = curMin, newMax = curMax;
+        if      (dir === 'start') { newMin = 0;     newMax = Math.min(n-1, visible); }
+        else if (dir === 'end')   { newMax = n-1;   newMin = Math.max(0, n-1-visible); }
+        else if (dir === 'back')  { newMin = Math.max(0, curMin-step);   newMax = newMin + visible; }
+        else if (dir === 'fwd')   { newMax = Math.min(n-1, curMax+step); newMin = newMax - visible; }
+        ch.zoomScale('x', { min: Math.max(0, Math.round(newMin)), max: Math.min(n-1, Math.round(newMax)) }, 'none');
+    }
+
     function changeRange(r, btn) {
         currentDetailRange = r;
         const panel = document.getElementById('range-' + currentDetailId);
@@ -2107,6 +2212,57 @@
         if (!currentDetailId) return;
         const ch = charts[currentDetailId + '-chart-detail'];
         if (ch && ch.resetZoom) ch.resetZoom();
+    }
+
+    let currentDetailOverlays = new Set();
+    const overlayCache = {};
+
+    const OVERLAY_CFG = {
+        price: { label: 'Price', color: '#f59e0b', yConfig: {}, getValues: d => d.close },
+        rsi:   { label: 'RSI',   color: '#3b82f6', yConfig: { min: 0, max: 100 }, getValues: d => d.rsi },
+    };
+
+    async function fetchOverlayIfNeeded(ovId) {
+        if (overlayCache[ovId]) return;
+        const apiId = ovId === 'rsi' ? 'rsi' : 'price';
+        overlayCache[ovId] = await fetch('/api/' + apiId + '?tf=1440').then(r => r.json());
+    }
+
+    function alignOverlay(primaryLabels, ovId) {
+        const ovData = overlayCache[ovId];
+        if (!ovData) return [];
+        const cfg = OVERLAY_CFG[ovId];
+        const map = new Map();
+        ovData.labels.forEach((lbl, i) => map.set(lbl.slice(0, 10), cfg.getValues(ovData)[i]));
+        return primaryLabels.map(lbl => map.get(lbl.slice(0, 10)) ?? null);
+    }
+
+    function getOverlayDatasets(slicedLabels) {
+        return [...currentDetailOverlays].map(ovId => {
+            const cfg = OVERLAY_CFG[ovId];
+            return { label: cfg.label, color: cfg.color, yConfig: cfg.yConfig, values: alignOverlay(slicedLabels, ovId) };
+        });
+    }
+
+    async function toggleOverlay(ovId, btn) {
+        if (currentDetailOverlays.has(ovId)) {
+            currentDetailOverlays.delete(ovId);
+            btn.classList.remove('active');
+        } else {
+            currentDetailOverlays.clear();
+            const panel = document.getElementById('overlays-' + currentDetailId);
+            if (panel) panel.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+            const m = METRICS[currentDetailId];
+            if (!m.overlays) await fetchOverlayIfNeeded(ovId);
+            currentDetailOverlays.add(ovId);
+            btn.classList.add('active');
+        }
+        const m = METRICS[currentDetailId];
+        if (m.overlays) {
+            fetchAndRenderTA(currentDetailId, currentTF[currentDetailId] || 1440);
+        } else {
+            renderDetailChart(currentDetailId);
+        }
     }
 
     function detailShare() {
@@ -2142,6 +2298,11 @@
 
     function showDetail(id) {
         if (!METRICS[id]) return;
+        if (id !== currentDetailId) {
+            currentDetailOverlays = new Set();
+            const prevPanel = document.getElementById('overlays-' + id);
+            if (prevPanel) prevPanel.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+        }
         currentDetailId = id;
         document.getElementById('view-home').style.display = 'none';
         document.getElementById('view-detail').style.display = 'block';
@@ -2199,31 +2360,51 @@
         const rangePanel = document.getElementById('range-' + id);
         if (rangePanel) rangePanel.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.dataset.range === currentDetailRange));
 
-        if (id === 'mvrv' && data.mvrv)
-            cardChart('mvrv-chart-detail', sliceTail(data.mvrv.labels), sliceTail(data.mvrv.values), sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
-        if (id === 'sopr' && data.sopr)
-            cardChart('sopr-chart-detail', sliceTail(data.sopr.labels), sliceTail(data.sopr.values), sigColor(sopr_signal(data.sopr.current).cls), false);
-        if (id === 'nvt' && data.nvt)
-            cardChart('nvt-chart-detail', sliceTail(data.nvt.labels), sliceTail(data.nvt.values), sigColor(nvt_signal(data.nvt.nvt).cls), false);
+        const sl = arr => sliceTail(arr);
+        const ov = lbl => getOverlayDatasets(lbl);
+
+        if (id === 'mvrv' && data.mvrv) {
+            const lbl = sl(data.mvrv.labels);
+            cardChart('mvrv-chart-detail', lbl, sl(data.mvrv.values), sigColor(mvrv_signal(data.mvrv.mvrv).cls), false, ov(lbl));
+        }
+        if (id === 'sopr' && data.sopr) {
+            const lbl = sl(data.sopr.labels);
+            cardChart('sopr-chart-detail', lbl, sl(data.sopr.values), sigColor(sopr_signal(data.sopr.current).cls), false, ov(lbl));
+        }
+        if (id === 'nvt' && data.nvt) {
+            const lbl = sl(data.nvt.labels);
+            cardChart('nvt-chart-detail', lbl, sl(data.nvt.values), sigColor(nvt_signal(data.nvt.nvt).cls), false, ov(lbl));
+        }
         if (id === 'hodl' && data.hodl)
             renderHodlChart('hodl-chart-detail', data.hodl.bands, false);
-        if (id === 'cdd' && data.cdd)
-            cardChart('cdd-chart-detail', sliceTail(data.cdd.labels), sliceTail(data.cdd.values), sigColor(cdd_signal(data.cdd.current, data.cdd.ma90).cls), false);
-        if (id === 'nupl' && data.nupl)
-            cardChart('nupl-chart-detail', sliceTail(data.nupl.labels), sliceTail(data.nupl.values), sigColor(nupl_signal(data.nupl.nupl).cls), false);
+        if (id === 'cdd' && data.cdd) {
+            const lbl = sl(data.cdd.labels);
+            cardChart('cdd-chart-detail', lbl, sl(data.cdd.values), sigColor(cdd_signal(data.cdd.current, data.cdd.ma90).cls), false, ov(lbl));
+        }
+        if (id === 'nupl' && data.nupl) {
+            const lbl = sl(data.nupl.labels);
+            cardChart('nupl-chart-detail', lbl, sl(data.nupl.values), sigColor(nupl_signal(data.nupl.nupl).cls), false, ov(lbl));
+        }
         if (id === 'rhodl' && data.rhodl && data.rhodl.bands_profit)
             renderProfitChart('rhodl-chart-detail', data.rhodl.bands_profit, false);
         if (id === 'supply_profit' && data.supply_profit && data.supply_profit.bands_profit)
             renderProfitChart('supply_profit-chart-detail', data.supply_profit.bands_profit, false);
-        if (id === 'puell' && data.puell)
-            cardChart('puell-chart-detail', sliceTail(data.puell.labels), sliceTail(data.puell.values), sigColor(puell_signal(data.puell.puell).cls), false);
-        if (id === 'active_addresses' && data.active_addresses)
-            cardChart('active_addresses-chart-detail', sliceTail(data.active_addresses.labels), sliceTail(data.active_addresses.values), sigColor(active_signal(data.active_addresses.current, data.active_addresses.ma30).cls), false);
-        if (id === 'whale_tx' && data.whale_tx)
-            cardChart('whale_tx-chart-detail', sliceTail(data.whale_tx.labels), sliceTail(data.whale_tx.values), sigColor(whale_signal(data.whale_tx.current, data.whale_tx.ma30).cls), false);
+        if (id === 'puell' && data.puell) {
+            const lbl = sl(data.puell.labels);
+            cardChart('puell-chart-detail', lbl, sl(data.puell.values), sigColor(puell_signal(data.puell.puell).cls), false, ov(lbl));
+        }
+        if (id === 'active_addresses' && data.active_addresses) {
+            const lbl = sl(data.active_addresses.labels);
+            cardChart('active_addresses-chart-detail', lbl, sl(data.active_addresses.values), sigColor(active_signal(data.active_addresses.current, data.active_addresses.ma30).cls), false, ov(lbl));
+        }
+        if (id === 'whale_tx' && data.whale_tx) {
+            const lbl = sl(data.whale_tx.labels);
+            cardChart('whale_tx-chart-detail', lbl, sl(data.whale_tx.values), sigColor(whale_signal(data.whale_tx.current, data.whale_tx.ma30).cls), false, ov(lbl));
+        }
         if (id === 'exchange_flow' && data.exchange_flow) {
             const d = data.exchange_flow;
-            cardChart('exchange_flow-chart-detail', sliceTail(d.labels), sliceTail(d.net), sigColor(ef_signal(d.current_net).cls), false);
+            const lbl = sl(d.labels);
+            cardChart('exchange_flow-chart-detail', lbl, sl(d.net), sigColor(ef_signal(d.current_net).cls), false, ov(lbl));
             const topEl = document.getElementById('d-exchange_flow-extra');
             if (topEl && d.top_exchanges && d.top_exchanges.length) {
                 topEl.innerHTML = '<div style="font-size:0.75rem;color:#888;margin-bottom:0.5rem">Top exchanges (30d)</div>' +
@@ -2235,20 +2416,30 @@
                     ).join('');
             }
         }
-        if (id === 'mvrv_zscore' && data.mvrv_zscore)
-            cardChart('mvrv_zscore-chart-detail', sliceTail(data.mvrv_zscore.labels), sliceTail(data.mvrv_zscore.values), sigColor(mvrv_zscore_signal(data.mvrv_zscore.z_score).cls), false);
+        if (id === 'mvrv_zscore' && data.mvrv_zscore) {
+            const lbl = sl(data.mvrv_zscore.labels);
+            cardChart('mvrv_zscore-chart-detail', lbl, sl(data.mvrv_zscore.values), sigColor(mvrv_zscore_signal(data.mvrv_zscore.z_score).cls), false, ov(lbl));
+        }
         if (id === 'lth' && data.lth)
             renderHodlChart('lth-chart-detail', data.lth.bands, false);
         if (id === 'sth' && data.sth)
             renderHodlChart('sth-chart-detail', data.sth.bands, false);
-        if (id === 'stf' && data.stf)
-            cardChart('stf-chart-detail', sliceTail(data.stf.labels), sliceTail(data.stf.values), sigColor(stf_signal(data.stf.deviation_pct).cls), false);
-        if (id === 'tx_count' && data.tx_count)
-            cardChart('tx_count-chart-detail', sliceTail(data.tx_count.labels), sliceTail(data.tx_count.tx_counts), sigColor(tx_count_signal(data.tx_count.tx_count, data.tx_count.tx_count_ma30).cls), false);
-        if (id === 'avg_fee' && data.avg_fee)
-            cardChart('avg_fee-chart-detail', sliceTail(data.avg_fee.labels), sliceTail(data.avg_fee.avg_fees), '#888', false);
-        if (id === 'hashrate' && data.hashrate)
-            cardChart('hashrate-chart-detail', sliceTail(data.hashrate.labels), sliceTail(data.hashrate.values), sigColor(hashrate_signal(data.hashrate.hashrate_eh, data.hashrate.ma14_eh).cls), false);
+        if (id === 'stf' && data.stf) {
+            const lbl = sl(data.stf.labels);
+            cardChart('stf-chart-detail', lbl, sl(data.stf.values), sigColor(stf_signal(data.stf.deviation_pct).cls), false, ov(lbl));
+        }
+        if (id === 'tx_count' && data.tx_count) {
+            const lbl = sl(data.tx_count.labels);
+            cardChart('tx_count-chart-detail', lbl, sl(data.tx_count.tx_counts), sigColor(tx_count_signal(data.tx_count.tx_count, data.tx_count.tx_count_ma30).cls), false, ov(lbl));
+        }
+        if (id === 'avg_fee' && data.avg_fee) {
+            const lbl = sl(data.avg_fee.labels);
+            cardChart('avg_fee-chart-detail', lbl, sl(data.avg_fee.avg_fees), '#888', false, ov(lbl));
+        }
+        if (id === 'hashrate' && data.hashrate) {
+            const lbl = sl(data.hashrate.labels);
+            cardChart('hashrate-chart-detail', lbl, sl(data.hashrate.values), sigColor(hashrate_signal(data.hashrate.hashrate_eh, data.hashrate.ma14_eh).cls), false, ov(lbl));
+        }
     }
 
     document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => showDetail(el.dataset.id)));
