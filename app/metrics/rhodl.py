@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime, timezone, timedelta
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 
 # (label, lo_days, hi_days) — matches hodl.py
 BANDS_META = [

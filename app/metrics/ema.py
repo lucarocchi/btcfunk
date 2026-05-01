@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime, timezone
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 
 
 def _calc_ema(closes, period):

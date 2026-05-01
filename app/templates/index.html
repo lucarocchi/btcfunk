@@ -946,7 +946,8 @@
             </div>`
         ).join('');
         const h = m.chartHeight || 340;
-        const chartControls = `<span style="display:flex;gap:0.15rem;margin-left:auto">
+        const chartControls = `<span style="display:flex;align-items:center;gap:0.15rem;margin-left:auto">
+            <span style="font-size:0.68rem;color:var(--text-6);margin-right:0.4rem">Ctrl+scroll zoom · Ctrl+drag pan</span>
             <button class="tf-btn" onclick="chartNav('start')" title="Jump to start">⏮</button>
             <button class="tf-btn" onclick="chartNav('back')"  title="Pan back">‹</button>
             <button class="tf-btn" onclick="chartNav('fwd')"   title="Pan forward">›</button>
@@ -1489,10 +1490,10 @@
             data.price  = d;
             data.volume = d;
             // update stats
-            document.getElementById('d-price-val').textContent  = d.current_price  ? fmt_usd(d.current_price)  : '—';
             document.getElementById('d-volume-val').textContent = fmt_vol(d.current_volume);
             document.getElementById('d-price-updated').textContent  = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
             document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
+            if (livePrice) applyLivePrice(livePrice); else fetchLiveTicker();
             if (id === 'price') {
                 const dxyOv = currentDetailOverlays.has('dxy') && overlayCache.dxy
                     ? [{ label: 'DXY', values: alignOverlay(d.labels, 'dxy'), color: '#8b5cf6' }] : [];
@@ -2119,14 +2120,12 @@
     fetch('/api/price?tf=1440').then(r => r.json()).then(d => {
         data.price = d; data.volume = d;
         // Price card
-        document.getElementById('hc-price-val').textContent  = d.current_price  ? fmt_usd(d.current_price)  : '—';
         document.getElementById('hc-price-badge').className  = 'badge neutral';
         document.getElementById('hc-price-badge').textContent = '—';
-        document.getElementById('d-price-val').textContent   = d.current_price  ? fmt_usd(d.current_price)  : '—';
         document.getElementById('d-price-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
         renderPriceChart('hc-price-chart', d.labels, d.close, true);
         cardReady('price');
-        fetchLiveTicker();
+        if (livePrice) applyLivePrice(livePrice); else fetchLiveTicker();
         // Volume card
         document.getElementById('hc-volume-val').textContent  = fmt_vol(d.current_volume);
         document.getElementById('hc-volume-badge').className  = 'badge neutral';
@@ -2188,8 +2187,8 @@
     function zoomCfg() {
         return {
             zoom: {
-                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-                pan:  { enabled: true, mode: 'x' }
+                zoom: { wheel: { enabled: true, modifierKey: 'ctrl' }, pinch: { enabled: true }, mode: 'x' },
+                pan:  { enabled: true, mode: 'x', modifierKey: 'ctrl' }
             }
         };
     }
@@ -2213,6 +2212,12 @@
             ctx.restore();
         }
     });
+
+    Chart.Tooltip.positioners.topRight = function() {
+        const { right, top } = this.chart.chartArea;
+        return { x: right, y: top, xAlign: 'right', yAlign: 'top' };
+    };
+    Chart.defaults.plugins.tooltip.position = 'topRight';
 
     function hoverOpts(small) {
         return small ? {} : { interaction: { mode: 'index', intersect: false } };
@@ -2508,7 +2513,25 @@
         new QRCode(document.getElementById('qr-btc'), { text: 'bitcoin:bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr', width: 160, height: 160 });
     }
 
-    // Live price ticker — polls Kraken every 30s
+    // Single source of truth for live BTC price
+    let livePrice = null;
+
+    function applyLivePrice(p) {
+        livePrice = p;
+        const fmt = fmt_usd(p);
+        ['hc-price-val', 'd-price-val'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = fmt;
+        });
+        ['hc-price-chart', 'price-chart-detail'].forEach(id => {
+            const ch = charts[id];
+            if (ch && ch.data.datasets[0].data.length > 0) {
+                ch.data.datasets[0].data[ch.data.datasets[0].data.length - 1] = p;
+                ch.update('none');
+            }
+        });
+    }
+
     function fetchLiveTicker() {
         fetch('https://api.kraken.com/0/public/Ticker?pair=XBTUSD')
             .then(r => r.json())
@@ -2516,26 +2539,7 @@
                 const result = d.result && d.result['XXBTZUSD'];
                 if (!result) return;
                 const p = parseFloat(result.c[0]);
-                if (!p) return;
-                // Update value displays
-                const elCard   = document.getElementById('hc-price-val');
-                const elDetail = document.getElementById('d-price-val');
-                if (elCard)   elCard.textContent   = fmt_usd(p);
-                if (elDetail) elDetail.textContent = fmt_usd(p);
-                // Update last data point in home price chart live
-                const ch = charts['hc-price-chart'];
-                if (ch && ch.data.datasets[0].data.length > 0) {
-                    const last = ch.data.datasets[0].data.length - 1;
-                    ch.data.datasets[0].data[last] = p;
-                    ch.update('none');
-                }
-                // Same for detail chart if open
-                const chd = charts['price-chart-detail'];
-                if (chd && chd.data.datasets[0].data.length > 0) {
-                    const last = chd.data.datasets[0].data.length - 1;
-                    chd.data.datasets[0].data[last] = p;
-                    chd.update('none');
-                }
+                if (p) applyLivePrice(p);
             })
             .catch(() => {});
     }

@@ -473,6 +473,24 @@ async function load() {
 }
 
 load();
+
+if (API === 'price') {
+    function fetchLiveTicker() {
+        fetch('https://api.kraken.com/0/public/Ticker?pair=XBTUSD')
+            .then(r => r.json())
+            .then(d => {
+                const result = d.result && d.result['XXBTZUSD'];
+                if (!result) return;
+                const p = parseFloat(result.c[0]);
+                if (!p) return;
+                const el = document.getElementById('val-num');
+                if (el) el.textContent = '$' + Math.round(p).toLocaleString('en-US');
+            })
+            .catch(() => {});
+    }
+    fetchLiveTicker();
+    setInterval(fetchLiveTicker, 30000);
+}
 </script>
 
 </body>

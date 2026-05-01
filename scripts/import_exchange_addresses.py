@@ -12,7 +12,7 @@ import sqlite3
 
 import requests
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 SPELLBOOK_URL = (
     "https://api.github.com/repos/duneanalytics/spellbook/contents/"
     "dbt_subprojects/hourly_spellbook/models/_sector/cex/addresses/chains/bitcoin"

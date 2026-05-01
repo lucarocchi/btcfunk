@@ -1,31 +1,14 @@
 import sqlite3, json
-from datetime import datetime, timezone, timedelta
-from google.cloud import bigquery
+from datetime import datetime, timezone
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 CACHE_TTL_HOURS = 24
-HISTORY_DAYS = 400
-WHALE_THRESHOLD_SAT = 10_000_000_000  # 100 BTC
-
-_bq_client = None
-
-
-def _get_bq():
-    global _bq_client
-    if _bq_client is None:
-        _bq_client = bigquery.Client()
-    return _bq_client
+WHALE_THRESHOLD_BTC = 100.0
 
 
 def _init_db():
     con = sqlite3.connect(DB_PATH)
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS whale_tx_daily (
-            day        TEXT PRIMARY KEY,
-            count      INTEGER,
-            btc_volume REAL
-        )
-    """)
+    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
     con.commit()
     return con
 
@@ -43,35 +26,6 @@ def _cache_set(con, key, value):
     con.commit()
 
 
-def _fetch_whales(since_day):
-    query = f"""
-        SELECT
-            DATE(block_timestamp)    AS day,
-            COUNT(*)                 AS count,
-            SUM(output_value) / 1e8  AS btc_volume
-        FROM `bigquery-public-data.crypto_bitcoin.transactions`
-        WHERE NOT is_coinbase
-          AND output_value >= {WHALE_THRESHOLD_SAT}
-          AND DATE(block_timestamp) > '{since_day}'
-        GROUP BY day ORDER BY day
-    """
-    result = _get_bq().query(query).result()
-    return [(str(row.day), int(row.count), float(row.btc_volume)) for row in result]
-
-
-def _update(con):
-    row = con.execute("SELECT MAX(day) FROM whale_tx_daily").fetchone()
-    last = row[0] if row and row[0] else None
-    floor = (datetime.now(timezone.utc) - timedelta(days=HISTORY_DAYS)).strftime("%Y-%m-%d")
-    since = last if last and last > floor else floor
-    rows = _fetch_whales(since)
-    if rows:
-        con.executemany(
-            "INSERT OR REPLACE INTO whale_tx_daily (day, count, btc_volume) VALUES (?,?,?)", rows
-        )
-        con.commit()
-
-
 def _moving_avg(values_dict, n):
     days = sorted(values_dict)
     result = {}
@@ -84,10 +38,7 @@ def _moving_avg(values_dict, n):
 def get_whale_tx():
     con = _init_db()
     cached = _cache_get(con, "whale_tx")
-    if cached:
-        return cached
-
-    _update(con)
+    if cached: return cached
 
     rows = con.execute("""
         SELECT day, count, btc_volume FROM whale_tx_daily
@@ -95,10 +46,10 @@ def get_whale_tx():
         ORDER BY day
     """).fetchall()
 
-    labels     = [r[0] for r in rows]
-    values     = [r[1] for r in rows]
-    btc_series = [round(r[2], 2) for r in rows]
-    current_count  = values[-1]     if values else None
+    labels         = [r[0] for r in rows]
+    values         = [r[1] for r in rows]
+    btc_series     = [round(r[2], 2) for r in rows]
+    current_count  = values[-1]     if values     else None
     current_volume = btc_series[-1] if btc_series else None
 
     all_rows = con.execute("SELECT day, count FROM whale_tx_daily ORDER BY day").fetchall()
@@ -112,7 +63,7 @@ def get_whale_tx():
         "labels":         labels,
         "values":         values,
         "btc_series":     btc_series,
-        "threshold_btc":  WHALE_THRESHOLD_SAT / 1e8,
+        "threshold_btc":  WHALE_THRESHOLD_BTC,
         "updated_at":     datetime.now(timezone.utc).isoformat(),
     }
     _cache_set(con, "whale_tx", result)

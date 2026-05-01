@@ -2,7 +2,7 @@ import sqlite3, json, math
 from collections import deque
 from datetime import datetime, timezone, timedelta
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 CACHE_TTL_HOURS = 24
 
 

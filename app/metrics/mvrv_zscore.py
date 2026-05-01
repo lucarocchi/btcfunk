@@ -1,7 +1,7 @@
 import sqlite3, json, statistics
 from datetime import datetime, timezone, timedelta
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 CACHE_TTL_HOURS = 24
 
 

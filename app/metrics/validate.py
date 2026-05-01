@@ -3,7 +3,7 @@ import sqlite3
 import json
 from datetime import datetime, timezone, timedelta
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 CM_URL = "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics"
 
 

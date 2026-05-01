@@ -1,29 +1,13 @@
 import sqlite3, json
-from datetime import datetime, timezone, timedelta
-from google.cloud import bigquery
+from datetime import datetime, timezone
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 CACHE_TTL_HOURS = 24
-HISTORY_DAYS = 400
-
-_bq_client = None
-
-
-def _get_bq():
-    global _bq_client
-    if _bq_client is None:
-        _bq_client = bigquery.Client()
-    return _bq_client
 
 
 def _init_db():
     con = sqlite3.connect(DB_PATH)
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS active_addr_daily (
-            day   TEXT PRIMARY KEY,
-            count INTEGER
-        )
-    """)
+    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
     con.commit()
     return con
 
@@ -41,31 +25,6 @@ def _cache_set(con, key, value):
     con.commit()
 
 
-def _fetch_active(since_day):
-    query = f"""
-        SELECT
-            DATE(o.block_timestamp) AS day,
-            COUNT(DISTINCT addr)    AS count
-        FROM `bigquery-public-data.crypto_bitcoin.outputs` o,
-        UNNEST(o.addresses) AS addr
-        WHERE DATE(o.block_timestamp) > '{since_day}'
-        GROUP BY day ORDER BY day
-    """
-    result = _get_bq().query(query).result()
-    return [(str(row.day), int(row.count)) for row in result]
-
-
-def _update(con):
-    row = con.execute("SELECT MAX(day) FROM active_addr_daily").fetchone()
-    last = row[0] if row and row[0] else None
-    floor = (datetime.now(timezone.utc) - timedelta(days=HISTORY_DAYS)).strftime("%Y-%m-%d")
-    since = last if last and last > floor else floor
-    rows = _fetch_active(since)
-    if rows:
-        con.executemany("INSERT OR REPLACE INTO active_addr_daily (day, count) VALUES (?,?)", rows)
-        con.commit()
-
-
 def _moving_avg(values_dict, n):
     days = sorted(values_dict)
     result = {}
@@ -78,10 +37,7 @@ def _moving_avg(values_dict, n):
 def get_active_addresses():
     con = _init_db()
     cached = _cache_get(con, "active_addresses")
-    if cached:
-        return cached
-
-    _update(con)
+    if cached: return cached
 
     rows = con.execute("""
         SELECT day, count FROM active_addr_daily
@@ -89,8 +45,8 @@ def get_active_addresses():
         ORDER BY day
     """).fetchall()
 
-    labels = [r[0] for r in rows]
-    values = [r[1] for r in rows]
+    labels  = [r[0] for r in rows]
+    values  = [r[1] for r in rows]
     current = values[-1] if values else None
 
     all_rows = con.execute("SELECT day, count FROM active_addr_daily ORDER BY day").fetchall()
@@ -98,11 +54,11 @@ def get_active_addresses():
     ma30_current = round(ma30.get(labels[-1], 0)) if labels else None
 
     result = {
-        "current":     current,
-        "ma30":        ma30_current,
-        "labels":      labels,
-        "values":      values,
-        "updated_at":  datetime.now(timezone.utc).isoformat(),
+        "current":    current,
+        "ma30":       ma30_current,
+        "labels":     labels,
+        "values":     values,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     _cache_set(con, "active_addresses", result)
     return result

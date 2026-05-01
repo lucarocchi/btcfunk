@@ -1,8 +1,7 @@
 import sqlite3, json
 from datetime import datetime, timezone, date
-from google.cloud import bigquery
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 CACHE_TTL_HOURS = 24
 
 BANDS = [
@@ -20,17 +19,6 @@ BANDS = [
     ("> 10y",     3650, None),
 ]
 
-_bq_client = None
-
-def _get_bq():
-    global _bq_client
-    if _bq_client is None:
-        _bq_client = bigquery.Client()
-    return _bq_client
-
-def _init_db():
-    con = sqlite3.connect(DB_PATH)
-    return con
 
 def _cache_get(con, key):
     row = con.execute("SELECT value, updated_at FROM cache WHERE key=?", (key,)).fetchone()
@@ -38,37 +26,25 @@ def _cache_get(con, key):
     age = (datetime.now(timezone.utc) - datetime.fromisoformat(row[1])).total_seconds() / 3600
     return json.loads(row[0]) if age < CACHE_TTL_HOURS else None
 
+
 def _cache_set(con, key, value):
     con.execute("INSERT OR REPLACE INTO cache (key,value,updated_at) VALUES (?,?,?)",
                 (key, json.dumps(value), datetime.now(timezone.utc).isoformat()))
     con.commit()
 
-def _fetch_utxos():
-    """Returns {creation_day: btc_value} for all current unspent outputs."""
-    query = """
-        SELECT
-            DATE(o.block_timestamp) AS creation_day,
-            SUM(o.value) / 1e8      AS btc_value
-        FROM `bigquery-public-data.crypto_bitcoin.outputs` o
-        LEFT JOIN `bigquery-public-data.crypto_bitcoin.inputs` i
-            ON o.transaction_hash = i.spent_transaction_hash
-            AND o.index = i.spent_output_index
-        WHERE i.transaction_hash IS NULL
-          AND o.value > 0
-        GROUP BY creation_day
-        ORDER BY creation_day
-    """
-    result = _get_bq().query(query).result()
-    return {str(row.creation_day): float(row.btc_value) for row in result}
 
 def get_hodl():
-    con = _init_db()
+    con = sqlite3.connect(DB_PATH)
+    con.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT)")
     cached = _cache_get(con, "hodl")
-    if cached:
-        return cached
+    if cached: return cached
 
-    utxos = _fetch_utxos()
-    today = date.today()
+    utxos = {r[0]: float(r[1]) for r in
+             con.execute("SELECT creation_day, btc_value FROM utxo_snapshot").fetchall()}
+    if not utxos:
+        return {"error": "utxo_snapshot vuota — esegui migrate_history.py"}
+
+    today     = date.today()
     total_btc = sum(utxos.values())
 
     band_totals = {label: 0.0 for label, _, _ in BANDS}
@@ -86,21 +62,20 @@ def get_hodl():
     bands = [
         {
             "label": label,
-            "btc": round(band_totals[label], 2),
-            "pct": round(band_totals[label] / total_btc * 100, 2) if total_btc else 0,
+            "btc":   round(band_totals[label], 2),
+            "pct":   round(band_totals[label] / total_btc * 100, 2) if total_btc else 0,
         }
         for label, _, _ in BANDS
     ]
 
     lth_pct = sum(b["pct"] for b in bands if b["label"] in
                   {"1y – 2y", "2y – 3y", "3y – 5y", "5y – 7y", "7y – 10y", "> 10y"})
-    sth_pct = round(100 - lth_pct, 2)
 
     result = {
-        "lth_pct": round(lth_pct, 2),
-        "sth_pct": sth_pct,
-        "total_btc": round(total_btc, 2),
-        "bands": bands,
+        "lth_pct":    round(lth_pct, 2),
+        "sth_pct":    round(100 - lth_pct, 2),
+        "total_btc":  round(total_btc, 2),
+        "bands":      bands,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     _cache_set(con, "hodl", result)

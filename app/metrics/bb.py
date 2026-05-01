@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime, timezone
 
-DB_PATH = "mvrv_cache.sqlite"
+DB_PATH = "btcfunk.sqlite"
 
 
 def _calc_bb(closes, period=20, std_dev=2):

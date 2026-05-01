@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR   = os.path.join(SCRIPT_DIR, "../app/data")
-DB_PATH    = os.path.join(SCRIPT_DIR, "../mvrv_cache.sqlite")
+DB_PATH    = os.path.join(SCRIPT_DIR, "../btcfunk.sqlite")
 
 PAIRS = [
     {"interval": 1440, "key": "XXBTZUSD", "file": "raw/XBTUSD_1440.csv"},
