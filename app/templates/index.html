@@ -2208,11 +2208,11 @@
 
     function feeSig(sat) {
         if (sat == null) return { label: '—', cls: 'neutral', hint: '' };
-        if (sat < 2)   return { label: 'VERY LOW',  cls: 'green',  hint: 'Network idle — ideal time to transact' };
-        if (sat < 10)  return { label: 'LOW',        cls: 'green',  hint: 'Quiet network — good time to send' };
-        if (sat < 30)  return { label: 'MEDIUM',     cls: 'neutral',hint: 'Normal activity' };
-        if (sat < 100) return { label: 'HIGH',        cls: 'red',    hint: 'Busy — consider waiting' };
-        return             { label: 'CONGESTED',  cls: 'red',    hint: 'Heavy congestion — fees very high' };
+        if (sat < 2)   return { label: 'VERY LOW',  cls: 'ok',     hint: 'Network idle — ideal time to transact' };
+        if (sat < 10)  return { label: 'LOW',        cls: 'ok',     hint: 'Quiet network — good time to send' };
+        if (sat < 30)  return { label: 'MEDIUM',     cls: 'medium', hint: 'Normal activity' };
+        if (sat < 100) return { label: 'HIGH',        cls: 'ko',     hint: 'Busy — consider waiting' };
+        return             { label: 'CONGESTED',  cls: 'ko',     hint: 'Heavy congestion — fees very high' };
     }
     function mempoolSizeSig(mb) {
         if (mb == null) return '';
