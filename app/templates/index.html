@@ -2218,6 +2218,8 @@
         return { x: right, y: top, xAlign: 'right', yAlign: 'top' };
     };
     Chart.defaults.plugins.tooltip.position = 'topRight';
+    Chart.defaults.plugins.tooltip.bodyFont = { family: 'ui-monospace, SFMono-Regular, Menlo, monospace', size: 12 };
+    Chart.defaults.plugins.tooltip.titleFont = { family: 'ui-monospace, SFMono-Regular, Menlo, monospace', size: 12 };
 
     function hoverOpts(small) {
         return small ? {} : { interaction: { mode: 'index', intersect: false } };
