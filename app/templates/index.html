@@ -2564,6 +2564,14 @@
                 if (!result) return;
                 const p = parseFloat(result.c[0]);
                 if (p) applyLivePrice(p);
+                const vol = parseFloat(result.v[0]);
+                if (vol) {
+                    const volStr = fmt_vol(vol);
+                    ['hc-volume-val', 'd-volume-val'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = volStr;
+                    });
+                }
             })
             .catch(() => {});
     }

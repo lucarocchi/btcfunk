@@ -32,7 +32,7 @@ def get_price(tf: int = 1440):
         "close":          closes,
         "volume":         vols,
         "current_price":  closes[-1] if closes else None,
-        "current_volume": vols[-2] if len(vols) >= 2 else vols[-1] if vols else None,
+        "current_volume": vols[-1] if vols else None,
         "tf":             tf,
         "updated_at":     datetime.now(timezone.utc).isoformat(),
     }
