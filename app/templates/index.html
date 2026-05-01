@@ -2099,7 +2099,7 @@
         document.getElementById('d-ema-e50').textContent   = e.ema50_val  ? fmt_usd(e.ema50_val)  : '—';
         document.getElementById('d-ema-e200').textContent  = e.ema200_val ? fmt_usd(e.ema200_val) : '—';
         document.getElementById('d-ema-updated').textContent = 'Updated: ' + new Date(e.updated_at).toLocaleString('en-GB');
-        const eCutoff = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+        const eCutoff = new Date(Date.now() - 366 * 86400000).toISOString().slice(0, 10);
         const eSlice = Math.max(0, e.labels.findIndex(l => l >= eCutoff));
         const eLabels = e.labels.slice(eSlice);
         renderEmaChart('hc-ema-chart', eLabels, (p._hcClose || p.close).slice(-eLabels.length), e.ema20.slice(eSlice), e.ema50.slice(eSlice), e.ema200.slice(eSlice), true);
@@ -2118,7 +2118,7 @@
         document.getElementById('d-bb-lower').textContent = b.lower_val ? fmt_usd(b.lower_val) : '—';
         document.getElementById('d-bb-bw').textContent    = b.bandwidth_val !== null ? b.bandwidth_val.toFixed(1) + '%' : '—';
         document.getElementById('d-bb-updated').textContent = 'Updated: ' + new Date(b.updated_at).toLocaleString('en-GB');
-        const bCutoff = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+        const bCutoff = new Date(Date.now() - 366 * 86400000).toISOString().slice(0, 10);
         const bSlice = Math.max(0, b.labels.findIndex(l => l >= bCutoff));
         const bLabels = b.labels.slice(bSlice);
         renderBbChart('hc-bb-chart', bLabels, (p._hcClose || p.close).slice(-bLabels.length), b.bb_upper.slice(bSlice), b.bb_mid.slice(bSlice), b.bb_lower.slice(bSlice), true);
@@ -2127,7 +2127,7 @@
 
     fetch('/api/price?tf=1440').then(r => r.json()).then(d => {
         data.price = d; data.volume = d;
-        const cutoff = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+        const cutoff = new Date(Date.now() - 366 * 86400000).toISOString().slice(0, 10);
         const hcSlice = d.labels.findIndex(l => l >= cutoff);
         const s = hcSlice < 0 ? 0 : hcSlice;
         d._hcLabels = d.labels.slice(s);
@@ -2164,7 +2164,7 @@
         hb.textContent = sig.label; hb.className = 'badge ' + sig.cls;
         document.getElementById('d-rsi-val').textContent     = d.current !== null ? d.current.toFixed(1) : '—';
         document.getElementById('d-rsi-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        const rCutoff = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+        const rCutoff = new Date(Date.now() - 366 * 86400000).toISOString().slice(0, 10);
         const rSlice = Math.max(0, d.labels.findIndex(l => l >= rCutoff));
         renderRsiChart('hc-rsi-chart', d.labels.slice(rSlice), d.rsi.slice(rSlice), true);
         cardReady('rsi');
