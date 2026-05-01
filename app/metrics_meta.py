@@ -321,6 +321,20 @@ METRICS_META = {
         'series':      'volume',
         'related':     ['price', 'rsi', 'active_addresses'],
     },
+    'coinbase_premium': {
+        'page_title':  'Bitcoin Coinbase Premium Index — US Capital Flows Indicator',
+        'description': 'Live Coinbase Premium Index: BTC price difference between Coinbase and Binance. Positive = US buying pressure; negative = US selling. Updated daily.',
+        'h1':          'Coinbase Premium Index',
+        'subtitle':    'BTC price gap: Coinbase vs Binance (%)',
+        'body':        'The Coinbase Premium Index measures the percentage price difference between Bitcoin on Coinbase (the leading U.S. regulated exchange) and Binance (the global benchmark). When the premium is positive, U.S. investors are paying more for Bitcoin — a signal of institutional accumulation and strong dollar-denominated demand. A negative premium reflects U.S. selling pressure or risk aversion. The index is widely used to track capital flows between U.S. and Asian crypto markets and to identify divergences between institutional and retail sentiment.',
+        'hint':        '>0 US buying (bullish) · ≈0 neutral · <0 US selling (bearish)',
+        'api':         'coinbase_premium',
+        'value_field': 'current',
+        'value_fmt':   '+.4f',
+        'value_suffix': '%',
+        'series':      'values',
+        'related':     ['exchange_flow', 'mvrv', 'sopr'],
+    },
 }
 
 METRIC_LABELS = {k: v['h1'] for k, v in METRICS_META.items()}
@@ -673,5 +687,14 @@ ORDER BY day""",
 -- Volume = sum of BTC traded within the candle interval
 -- Endpoint: GET https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1440
 -- interval: 15 | 30 | 60 | 240 | 720 | 1440 (minutes)""",
+    },
+    'coinbase_premium': {
+        'source': 'Coinbase Exchange API + Binance REST API (public, no auth)',
+        'sql': """\
+-- premium_pct = (coinbase_close - binance_close) / binance_close × 100
+-- coinbase_close: daily close from https://api.exchange.coinbase.com/products/BTC-USD/candles (granularity=86400)
+-- binance_close:  daily close from https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d
+-- Stored in coinbase_premium_daily; live value fetched from spot APIs on each request
+-- SELECT day, coinbase_close, binance_close, premium_pct FROM coinbase_premium_daily ORDER BY day DESC LIMIT 10""",
     },
 }

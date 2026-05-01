@@ -182,6 +182,13 @@ async def mempool(request: Request):
     return get_mempool()
 
 
+@app.get("/api/coinbase_premium")
+@limiter.limit("100/minute")
+async def coinbase_premium(request: Request, summary: bool = _S):
+    from app.metrics.coinbase_premium import get_coinbase_premium
+    return _resp(get_coinbase_premium(), summary)
+
+
 @app.get("/api/price")
 @limiter.limit("100/minute")
 async def price(request: Request, tf: int = _TF, summary: bool = _S):
