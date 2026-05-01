@@ -168,6 +168,13 @@ async def hashrate(request: Request, summary: bool = _S):
     return _resp(get_hashrate(), summary)
 
 
+@app.get("/api/dxy")
+@limiter.limit("100/minute")
+async def dxy(request: Request, summary: bool = _S):
+    from app.metrics.dxy import get_dxy
+    return _resp(get_dxy(), summary)
+
+
 @app.get("/api/price")
 @limiter.limit("100/minute")
 async def price(request: Request, tf: int = _TF, summary: bool = _S):

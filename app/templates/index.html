@@ -653,6 +653,7 @@
             chartHeight: 340,
             chartType: 'price',
             tfSelector: [15, 30, 60, 240, 1440],
+            overlays: ['dxy'],
         },
         volume: {
             label: 'Volume', acronym: 'BTC/USD trading volume — Kraken', live: true, group: 'Price & TA',
@@ -896,9 +897,17 @@
             hint: 'Rising hashrate = security growth &nbsp;|&nbsp; Decline = miner stress / potential bottom',
             chartHeight: 340,
         },
+        dxy: {
+            label: 'DXY', acronym: 'US Dollar Index', live: true, group: 'Macro',
+            detail: 'The DXY (US Dollar Index) measures the value of the US dollar against a basket of six major currencies: EUR, JPY, GBP, CAD, SEK, CHF. Bitcoin and DXY typically move inversely — a strengthening dollar tends to pressure risk assets including BTC, while a weakening dollar often provides a tailwind. Watching DXY alongside BTC price can help identify macro-driven moves versus crypto-native sentiment shifts.',
+            stats: [{ id: 'val', label: 'DXY' }],
+            hint: 'DXY rising = dollar strong = BTC headwind &nbsp;|&nbsp; DXY falling = dollar weak = BTC tailwind',
+            chartHeight: 340,
+            overlays: ['price'],
+        },
     };
 
-    let data = { price: null, volume: null, rsi: null, ema: null, bb: null, mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null };
+    let data = { price: null, volume: null, rsi: null, ema: null, bb: null, mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null, dxy: null };
     let currentTF = { price: 1440, volume: 1440, rsi: 1440, ema: 1440, bb: 1440 };
     let charts = {};
     let dragSrc = null;
@@ -1484,7 +1493,11 @@
             document.getElementById('d-volume-val').textContent = fmt_vol(d.current_volume);
             document.getElementById('d-price-updated').textContent  = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
             document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB') + ' · tf=' + TF_LABELS[tf];
-            if (id === 'price')  renderPriceChart('price-chart-detail',  d.labels, d.close, false);
+            if (id === 'price') {
+                const dxyOv = currentDetailOverlays.has('dxy') && overlayCache.dxy
+                    ? [{ label: 'DXY', values: alignOverlay(d.labels, 'dxy'), color: '#8b5cf6' }] : [];
+                renderPriceChart('price-chart-detail', d.labels, d.close, false, dxyOv);
+            }
             if (id === 'volume') {
                 const priceOv = currentDetailOverlays.has('price') ? [{ label: 'Price', values: d.close, color: '#f59e0b' }] : [];
                 renderVolumeChart('volume-chart-detail', d.labels, d.volume, false, priceOv);
@@ -1610,7 +1623,7 @@
         if (ch) requestAnimationFrame(() => ch.resize());
     }
 
-    function renderPriceChart(canvasId, labels, close, small) {
+    function renderPriceChart(canvasId, labels, close, small, ovDatasets = []) {
         if (charts[canvasId]) charts[canvasId].destroy();
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
@@ -1619,17 +1632,27 @@
         const ticks = small
             ? { color: cc.tick, maxTicksLimit: 4, font: { size: 10 } }
             : { color: cc.tick, maxTicksLimit: 8, font: { size: 11 } };
+        const hasOv = !small && ovDatasets.length > 0;
+        const datasets = [
+            { data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price', yAxisID: 'y' },
+            ...ovDatasets.map(ov => ({ data: ov.values, borderColor: ov.color, borderWidth: 1, pointRadius: 0, fill: false, tension: 0.2, yAxisID: 'y2', label: ov.label }))
+        ];
+        const scales = {
+            x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
+            y: { position: 'left', ticks, grid: { color: cc.grid } },
+            ...(hasOv ? { y2: { position: 'right', ticks: { ...ticks, color: ovDatasets[0].color }, grid: { display: false } } } : {})
+        };
         charts[canvasId] = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets: [{ data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2, label: 'Price' }] },
+            data: { labels, datasets },
             options: {
                 animation: false,
                 ...hoverOpts(small),
-                plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
-                scales: {
-                    x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
-                    y: { ticks, grid: { color: cc.grid } }
-                }
+                plugins: {
+                    legend: { display: hasOv, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8, filter: i => i.datasetIndex > 0 } },
+                    ...(small ? {} : zoomCfg())
+                },
+                scales
             }
         });
     }
@@ -2047,6 +2070,17 @@
         cardReady('hashrate');
     }).catch(() => { document.getElementById('hc-hashrate-val').textContent = 'error'; cardReady('hashrate'); });
 
+    // Load DXY
+    fetch('/api/dxy').then(r => r.json()).then(d => {
+        data.dxy = d;
+        overlayCache.dxy = d;
+        document.getElementById('hc-dxy-val').textContent = d.current ? d.current.toFixed(2) : '—';
+        document.getElementById('d-dxy-val').textContent  = d.current ? d.current.toFixed(2) : '—';
+        document.getElementById('d-dxy-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        cardChart('hc-dxy-chart', d.labels, d.values, '#8b5cf6', true);
+        cardReady('dxy');
+    }).catch(() => { document.getElementById('hc-dxy-val').textContent = 'error'; cardReady('dxy'); });
+
     // Load Price + Volume + EMA + BB (shared price fetch)
     function tryRenderEmaCard() {
         if (!data.price || !data.ema) return;
@@ -2220,12 +2254,13 @@
     const OVERLAY_CFG = {
         price: { label: 'Price', color: '#f59e0b', yConfig: {}, getValues: d => d.close },
         rsi:   { label: 'RSI',   color: '#3b82f6', yConfig: { min: 0, max: 100 }, getValues: d => d.rsi },
+        dxy:   { label: 'DXY',   color: '#8b5cf6', yConfig: {}, getValues: d => d.values },
     };
 
     async function fetchOverlayIfNeeded(ovId) {
         if (overlayCache[ovId]) return;
-        const apiId = ovId === 'rsi' ? 'rsi' : 'price';
-        overlayCache[ovId] = await fetch('/api/' + apiId + '?tf=1440').then(r => r.json());
+        const apiMap = { rsi: '/api/rsi?tf=1440', price: '/api/price?tf=1440', dxy: '/api/dxy' };
+        overlayCache[ovId] = await fetch(apiMap[ovId] || '/api/price?tf=1440').then(r => r.json());
     }
 
     function alignOverlay(primaryLabels, ovId) {
@@ -2439,6 +2474,10 @@
         if (id === 'hashrate' && data.hashrate) {
             const lbl = sl(data.hashrate.labels);
             cardChart('hashrate-chart-detail', lbl, sl(data.hashrate.values), sigColor(hashrate_signal(data.hashrate.hashrate_eh, data.hashrate.ma14_eh).cls), false, ov(lbl));
+        }
+        if (id === 'dxy' && data.dxy) {
+            const lbl = sl(data.dxy.labels);
+            cardChart('dxy-chart-detail', lbl, sl(data.dxy.values), '#8b5cf6', false, ov(lbl));
         }
     }
 
