@@ -2283,11 +2283,6 @@
         if (name === 'donate') generateQR();
         if (name === 'settings') buildWidgetToggles();
     }
-    document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => showPage(l.dataset.page)));
-    const pages = ['landing', 'dashboard', 'about', 'api', 'donate', 'settings'];
-    const hashPage = location.hash.slice(1);
-    showPage(pages.includes(hashPage) ? hashPage : 'landing');
-
     // Sidebar toggle (mobile)
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
@@ -2298,6 +2293,11 @@
     document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => {
         if (window.innerWidth <= 640) closeSidebar();
     }));
+
+    document.querySelectorAll('.nav-link').forEach(l => l.addEventListener('click', () => showPage(l.dataset.page)));
+    const pages = ['landing', 'dashboard', 'about', 'api', 'donate', 'settings'];
+    const hashPage = location.hash.slice(1);
+    showPage(pages.includes(hashPage) ? hashPage : 'landing');
 </script>
 </body>
 </html>
