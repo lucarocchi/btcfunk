@@ -2354,7 +2354,7 @@
         document.getElementById('detail-api-link').textContent = '{ } /api/' + apiId;
         const dt = document.getElementById('d-' + id + '-text');
         if (dt) dt.textContent = METRICS[id].detail;
-        ['price','volume','rsi','ema','bb','mvrv','sopr','nvt','hodl','cdd','exchange_flow','nupl','rhodl','supply_profit','puell','active_addresses','whale_tx','mvrv_zscore','lth','sth','stf','tx_count','avg_fee','hashrate'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
+        Object.keys(METRICS).forEach(k => { const el = document.getElementById('detail-' + k); if (el) el.style.display = k === id ? 'block' : 'none'; });
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
         renderDetailChart(id);
         // TA metrics — always re-fetch on detail open (TF may have changed)
