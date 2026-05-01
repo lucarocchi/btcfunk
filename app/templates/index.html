@@ -2147,10 +2147,10 @@
         cardReady('price');
         if (livePrice) applyLivePrice(livePrice); else fetchLiveTicker();
         // Volume card
-        document.getElementById('hc-volume-val').textContent  = fmt_vol(d.current_volume);
+        document.getElementById('hc-volume-val').textContent  = liveVolume ? fmt_vol(liveVolume) : fmt_vol(d.current_volume);
         document.getElementById('hc-volume-badge').className  = 'badge neutral';
         document.getElementById('hc-volume-badge').textContent = '—';
-        document.getElementById('d-volume-val').textContent   = fmt_vol(d.current_volume);
+        document.getElementById('d-volume-val').textContent   = liveVolume ? fmt_vol(liveVolume) : fmt_vol(d.current_volume);
         document.getElementById('d-volume-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
         renderVolumeChart('hc-volume-chart', d._hcLabels, d._hcVol, true);
         cardReady('volume');
@@ -2539,6 +2539,16 @@
 
     // Single source of truth for live BTC price
     let livePrice = null;
+    let liveVolume = null;
+
+    function applyLiveVolume(v) {
+        liveVolume = v;
+        const volStr = fmt_vol(v);
+        ['hc-volume-val', 'd-volume-val'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = volStr;
+        });
+    }
 
     function applyLivePrice(p) {
         livePrice = p;
@@ -2565,13 +2575,7 @@
                 const p = parseFloat(result.c[0]);
                 if (p) applyLivePrice(p);
                 const vol = parseFloat(result.v[0]);
-                if (vol) {
-                    const volStr = fmt_vol(vol);
-                    ['hc-volume-val', 'd-volume-val'].forEach(id => {
-                        const el = document.getElementById(id);
-                        if (el) el.textContent = volStr;
-                    });
-                }
+                if (vol) applyLiveVolume(vol);
             })
             .catch(() => {});
     }
