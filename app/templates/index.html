@@ -2535,7 +2535,9 @@
         document.getElementById('view-detail').style.display = 'block';
         document.getElementById('detail-title').textContent   = METRICS[id].label;
         document.getElementById('detail-acronym').textContent = METRICS[id].acronym;
-        document.getElementById('detail-page-link').href = '/' + id;
+        const pageLink = document.getElementById('detail-page-link');
+        pageLink.href = '/' + id;
+        pageLink.style.display = METRICS[id].noChart ? 'none' : '';
         // Reset chart/table toggle to Chart
         const canvas = document.getElementById(id + '-chart-detail');
         const tbl    = document.getElementById(id + '-table-detail');
