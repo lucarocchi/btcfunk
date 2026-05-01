@@ -40,6 +40,8 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
@@ -320,7 +322,7 @@
         .toggle-btn { padding: 0.2rem 0.65rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.72rem; cursor: pointer; background: var(--surface); color: var(--text-4); font-family: inherit; }
         .toggle-btn:hover { border-color: var(--text-6); color: var(--text); }
         .toggle-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
-        .tf-selector { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; }
+        .tf-selector, .range-selector { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; align-items: center; }
         .tf-btn { padding: 0.2rem 0.55rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.68rem; cursor: pointer; background: var(--surface); color: var(--text-4); font-family: inherit; }
         .tf-btn:hover { border-color: var(--text-6); color: var(--text); }
         .tf-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
@@ -417,6 +419,10 @@
                 <button class="detail-action-btn" id="detail-jpeg-btn" onclick="detailSaveJpeg()">
                     <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     Save JPEG
+                </button>
+                <button class="detail-action-btn" id="detail-reset-zoom" onclick="resetDetailZoom()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Reset zoom
                 </button>
             </div>
             <div id="detail-panels"></div>
@@ -928,6 +934,14 @@
         const tfHtml = m.tfSelector
             ? `<div class="tf-selector" id="tf-${id}">${m.tfSelector.map(tf => `<button class="tf-btn${tf === 1440 ? ' active' : ''}" onclick="loadDetailTF('${id}',${tf},this)">${TF_LABELS[tf]}</button>`).join('')}</div>`
             : '';
+        const rangeHtml = !m.tfSelector && !m.chartType
+            ? `<div class="range-selector" id="range-${id}">
+                <button class="tf-btn active" data-range="ALL" onclick="changeRange('ALL',this)">ALL</button>
+                <button class="tf-btn" data-range="5Y" onclick="changeRange('5Y',this)">5Y</button>
+                <button class="tf-btn" data-range="2Y" onclick="changeRange('2Y',this)">2Y</button>
+                <button class="tf-btn" data-range="1Y" onclick="changeRange('1Y',this)">1Y</button>
+               </div>`
+            : '';
         return `
             <div id="detail-${id}" style="display:none">
                 <div class="card">
@@ -937,7 +951,7 @@
                         <button class="toggle-btn active" onclick="toggleDetailView('${id}','chart',this)">Chart</button>
                         <button class="toggle-btn"        onclick="toggleDetailView('${id}','table',this)">Table</button>
                     </div>
-                    ${tfHtml}
+                    ${tfHtml}${rangeHtml}
                     <canvas id="${id}-chart-detail" style="max-height:${h}px"></canvas>
                     <div id="${id}-table-detail" class="table-wrap" style="display:none"></div>
                     ${m.extra === 'top' ? `<div id="d-${id}-extra" style="margin-top:1rem"></div>` : ''}
@@ -1208,7 +1222,7 @@
             data: { labels, datasets: [{ data: values, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
             options: {
                 animation: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
                     y: { ticks, grid: { color: cc.grid } }
@@ -1566,7 +1580,7 @@
             data: { labels, datasets: [{ data: close, borderColor: cc.line, borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
             options: {
                 animation: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
                     y: { ticks, grid: { color: cc.grid } }
@@ -1589,7 +1603,7 @@
             data: { labels, datasets: [{ data: volume, backgroundColor: 'rgba(128,128,128,0.25)', borderWidth: 0 }] },
             options: {
                 animation: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { display: false } },
                     y: { ticks, grid: { color: cc.grid } }
@@ -1620,7 +1634,7 @@
             },
             options: {
                 animation: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { display: false }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
                     y: { ticks, grid: { color: cc.grid }, min: 0, max: 100 }
@@ -1651,7 +1665,7 @@
             },
             options: {
                 animation: false,
-                plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+                plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
                     y: { ticks, grid: { color: cc.grid } }
@@ -1682,7 +1696,7 @@
             },
             options: {
                 animation: false,
-                plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } } },
+                plugins: { legend: { display: small ? false : true, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8 } }, ...(small ? {} : zoomCfg()) },
                 scales: {
                     x: { ticks: { ...ticks, maxRotation: 0 }, grid: { color: cc.grid } },
                     y: { ticks, grid: { color: cc.grid } }
@@ -2064,7 +2078,36 @@
         });
     }
 
-    let currentDetailId = null;
+    let currentDetailId   = null;
+    let currentDetailRange = 'ALL';
+
+    function sliceTail(arr) {
+        if (!arr) return [];
+        const n = { '1Y': 365, '2Y': 730, '5Y': 1825 }[currentDetailRange];
+        return n ? arr.slice(-n) : arr;
+    }
+
+    function zoomCfg() {
+        return {
+            zoom: {
+                zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+                pan:  { enabled: true, mode: 'x' }
+            }
+        };
+    }
+
+    function changeRange(r, btn) {
+        currentDetailRange = r;
+        const panel = document.getElementById('range-' + currentDetailId);
+        if (panel) panel.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.dataset.range === r));
+        renderDetailChart(currentDetailId);
+    }
+
+    function resetDetailZoom() {
+        if (!currentDetailId) return;
+        const ch = charts[currentDetailId + '-chart-detail'];
+        if (ch && ch.resetZoom) ch.resetZoom();
+    }
 
     function detailShare() {
         const url = 'https://btcfunk.com/' + (currentDetailId || '');
@@ -2118,57 +2161,7 @@
         if (dt) dt.textContent = METRICS[id].detail;
         ['price','volume','rsi','ema','bb','mvrv','sopr','nvt','hodl','cdd','exchange_flow','nupl','rhodl','supply_profit','puell','active_addresses','whale_tx','mvrv_zscore','lth','sth','stf','tx_count','avg_fee','hashrate'].forEach(k => document.getElementById('detail-' + k).style.display = k === id ? 'block' : 'none');
         document.querySelectorAll('.metric-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
-        if (id === 'mvrv' && data.mvrv)
-            cardChart('mvrv-chart-detail', data.mvrv.labels, data.mvrv.values, sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
-        if (id === 'sopr' && data.sopr)
-            cardChart('sopr-chart-detail', data.sopr.labels, data.sopr.values, sigColor(sopr_signal(data.sopr.current).cls), false);
-        if (id === 'nvt' && data.nvt)
-            cardChart('nvt-chart-detail', data.nvt.labels, data.nvt.values, sigColor(nvt_signal(data.nvt.nvt).cls), false);
-        if (id === 'hodl' && data.hodl)
-            renderHodlChart('hodl-chart-detail', data.hodl.bands, false);
-        if (id === 'cdd' && data.cdd)
-            cardChart('cdd-chart-detail', data.cdd.labels, data.cdd.values, sigColor(cdd_signal(data.cdd.current, data.cdd.ma90).cls), false);
-        if (id === 'nupl' && data.nupl)
-            cardChart('nupl-chart-detail', data.nupl.labels, data.nupl.values, sigColor(nupl_signal(data.nupl.nupl).cls), false);
-        if (id === 'rhodl' && data.rhodl && data.rhodl.bands_profit)
-            renderProfitChart('rhodl-chart-detail', data.rhodl.bands_profit, false);
-        if (id === 'supply_profit' && data.supply_profit && data.supply_profit.bands_profit)
-            renderProfitChart('supply_profit-chart-detail', data.supply_profit.bands_profit, false);
-        if (id === 'puell' && data.puell)
-            cardChart('puell-chart-detail', data.puell.labels, data.puell.values, sigColor(puell_signal(data.puell.puell).cls), false);
-        if (id === 'active_addresses' && data.active_addresses)
-            cardChart('active_addresses-chart-detail', data.active_addresses.labels, data.active_addresses.values, sigColor(active_signal(data.active_addresses.current, data.active_addresses.ma30).cls), false);
-        if (id === 'whale_tx' && data.whale_tx)
-            cardChart('whale_tx-chart-detail', data.whale_tx.labels, data.whale_tx.values, sigColor(whale_signal(data.whale_tx.current, data.whale_tx.ma30).cls), false);
-        if (id === 'exchange_flow' && data.exchange_flow) {
-            const d = data.exchange_flow;
-            const sig = ef_signal(d.current_net);
-            cardChart('exchange_flow-chart-detail', d.labels, d.net, sigColor(sig.cls), false);
-            const topEl = document.getElementById('d-exchange_flow-extra');
-            if (topEl && d.top_exchanges && d.top_exchanges.length) {
-                topEl.innerHTML = '<div style="font-size:0.75rem;color:#888;margin-bottom:0.5rem">Top exchanges (30d)</div>' +
-                    d.top_exchanges.map(e =>
-                        `<div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.2rem 0;border-bottom:1px solid #f5f5f5">
-                            <span style="color:#333">${e.exchange}</span>
-                            <span><span style="color:#16a34a">↓${fmt_btc(e.inflow)}</span> &nbsp; <span style="color:#dc2626">↑${fmt_btc(e.outflow)}</span></span>
-                        </div>`
-                    ).join('');
-            }
-        }
-        if (id === 'mvrv_zscore' && data.mvrv_zscore)
-            cardChart('mvrv_zscore-chart-detail', data.mvrv_zscore.labels, data.mvrv_zscore.values, sigColor(mvrv_zscore_signal(data.mvrv_zscore.z_score).cls), false);
-        if (id === 'lth' && data.lth)
-            renderHodlChart('lth-chart-detail', data.lth.bands, false);
-        if (id === 'sth' && data.sth)
-            renderHodlChart('sth-chart-detail', data.sth.bands, false);
-        if (id === 'stf' && data.stf)
-            cardChart('stf-chart-detail', data.stf.labels, data.stf.values, sigColor(stf_signal(data.stf.deviation_pct).cls), false);
-        if (id === 'tx_count' && data.tx_count)
-            cardChart('tx_count-chart-detail', data.tx_count.labels, data.tx_count.tx_counts, sigColor(tx_count_signal(data.tx_count.tx_count, data.tx_count.tx_count_ma30).cls), false);
-        if (id === 'avg_fee' && data.avg_fee)
-            cardChart('avg_fee-chart-detail', data.avg_fee.labels, data.avg_fee.avg_fees, '#888', false);
-        if (id === 'hashrate' && data.hashrate)
-            cardChart('hashrate-chart-detail', data.hashrate.labels, data.hashrate.values, sigColor(hashrate_signal(data.hashrate.hashrate_eh, data.hashrate.ma14_eh).cls), false);
+        renderDetailChart(id);
         // TA metrics — always re-fetch on detail open (TF may have changed)
         if (id === 'price')  fetchAndRenderTA('price',  currentTF['price']  || 1440);
         if (id === 'volume') fetchAndRenderTA('volume', currentTF['volume'] || 1440);
@@ -2199,6 +2192,63 @@
                 }
             });
         }
+    }
+
+    function renderDetailChart(id) {
+        // sync range buttons to current range
+        const rangePanel = document.getElementById('range-' + id);
+        if (rangePanel) rangePanel.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.dataset.range === currentDetailRange));
+
+        if (id === 'mvrv' && data.mvrv)
+            cardChart('mvrv-chart-detail', sliceTail(data.mvrv.labels), sliceTail(data.mvrv.values), sigColor(mvrv_signal(data.mvrv.mvrv).cls), false);
+        if (id === 'sopr' && data.sopr)
+            cardChart('sopr-chart-detail', sliceTail(data.sopr.labels), sliceTail(data.sopr.values), sigColor(sopr_signal(data.sopr.current).cls), false);
+        if (id === 'nvt' && data.nvt)
+            cardChart('nvt-chart-detail', sliceTail(data.nvt.labels), sliceTail(data.nvt.values), sigColor(nvt_signal(data.nvt.nvt).cls), false);
+        if (id === 'hodl' && data.hodl)
+            renderHodlChart('hodl-chart-detail', data.hodl.bands, false);
+        if (id === 'cdd' && data.cdd)
+            cardChart('cdd-chart-detail', sliceTail(data.cdd.labels), sliceTail(data.cdd.values), sigColor(cdd_signal(data.cdd.current, data.cdd.ma90).cls), false);
+        if (id === 'nupl' && data.nupl)
+            cardChart('nupl-chart-detail', sliceTail(data.nupl.labels), sliceTail(data.nupl.values), sigColor(nupl_signal(data.nupl.nupl).cls), false);
+        if (id === 'rhodl' && data.rhodl && data.rhodl.bands_profit)
+            renderProfitChart('rhodl-chart-detail', data.rhodl.bands_profit, false);
+        if (id === 'supply_profit' && data.supply_profit && data.supply_profit.bands_profit)
+            renderProfitChart('supply_profit-chart-detail', data.supply_profit.bands_profit, false);
+        if (id === 'puell' && data.puell)
+            cardChart('puell-chart-detail', sliceTail(data.puell.labels), sliceTail(data.puell.values), sigColor(puell_signal(data.puell.puell).cls), false);
+        if (id === 'active_addresses' && data.active_addresses)
+            cardChart('active_addresses-chart-detail', sliceTail(data.active_addresses.labels), sliceTail(data.active_addresses.values), sigColor(active_signal(data.active_addresses.current, data.active_addresses.ma30).cls), false);
+        if (id === 'whale_tx' && data.whale_tx)
+            cardChart('whale_tx-chart-detail', sliceTail(data.whale_tx.labels), sliceTail(data.whale_tx.values), sigColor(whale_signal(data.whale_tx.current, data.whale_tx.ma30).cls), false);
+        if (id === 'exchange_flow' && data.exchange_flow) {
+            const d = data.exchange_flow;
+            cardChart('exchange_flow-chart-detail', sliceTail(d.labels), sliceTail(d.net), sigColor(ef_signal(d.current_net).cls), false);
+            const topEl = document.getElementById('d-exchange_flow-extra');
+            if (topEl && d.top_exchanges && d.top_exchanges.length) {
+                topEl.innerHTML = '<div style="font-size:0.75rem;color:#888;margin-bottom:0.5rem">Top exchanges (30d)</div>' +
+                    d.top_exchanges.map(e =>
+                        `<div style="display:flex;justify-content:space-between;font-size:0.78rem;padding:0.2rem 0;border-bottom:1px solid #f5f5f5">
+                            <span style="color:#333">${e.exchange}</span>
+                            <span><span style="color:#16a34a">↓${fmt_btc(e.inflow)}</span> &nbsp; <span style="color:#dc2626">↑${fmt_btc(e.outflow)}</span></span>
+                        </div>`
+                    ).join('');
+            }
+        }
+        if (id === 'mvrv_zscore' && data.mvrv_zscore)
+            cardChart('mvrv_zscore-chart-detail', sliceTail(data.mvrv_zscore.labels), sliceTail(data.mvrv_zscore.values), sigColor(mvrv_zscore_signal(data.mvrv_zscore.z_score).cls), false);
+        if (id === 'lth' && data.lth)
+            renderHodlChart('lth-chart-detail', data.lth.bands, false);
+        if (id === 'sth' && data.sth)
+            renderHodlChart('sth-chart-detail', data.sth.bands, false);
+        if (id === 'stf' && data.stf)
+            cardChart('stf-chart-detail', sliceTail(data.stf.labels), sliceTail(data.stf.values), sigColor(stf_signal(data.stf.deviation_pct).cls), false);
+        if (id === 'tx_count' && data.tx_count)
+            cardChart('tx_count-chart-detail', sliceTail(data.tx_count.labels), sliceTail(data.tx_count.tx_counts), sigColor(tx_count_signal(data.tx_count.tx_count, data.tx_count.tx_count_ma30).cls), false);
+        if (id === 'avg_fee' && data.avg_fee)
+            cardChart('avg_fee-chart-detail', sliceTail(data.avg_fee.labels), sliceTail(data.avg_fee.avg_fees), '#888', false);
+        if (id === 'hashrate' && data.hashrate)
+            cardChart('hashrate-chart-detail', sliceTail(data.hashrate.labels), sliceTail(data.hashrate.values), sigColor(hashrate_signal(data.hashrate.hashrate_eh, data.hashrate.ma14_eh).cls), false);
     }
 
     document.querySelectorAll('.metric-item:not(.soon)').forEach(el => el.addEventListener('click', () => showDetail(el.dataset.id)));
