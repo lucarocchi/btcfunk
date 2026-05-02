@@ -335,6 +335,18 @@ METRICS_META = {
         'series':      'values',
         'related':     ['exchange_flow', 'mvrv', 'sopr'],
     },
+    'mempool': {
+        'page_title':  'Bitcoin Mempool — Live Network Status',
+        'description': 'Live Bitcoin mempool data: pending transactions, fee estimates, hashrate and block height. Sourced directly from a Bitcoin Core full node.',
+        'h1':          'Bitcoin Mempool',
+        'subtitle':    'Live network mempool snapshot',
+        'body':        'The Bitcoin mempool (memory pool) is the queue of unconfirmed transactions waiting to be included in a block. Monitoring the mempool gives real-time insight into network demand and fee pressure. When the mempool is large and fees are high, block space is in high demand — typically during bull markets or periods of heavy on-chain activity. Fee estimates are shown for confirmation within the next block, within 30 minutes, and within 1 hour.',
+        'hint':        'Low fees = quiet network · High fees = congestion / high demand',
+        'api':         'mempool',
+        'value_field': None,
+        'series':      None,
+        'related':     ['active_addresses', 'whale_tx', 'hashrate'],
+    },
 }
 
 METRIC_LABELS = {k: v['h1'] for k, v in METRICS_META.items()}
