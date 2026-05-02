@@ -1710,9 +1710,11 @@
         const cc = chartColors();
         const labels = bands.map(b => b.label);
         const values = bands.map(b => b.pct);
-        const colors = bands.map((b, i) => {
-            const age = ['< 1 day','1d – 1w','1w – 1m','1m – 3m','3m – 6m','6m – 1y'].includes(b.label);
-            return age ? cc.grid : `hsl(${210 + i * 10}, 60%, ${55 - i * 2}%)`;
+        const STH_SET = new Set(['< 1 day','1d – 1w','1w – 1m','1m – 3m','3m – 6m','6m – 1y']);
+        let sthCount = 0, lthCount = 0;
+        const colors = bands.map(b => {
+            if (STH_SET.has(b.label)) return `hsl(${28 + sthCount++ * 8}, 80%, ${62 - sthCount * 3}%)`;
+            return `hsl(${210 + lthCount++ * 12}, 60%, ${55 - lthCount * 2}%)`;
         });
         charts[id] = new Chart(ctx, {
             type: 'bar',
