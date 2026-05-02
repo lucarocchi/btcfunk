@@ -1385,6 +1385,7 @@
             data: { labels, datasets },
             options: {
                 animation: false,
+                layout: { padding: { right: small ? 4 : 16 } },
                 ...hoverOpts(small),
                 plugins: {
                     legend: { display: hasOv, labels: { color: cc.tick, font: { size: 10 }, boxWidth: 12, padding: 8, filter: i => i.datasetIndex > 0 } },
