@@ -391,7 +391,21 @@
     <div class="landing-inner">
         <h1 class="landing-title">BTCFunk</h1>
         <div class="cp-p landing-tagline">Free Unchained Network Knowledge</div>
-        <div class="cp-p landing-desc">Monitor the most important Bitcoin on-chain signals in one place.<br>No account. No subscription. Updated daily.</div>
+        <div class="cp-p landing-desc">On-chain metrics, technical indicators, macro signals and AI analysis — all in one place.</div>
+
+        {% if analysis %}
+        <!-- AI ANALYSIS -->
+        <div style="margin:2rem 0;width:100%;text-align:left">
+            <div style="font-size:1rem;font-weight:700;color:#111;margin-bottom:0.5rem">{{ analysis.title }}</div>
+            <div style="font-size:0.72rem;font-weight:600;color:#6366f1;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:0.4rem">Market Snapshot</div>
+            <div style="font-size:0.84rem;line-height:1.7;color:#444">{{ analysis.snippet }}</div>
+            <div style="margin-top:0.9rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+                <a href="/analysis" style="font-size:0.78rem;color:#6366f1;text-decoration:none;font-weight:500">Read full analysis →</a>
+                <span style="font-size:0.68rem;color:#bbb">{{ analysis.updated | replace('T',' ') | truncate(16, True, '') }} UTC &nbsp;·&nbsp; Claude &nbsp;·&nbsp; {{ analysis.model }}</span>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="landing-chips">
             <a href="/active_addresses">Active Addresses</a><a href="/avg_fee">Avg Fee</a><a href="/bb">Bollinger Bands</a><a href="/cdd">CDD</a><a href="/ema">EMA</a>
             <a href="/exchange_flow">Exchange Flow</a><a href="/hashrate">Hash Rate</a><a href="/hodl">HODL Waves</a><a href="/lth">LTH Supply</a><a href="/mvrv">MVRV</a>
@@ -421,6 +435,7 @@
             <button id="tab-all" class="tf-btn active-tab" onclick="setTab('all')">All</button>
             <button id="tab-fav" class="tf-btn" onclick="setTab('favorites')">Favorites</button>
         </div>
+
         <div id="view-home"></div>
 
         <!-- DETAIL -->
@@ -2809,6 +2824,7 @@
     }
     fetchLiveTicker();
     setInterval(fetchLiveTicker, 30000);
+
 
     // Full price chart refresh every 7 min (aligned with SQLite OHLC update cadence)
     setInterval(() => {

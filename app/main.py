@@ -27,10 +27,27 @@ _S = Query(False, description="Return only scalar fields, omit time-series array
 _TF = Query(1440, description="Timeframe in minutes: 15, 30, 60, 240, 720, 1440")
 
 
+def _load_analysis():
+    import json, os
+    path = "app/static/analysis.json"
+    try:
+        with open(path) as f:
+            d = json.load(f)
+        lines = d.get("text", "").split("\n")
+        title = lines[0].lstrip("# ").strip() if lines else ""
+        sections = d.get("text", "").split("\n## ")
+        snippet = sections[1].split("\n", 1)[1].strip() if len(sections) > 1 else ""
+        updated = d.get("generated_at", "")
+        model = d.get("model", "")
+        return {"title": title, "snippet": snippet, "updated": updated, "model": model}
+    except Exception:
+        return None
+
+
 @app.get("/")
 async def index(request: Request):
     return templates.TemplateResponse(
-        "index.html", {"request": request},
+        "index.html", {"request": request, "analysis": _load_analysis()},
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
     )
 
@@ -180,6 +197,22 @@ async def dxy(request: Request, summary: bool = _S):
 async def mempool(request: Request):
     from app.metrics.mempool import get_mempool
     return get_mempool()
+
+
+@app.get("/api/analysis")
+@limiter.limit("60/minute")
+async def analysis(request: Request):
+    import json, os
+    path = "app/static/analysis.json"
+    if not os.path.exists(path):
+        return {"text": None, "generated_at": None}
+    with open(path) as f:
+        return json.load(f)
+
+
+@app.get("/analysis")
+async def analysis_page(request: Request):
+    return templates.TemplateResponse("analysis.html", {"request": request})
 
 
 @app.get("/api/coinbase_premium")
