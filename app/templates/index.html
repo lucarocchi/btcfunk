@@ -2139,7 +2139,10 @@
         document.getElementById('d-lth-supply').textContent = d.lth_supply ? fmt_btc(d.lth_supply) : '—';
         document.getElementById('d-lth-rp').textContent     = d.lth_realized_price ? fmt_usd(d.lth_realized_price) : '—';
         document.getElementById('d-lth-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        if (d.bands) renderHodlChart('hc-lth-chart', d.bands, true);
+        const LTH_LABELS = new Set(['1y – 2y','2y – 3y','3y – 5y','5y – 7y','7y – 10y','> 10y']);
+        const lthBands = d.bands ? d.bands.filter(b => LTH_LABELS.has(b.label)) : [];
+        const sthBands = d.bands ? d.bands.filter(b => !LTH_LABELS.has(b.label)) : [];
+        if (lthBands.length) renderHodlChart('hc-lth-chart', lthBands, true);
         cardReady('lth');
         // STH card
         const sigS = sth_signal(d.sth_supply);
@@ -2149,7 +2152,7 @@
         document.getElementById('d-sth-supply').textContent = d.sth_supply ? fmt_btc(d.sth_supply) : '—';
         document.getElementById('d-sth-rp').textContent     = d.sth_realized_price ? fmt_usd(d.sth_realized_price) : '—';
         document.getElementById('d-sth-updated').textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
-        if (d.bands) renderHodlChart('hc-sth-chart', d.bands, true);
+        if (sthBands.length) renderHodlChart('hc-sth-chart', sthBands, true);
         cardReady('sth');
     }).catch(() => {
         document.getElementById('hc-lth-val').textContent = 'error'; cardReady('lth');
@@ -2699,10 +2702,14 @@
             const lbl = sl(data.mvrv_zscore.labels);
             cardChart('mvrv_zscore-chart-detail', lbl, sl(data.mvrv_zscore.values), sigColor(mvrv_zscore_signal(data.mvrv_zscore.z_score).cls), false, ov(lbl));
         }
-        if (id === 'lth' && data.lth)
-            renderHodlChart('lth-chart-detail', data.lth.bands, false);
-        if (id === 'sth' && data.sth)
-            renderHodlChart('sth-chart-detail', data.sth.bands, false);
+        if (id === 'lth' && data.lth && data.lth.bands) {
+            const LTH_LABELS = new Set(['1y – 2y','2y – 3y','3y – 5y','5y – 7y','7y – 10y','> 10y']);
+            renderHodlChart('lth-chart-detail', data.lth.bands.filter(b => LTH_LABELS.has(b.label)), false);
+        }
+        if (id === 'sth' && data.sth && data.sth.bands) {
+            const LTH_LABELS = new Set(['1y – 2y','2y – 3y','3y – 5y','5y – 7y','7y – 10y','> 10y']);
+            renderHodlChart('sth-chart-detail', data.sth.bands.filter(b => !LTH_LABELS.has(b.label)), false);
+        }
         if (id === 'stf' && data.stf) {
             const lbl = sl(data.stf.labels);
             cardChart('stf-chart-detail', lbl, sl(data.stf.values), sigColor(stf_signal(data.stf.deviation_pct).cls), false, ov(lbl));
