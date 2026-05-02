@@ -1031,7 +1031,7 @@
                 ${chartControls}
                </div>`
             : '';
-        const availableOverlays = m.overlayButtons !== undefined ? m.overlayButtons : (!m.tfSelector && !m.chartType ? ['price', 'rsi'] : (m.overlays || []));
+        const availableOverlays = m.overlayButtons !== undefined ? m.overlayButtons : (!m.tfSelector && !m.chartType ? ['price'] : (m.overlays || []));
         const overlayHtml = availableOverlays.length > 0
             ? `<div class="overlay-selector" id="overlays-${id}">
                 <span class="overlay-label">overlay</span>
