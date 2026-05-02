@@ -1,4 +1,5 @@
 # BTCFunk server crontab — install with: crontab crontab.txt
-*/7 * * * * cd /var/www/btcfunk/app && python3  scripts/update_csv.py >> /var/log/btcfunk_csv.log 2>&1
-0 6 * * * cd /var/www/btcfunk/app && python3 scripts/daily_update.py >> /var/log/btcfunk_daily.log 2>&1
-0 6 * * * cd /var/www/btcfunk/app && python3 scripts/update_coinbase_premium.py >> /var/log/btcfunk_premium.log 2>&1
+GOOGLE_APPLICATION_CREDENTIALS=/root/.config/btcfunk-credentials.json
+*/7 * * * * cd /var/www/btcfunk/app && python3 scripts/update_csv.py >> /var/log/btcfunk_csv.log 2>&1
+0 6 * * * cd /var/www/btcfunk/app && venv/bin/python3 scripts/daily_update.py >> /var/log/btcfunk_daily.log 2>&1
+0 6 * * * cd /var/www/btcfunk/app && venv/bin/python3 scripts/update_coinbase_premium.py >> /var/log/btcfunk_premium.log 2>&1
