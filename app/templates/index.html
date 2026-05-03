@@ -608,11 +608,16 @@
             <div class="tag" style="background:#f0faf4;color:#16a34a">₿ Bitcoin on-chain</div>
             <div id="qr-btc" style="margin:0.75rem auto;display:inline-block"></div>
             <div style="font-size:0.72rem;color:#555;word-break:break-all;margin-bottom:0.6rem">bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr</div>
-            <button onclick="copyText('bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
+            <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap">
+                <button onclick="copyText('bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
+                <button onclick="FunkPay.open({ label: 'btcfunk-donation' })" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #f97316;border-radius:4px;background:#fff;color:#f97316;cursor:pointer;font-family:inherit;font-weight:500">Pay with Bitcoin</button>
+            </div>
         </div>
     </div>
 
     <div style="font-size:0.78rem;color:#999;margin-top:1.5rem;text-align:center">Thank you ₿</div>
+
+    <script src="https://btcfunk.com/pay/funkpay.js"></script>
 
     <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid #eee;text-align:center">
         <div style="font-size:0.78rem;color:#888;margin-bottom:0.4rem">Questions or feedback?</div>
