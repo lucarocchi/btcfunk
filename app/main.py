@@ -199,6 +199,23 @@ async def mempool(request: Request):
     return get_mempool()
 
 
+@app.get("/api/prices")
+@limiter.limit("120/minute")
+async def prices(request: Request):
+    import httpx, time
+    _cache = getattr(app.state, "_prices_cache", None)
+    if _cache and time.time() - _cache["ts"] < 120:
+        return _cache["data"]
+    try:
+        async with httpx.AsyncClient(timeout=5) as c:
+            r = await c.get("https://mempool.space/api/v1/prices")
+            data = r.json()
+    except Exception:
+        data = _cache["data"] if _cache else {}
+    app.state._prices_cache = {"data": data, "ts": time.time()}
+    return data
+
+
 @app.get("/api/analysis")
 @limiter.limit("60/minute")
 async def analysis(request: Request):
