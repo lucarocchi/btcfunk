@@ -2842,7 +2842,7 @@
             generateQR();
             if (!window._funkpayMounted) {
                 window._funkpayMounted = true;
-                FunkPay.mount('#funkpay', { currency: 'EUR', label: 'btcfunk-donation' });
+                FunkPay.mount('#funkpay', { currency: 'EUR', label: 'btcfunk-donation', theme: 'light' });
             }
         }
         if (name === 'settings') buildWidgetToggles();
