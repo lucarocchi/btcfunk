@@ -603,28 +603,14 @@
     <h2>Support BTCFunk</h2>
     <div class="cp-p cp-subtitle">BTCFunk is free and open. If you find it useful, a small donation keeps the servers running and the data flowing.</div>
 
-    <div style="max-width:320px;margin:1.5rem auto 0;text-align:center">
-        <div class="source-card" style="text-align:center">
-            <div class="tag" style="background:#f0faf4;color:#16a34a">₿ Bitcoin on-chain</div>
-            <div id="qr-btc" style="margin:0.75rem auto;display:inline-block"></div>
-            <div style="font-size:0.72rem;color:#555;word-break:break-all;margin-bottom:0.6rem">bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr</div>
-            <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap">
-                <button onclick="copyText('bc1qxfpsdm9urjnvrzza4n3wyautp9jxd4mjcp7uwr', this)" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-family:inherit">Copy address</button>
-                <button onclick="FunkPay.open({ label: 'btcfunk-donation' })" style="font-size:0.72rem;padding:0.25rem 0.75rem;border:1px solid #f97316;border-radius:4px;background:#fff;color:#f97316;cursor:pointer;font-family:inherit;font-weight:500">Pay with Bitcoin</button>
-            </div>
-        </div>
-    </div>
-
-    <div style="font-size:0.78rem;color:#999;margin-top:1.5rem;text-align:center">Thank you ₿</div>
-
-    <script src="https://btcfunk.com/pay/funkpay.js"></script>
-
-    <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid #eee;text-align:center">
+    <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid #eee;text-align:center">
         <div style="font-size:0.78rem;color:#888;margin-bottom:0.4rem">Questions or feedback?</div>
         <a href="mailto:lucarocchi@outlook.it" style="font-size:0.85rem;color:#111;text-decoration:none;font-weight:500">lucarocchi@outlook.it</a>
     </div>
 </div>
 </div><!-- /page-donate -->
+
+<script src="https://btcfunk.com/pay/funkpay.js"></script>
 
 <!-- ── SETTINGS PAGE ── -->
 <div id="page-settings" class="content-page">
@@ -2851,7 +2837,7 @@
         });
         if (name === 'dashboard' && gridNeedsRebuild) { gridNeedsRebuild = false; location.reload(); return; }
         if (name !== 'dashboard') closeSidebar();
-        if (name === 'donate') generateQR();
+        if (name === 'donate') { generateQR(); if (typeof FunkPay !== 'undefined') FunkPay.open({ label: 'btcfunk-donation' }); }
         if (name === 'settings') buildWidgetToggles();
     }
     // Sidebar toggle (mobile)
