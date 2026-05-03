@@ -2840,12 +2840,13 @@
         if (name !== 'dashboard') closeSidebar();
         if (name === 'support') {
             generateQR();
-            if (!window._funkpayLoaded) {
-                window._funkpayLoaded = true;
-                const s = document.createElement('script');
-                s.src = 'https://btcfunk.com/pay/funkpay.js';
-                s.onload = () => FunkPay.mount('#funkpay', { currency: 'EUR', label: 'btcfunk-donation' });
-                document.body.appendChild(s);
+            const fp = document.getElementById('funkpay');
+            if (fp && !fp.hasChildNodes()) {
+                const iframe = document.createElement('iframe');
+                iframe.src = 'https://btcfunk.com/pay/?currency=EUR&label=btcfunk-donation&theme=light';
+                iframe.setAttribute('allow', 'clipboard-write');
+                iframe.style.cssText = 'border:none;width:100%;height:640px;border-radius:12px;';
+                fp.appendChild(iframe);
             }
         }
         if (name === 'settings') buildWidgetToggles();
