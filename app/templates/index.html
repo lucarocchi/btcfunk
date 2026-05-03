@@ -608,13 +608,10 @@
     </div>
 
     <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid #eee;text-align:center">
-        <div style="font-size:0.78rem;color:#888;margin-bottom:0.4rem">Questions or feedback?</div>
-        <a href="mailto:lucarocchi@outlook.it" style="font-size:0.85rem;color:#111;text-decoration:none;font-weight:500">lucarocchi@outlook.it</a>
+        <a href="mailto:lucarocchi@outlook.it" style="font-size:0.85rem;color:#111;text-decoration:none;font-weight:500">Contact us</a>
     </div>
 </div>
 </div><!-- /page-support -->
-
-<script src="https://btcfunk.com/pay/funkpay.js"></script>
 
 <!-- ── SETTINGS PAGE ── -->
 <div id="page-settings" class="content-page">
@@ -2841,7 +2838,15 @@
         });
         if (name === 'dashboard' && gridNeedsRebuild) { gridNeedsRebuild = false; location.reload(); return; }
         if (name !== 'dashboard') closeSidebar();
-        if (name === 'support') generateQR();
+        if (name === 'support') {
+            generateQR();
+            if (!window._funkpayLoaded) {
+                window._funkpayLoaded = true;
+                const s = document.createElement('script');
+                s.src = 'https://btcfunk.com/pay/funkpay.js';
+                document.body.appendChild(s);
+            }
+        }
         if (name === 'settings') buildWidgetToggles();
     }
     // Sidebar toggle (mobile)
