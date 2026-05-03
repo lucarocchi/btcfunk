@@ -603,6 +603,10 @@
     <h2>Support BTCFunk</h2>
     <div class="cp-p cp-subtitle">BTCFunk is free and open. If you find it useful, a small donation keeps the servers running and the data flowing.</div>
 
+    <div style="margin-top:1.5rem">
+        <div id="funkpay" data-label="btcfunk-donation" data-currency="EUR"></div>
+    </div>
+
     <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid #eee;text-align:center">
         <div style="font-size:0.78rem;color:#888;margin-bottom:0.4rem">Questions or feedback?</div>
         <a href="mailto:lucarocchi@outlook.it" style="font-size:0.85rem;color:#111;text-decoration:none;font-weight:500">lucarocchi@outlook.it</a>
@@ -2837,7 +2841,7 @@
         });
         if (name === 'dashboard' && gridNeedsRebuild) { gridNeedsRebuild = false; location.reload(); return; }
         if (name !== 'dashboard') closeSidebar();
-        if (name === 'donate') { generateQR(); if (typeof FunkPay !== 'undefined') FunkPay.open({ label: 'btcfunk-donation' }); }
+        if (name === 'donate') generateQR();
         if (name === 'settings') buildWidgetToggles();
     }
     // Sidebar toggle (mobile)
