@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import PlainTextResponse, Response
+from fastapi.responses import PlainTextResponse, Response, RedirectResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -12,6 +12,10 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 app = FastAPI(title="BTCFunk Analytics")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc):
+    return RedirectResponse(url="/")
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
