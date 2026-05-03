@@ -2844,6 +2844,7 @@
                 window._funkpayLoaded = true;
                 const s = document.createElement('script');
                 s.src = 'https://btcfunk.com/pay/funkpay.js';
+                s.onload = () => FunkPay.mount('#funkpay', { currency: 'EUR', label: 'btcfunk-donation' });
                 document.body.appendChild(s);
             }
         }
