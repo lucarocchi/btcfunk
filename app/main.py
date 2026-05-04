@@ -1,6 +1,8 @@
 import os
+import secrets
 
-from fastapi import FastAPI, Request, Query, HTTPException
+from fastapi import Depends, FastAPI, Request, Query, HTTPException
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import PlainTextResponse, Response, RedirectResponse
@@ -283,8 +285,27 @@ async def bb(request: Request, tf: int = _TF, summary: bool = _S):
 _PAY_ADMIN_USER = os.environ.get("BTCFUNKPAY_ADMIN_USERNAME", "admin")
 _PAY_ADMIN_PASS = os.environ.get("BTCFUNKPAY_ADMIN_PASSWORD", "")
 
+_http_basic = HTTPBasic()
+
+def _require_admin(credentials: HTTPBasicCredentials = Depends(_http_basic)):
+    pw = _PAY_ADMIN_PASS
+    if not pw:
+        raise HTTPException(status_code=503, detail="Admin password not configured")
+    ok_user = secrets.compare_digest(credentials.username.encode(), _PAY_ADMIN_USER.encode())
+    ok_pass = secrets.compare_digest(credentials.password.encode(), pw.encode())
+    if not (ok_user and ok_pass):
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
 @app.get("/invoices")
-async def invoices_page(request: Request, status: str = None):
+async def invoices_page(
+    request: Request,
+    status: str = None,
+    _: HTTPBasicCredentials = Depends(_require_admin),
+):
     import httpx
     params = {}
     if status:
