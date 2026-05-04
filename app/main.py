@@ -236,6 +236,13 @@ async def analysis_page(request: Request):
     return templates.TemplateResponse("analysis.html", {"request": request})
 
 
+@app.get("/api/fear_greed")
+@limiter.limit("60/minute")
+async def fear_greed(request: Request):
+    from app.metrics.fear_greed import get_fear_greed
+    return get_fear_greed()
+
+
 @app.get("/api/coinbase_premium")
 @limiter.limit("100/minute")
 async def coinbase_premium(request: Request, summary: bool = _S):

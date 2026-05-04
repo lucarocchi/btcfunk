@@ -347,6 +347,19 @@ METRICS_META = {
         'series':      None,
         'related':     ['active_addresses', 'whale_tx', 'hashrate'],
     },
+    'fear_greed': {
+        'page_title':  'Bitcoin Fear & Greed Index — Market Sentiment',
+        'description': 'Live Bitcoin Fear & Greed Index. 0 = Extreme Fear (buy zone), 100 = Extreme Greed (sell zone). Updated daily by alternative.me.',
+        'h1':          'Fear & Greed Index',
+        'subtitle':    'Market sentiment — 0 Extreme Fear · 100 Extreme Greed',
+        'body':        'The Fear & Greed Index aggregates multiple market signals — volatility, momentum, social media, dominance and trends — into a single score from 0 to 100. Extreme Fear (0–24) has historically marked major buying opportunities, when most market participants panic-sell. Extreme Greed (75–100) signals euphoria and overextension — conditions that have preceded sharp corrections. As a contrarian indicator, it works best when combined with on-chain metrics like MVRV and NUPL.',
+        'hint':        '0–24 Extreme Fear · 25–44 Fear · 45–55 Neutral · 56–74 Greed · 75–100 Extreme Greed',
+        'api':         'fear_greed',
+        'value_field': 'current',
+        'value_fmt':   '.0f',
+        'series':      'values',
+        'related':     ['mvrv', 'nupl', 'sopr'],
+    },
 }
 
 METRIC_LABELS = {k: v['h1'] for k, v in METRICS_META.items()}
