@@ -1322,7 +1322,7 @@
     function chartColors() {
         const s = getComputedStyle(document.documentElement);
         return {
-            grid: s.getPropertyValue('--border-3').trim() || '#f0f0f0',
+            grid: s.getPropertyValue('--border').trim() || '#e0e0e0',
             tick: s.getPropertyValue('--text-6').trim()   || '#999',
             line: s.getPropertyValue('--text').trim()     || '#111',
         };
