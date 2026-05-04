@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -278,6 +280,9 @@ async def bb(request: Request, tf: int = _TF, summary: bool = _S):
     return _resp(get_bb(tf=tf), summary)
 
 
+_PAY_ADMIN_USER = os.environ.get("BTCFUNKPAY_ADMIN_USERNAME", "admin")
+_PAY_ADMIN_PASS = os.environ.get("BTCFUNKPAY_ADMIN_PASSWORD", "")
+
 @app.get("/invoices")
 async def invoices_page(request: Request, status: str = None):
     import httpx
@@ -285,10 +290,11 @@ async def invoices_page(request: Request, status: str = None):
     if status:
         params["status"] = status
     try:
+        auth = (_PAY_ADMIN_USER, _PAY_ADMIN_PASS) if _PAY_ADMIN_PASS else None
         async with httpx.AsyncClient(timeout=5) as c:
-            r = await c.get("http://127.0.0.1:8001/invoices", params=params)
-            invoices = r.json()
-    except Exception as e:
+            r = await c.get("http://127.0.0.1:8001/invoices", params=params, auth=auth)
+            invoices = r.json() if r.status_code == 200 else []
+    except Exception:
         invoices = []
 
     status_colors = {
