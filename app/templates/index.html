@@ -408,7 +408,7 @@
 
         <div class="landing-chips">
             <a href="/active_addresses">Active Addresses</a><a href="/avg_fee">Avg Fee</a><a href="/bb">Bollinger Bands</a><a href="/cdd">CDD</a><a href="/ema">EMA</a>
-            <a href="/exchange_flow">Exchange Flow</a><a href="/hashrate">Hash Rate</a><a href="/hodl">HODL Waves</a><a href="/lth">LTH Supply</a><a href="/mvrv">MVRV</a>
+            <a href="/exchange_flow">Exchange Flow</a><a href="/fear_greed">Fear & Greed</a><a href="/hashrate">Hash Rate</a><a href="/hodl">HODL Waves</a><a href="/lth">LTH Supply</a><a href="/mvrv">MVRV</a>
             <a href="/mvrv_zscore">MVRV Z-Score</a><a href="/nupl">NUPL</a><a href="/nvt">NVT</a><a href="/price">Price</a><a href="/puell">Puell Multiple</a>
             <a href="/rhodl">RHODL</a><a href="/rsi">RSI</a><a href="/stf">S2F</a><a href="/sopr">SOPR</a><a href="/sth">STH Supply</a>
             <a href="/supply_profit">Supply in Profit</a><a href="/tx_count">Tx Count</a><a href="/volume">Volume</a><a href="/whale_tx">Whale Tx</a>
@@ -898,6 +898,12 @@
             noChart: true,
             hint: 'Low fees = network quiet &nbsp;|&nbsp; High fees = congestion / high demand',
         },
+        fear_greed: {
+            label: 'Fear & Greed', acronym: 'Market sentiment index 0–100', live: true, group: 'Sentiment',
+            detail: 'The Fear & Greed Index aggregates volatility, momentum, social media, dominance and trends into a single score from 0 to 100. Extreme Fear has historically marked major buying opportunities. Extreme Greed signals euphoria and overextension. As a contrarian indicator it works best combined with on-chain metrics like MVRV and NUPL.',
+            stats: [{ id: 'val', label: 'Index' }, { id: 'cls', label: 'Classification' }],
+            hint: '0–24 Extreme Fear &nbsp;|&nbsp; 25–44 Fear &nbsp;|&nbsp; 45–55 Neutral &nbsp;|&nbsp; 56–74 Greed &nbsp;|&nbsp; 75–100 Extreme Greed',
+        },
         coinbase_premium: {
             label: 'Coinbase Premium', acronym: 'Coinbase vs Binance price gap (%)', live: true, group: 'Flows',
             detail: 'The Coinbase Premium Index measures the percentage price difference between Bitcoin on Coinbase (the leading U.S. regulated exchange) and Binance (the global benchmark). A positive premium signals strong U.S. institutional and retail buying. A negative premium reflects U.S. selling pressure or capital outflows. The index is widely used to track capital flows between U.S. and global crypto markets.',
@@ -907,7 +913,7 @@
         },
     };
 
-    let data = { price: null, volume: null, rsi: null, ema: null, bb: null, mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null, dxy: null, mempool: null, coinbase_premium: null };
+    let data = { price: null, volume: null, rsi: null, ema: null, bb: null, mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null, dxy: null, mempool: null, coinbase_premium: null, fear_greed: null };
     let currentTF = { price: 1440, volume: 1440, rsi: 1440, ema: 1440, bb: 1440 };
     let charts = {};
     let dragSrc = null;
@@ -1386,6 +1392,15 @@
         if (!v || v < 1)    return { label: 'LOSS',      cls: 'ko' };
         if (v < 1.02)       return { label: 'BREAKEVEN', cls: 'neutral' };
         return                  { label: 'PROFIT',   cls: 'ok' };
+    }
+
+    function fg_signal(v) {
+        if (v == null)  return { label: '—',             cls: 'neutral' };
+        if (v <= 24)    return { label: 'EXTREME FEAR',  cls: 'ok' };
+        if (v <= 44)    return { label: 'FEAR',           cls: 'ok' };
+        if (v <= 55)    return { label: 'NEUTRAL',        cls: 'neutral' };
+        if (v <= 74)    return { label: 'GREED',          cls: 'medium' };
+        return              { label: 'EXTREME GREED',  cls: 'ko' };
     }
 
     function cpremium_signal(v) {
@@ -2198,6 +2213,29 @@
         cardReady('dxy');
     }).catch(() => { document.getElementById('hc-dxy-val').textContent = 'error'; cardReady('dxy'); });
 
+    // Load Fear & Greed Index
+    fetch('/api/fear_greed').then(r => r.json()).then(d => {
+        data.fear_greed = d;
+        const sig = fg_signal(d.current);
+        const hv = document.getElementById('hc-fear_greed-val');
+        if (hv) hv.textContent = d.current != null ? d.current : '—';
+        const hb = document.getElementById('hc-fear_greed-badge');
+        if (hb) { hb.textContent = sig.label; hb.className = 'badge ' + sig.cls; }
+        const dv = document.getElementById('d-fear_greed-val');
+        if (dv) dv.textContent = d.current != null ? d.current : '—';
+        const dc = document.getElementById('d-fear_greed-cls');
+        if (dc) dc.textContent = d.classification || '—';
+        const du = document.getElementById('d-fear_greed-updated');
+        if (du) du.textContent = 'Updated: ' + new Date(d.updated_at).toLocaleString('en-GB');
+        const color = sig.cls === 'ok' ? '#22c55e' : sig.cls === 'ko' ? '#ef4444' : '#94a3b8';
+        cardChart('hc-fear_greed-chart', d.labels, d.values, color, true);
+        cardReady('fear_greed');
+    }).catch(() => {
+        const hv = document.getElementById('hc-fear_greed-val');
+        if (hv) hv.textContent = 'error';
+        cardReady('fear_greed');
+    });
+
     // Load Coinbase Premium Index
     fetch('/api/coinbase_premium').then(r => r.json()).then(d => {
         data.coinbase_premium = d;
@@ -2696,6 +2734,13 @@
         if (id === 'dxy' && data.dxy) {
             const lbl = sl(data.dxy.labels);
             cardChart('dxy-chart-detail', lbl, sl(data.dxy.values), '#8b5cf6', false, ov(lbl));
+        }
+        if (id === 'fear_greed' && data.fear_greed) {
+            const d = data.fear_greed;
+            const lbl = sl(d.labels);
+            const sig = fg_signal(d.current);
+            const color = sig.cls === 'ok' ? '#22c55e' : sig.cls === 'ko' ? '#ef4444' : '#94a3b8';
+            cardChart('fear_greed-chart-detail', lbl, sl(d.values), color, false, ov(lbl));
         }
         if (id === 'coinbase_premium' && data.coinbase_premium) {
             const d = data.coinbase_premium;
