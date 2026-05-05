@@ -444,6 +444,8 @@ async def funkpay_page():
     <div class="feature"><strong>No third party</strong><span>Your Bitcoin Core node, your database, your data.</span></div>
     <div class="feature"><strong>Embeddable widget</strong><span>One &lt;script&gt; tag. Shadow DOM isolation. Works on any website.</span></div>
     <div class="feature"><strong>Mempool-first UX</strong><span>Instant detection on 0-conf. Confirmed callback when settled on-chain.</span></div>
+    <div class="feature"><strong>Webhook support</strong><span>Server-side notifications fire even if the user closes the browser.</span></div>
+    <div class="feature"><strong>Multi-currency</strong><span>Fiat display in USD, EUR, GBP, JPY, CAD, CHF, AUD. Always pays in BTC.</span></div>
   </div>
 
   <div class="links">
