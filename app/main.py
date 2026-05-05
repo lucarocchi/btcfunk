@@ -416,7 +416,6 @@ async def funkpay_page():
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f0f; color: #eee; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 3rem 1.25rem 4rem; }
     .back { align-self: flex-start; color: #f7931a; text-decoration: none; font-size: 0.8rem; margin-bottom: 2.5rem; }
     .back:hover { opacity: 0.8; }
-    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.4rem; }
     .sub { color: #aaa; font-size: 0.9rem; margin-bottom: 2.5rem; }
     .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; width: 100%; max-width: 680px; margin-bottom: 2.5rem; }
     .feature { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1rem 1.25rem; }
@@ -425,12 +424,20 @@ async def funkpay_page():
     .links { display: flex; gap: 1rem; margin-bottom: 3rem; }
     .btn { padding: 0.6rem 1.4rem; border-radius: 6px; font-size: 0.85rem; font-weight: 500; text-decoration: none; }
     .btn-primary { background: #f7931a; color: #000; }
-    .btn-secondary { background: #1a1a1a; color: #eee; border: 1px solid #333; }
     .btn:hover { opacity: 0.85; }
     #funkpay { width: 100%; max-width: 380px; }
     footer { margin-top: auto; padding-top: 3rem; font-size: 0.72rem; color: #555; }
     footer a { color: #555; text-decoration: none; }
     footer a:hover { color: #aaa; }
+    @media (prefers-color-scheme: light) {
+      body { background: #f5f5f5; color: #111; }
+      .sub { color: #666; }
+      .feature { background: #fff; border-color: #e0e0e0; }
+      .feature span { color: #555; }
+      footer { color: #999; }
+      footer a { color: #999; }
+      footer a:hover { color: #333; }
+    }
   </style>
 </head>
 <body>
