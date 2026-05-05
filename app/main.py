@@ -431,12 +431,12 @@ async def funkpay_page():
     footer a:hover { color: #aaa; }
     @media (prefers-color-scheme: light) {
       body { background: #f5f5f5; color: #111; }
-      .sub { color: #666; }
-      .feature { background: #fff; border-color: #e0e0e0; }
-      .feature span { color: #555; }
-      footer { color: #999; }
-      footer a { color: #999; }
-      footer a:hover { color: #333; }
+      .sub { color: #333; }
+      .feature { background: #fff; border-color: #ddd; }
+      .feature span { color: #333; }
+      footer { color: #666; }
+      footer a { color: #666; }
+      footer a:hover { color: #111; }
     }
   </style>
 </head>
