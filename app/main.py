@@ -455,11 +455,11 @@ async def funkpay_page():
     <div class="feature"><strong>Multi-currency</strong><span>Fiat display in USD, EUR, GBP, JPY, CAD, CHF, AUD. Always pays in BTC.</span></div>
   </div>
 
+  <div id="funkpay" data-server="https://btcfunk.com/pay" data-currency="USD" data-theme="auto"></div>
+
   <div class="links">
     <a class="btn btn-primary" href="https://github.com/lucarocchi/btcfunkpay" target="_blank" rel="noopener">GitHub</a>
   </div>
-
-  <div id="funkpay" data-server="https://btcfunk.com/pay" data-currency="USD" data-theme="auto"></div>
 
   <footer><a href="/">BTCFunk</a> &nbsp;&middot;&nbsp; <a href="mailto:lucarocchi@outlook.it">Contact</a></footer>
 
