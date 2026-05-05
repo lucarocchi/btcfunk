@@ -401,9 +401,69 @@ async def invoices_page(
     return HTMLResponse(html)
 
 
+@app.get("/funkpay")
+async def funkpay_page():
+    from fastapi.responses import HTMLResponse
+    html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FunkPay — Bitcoin On-Chain Payments</title>
+  <meta name="description" content="FunkPay is a self-custodial Bitcoin payment library. Accept BTC payments with no middlemen, no custody, no third party. Your keys, your coins.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f0f; color: #eee; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 3rem 1.25rem 4rem; }
+    .back { align-self: flex-start; color: #f7931a; text-decoration: none; font-size: 0.8rem; margin-bottom: 2.5rem; }
+    .back:hover { opacity: 0.8; }
+    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.4rem; }
+    .sub { color: #aaa; font-size: 0.9rem; margin-bottom: 2.5rem; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; width: 100%; max-width: 680px; margin-bottom: 2.5rem; }
+    .feature { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1rem 1.25rem; }
+    .feature strong { display: block; font-size: 0.85rem; color: #f7931a; margin-bottom: 0.3rem; }
+    .feature span { font-size: 0.8rem; color: #999; line-height: 1.5; }
+    .links { display: flex; gap: 1rem; margin-bottom: 3rem; }
+    .btn { padding: 0.6rem 1.4rem; border-radius: 6px; font-size: 0.85rem; font-weight: 500; text-decoration: none; }
+    .btn-primary { background: #f7931a; color: #000; }
+    .btn-secondary { background: #1a1a1a; color: #eee; border: 1px solid #333; }
+    .btn:hover { opacity: 0.85; }
+    #funkpay { width: 100%; max-width: 380px; }
+    footer { margin-top: auto; padding-top: 3rem; font-size: 0.72rem; color: #555; }
+    footer a { color: #555; text-decoration: none; }
+    footer a:hover { color: #aaa; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">← BTCFunk</a>
+
+  <h1>FunkPay</h1>
+  <p class="sub">Self-custodial Bitcoin on-chain payments &mdash; no middlemen, no custody.</p>
+
+  <div class="features">
+    <div class="feature"><strong>Your keys, your coins</strong><span>Funds go directly to your wallet. FunkPay never touches private keys.</span></div>
+    <div class="feature"><strong>No third party</strong><span>Your Bitcoin Core node, your database, your data.</span></div>
+    <div class="feature"><strong>Embeddable widget</strong><span>One &lt;script&gt; tag. Shadow DOM isolation. Works on any website.</span></div>
+    <div class="feature"><strong>Mempool-first UX</strong><span>Instant detection on 0-conf. Confirmed callback when settled on-chain.</span></div>
+  </div>
+
+  <div class="links">
+    <a class="btn btn-primary" href="https://github.com/lucarocchi/btcfunkpay" target="_blank" rel="noopener">GitHub</a>
+    <a class="btn btn-secondary" href="https://pypi.org/project/btcfunkpay/" target="_blank" rel="noopener">PyPI</a>
+  </div>
+
+  <div id="funkpay" data-server="https://btcfunk.com/pay" data-currency="USD" data-theme="auto"></div>
+
+  <footer><a href="/">BTCFunk</a> &nbsp;&middot;&nbsp; <a href="mailto:lucarocchi@outlook.it">Contact</a></footer>
+
+  <script src="https://btcfunk.com/pay/funkpay.js"></script>
+</body>
+</html>"""
+    return HTMLResponse(html)
+
+
 @app.get("/sitemap.xml")
 async def sitemap_dynamic():
-    urls = ['https://btcfunk.com/'] + [f'https://btcfunk.com/{k}' for k in METRICS_META]
+    urls = ['https://btcfunk.com/', 'https://btcfunk.com/funkpay'] + [f'https://btcfunk.com/{k}' for k in METRICS_META]
     items = ''.join(
         f'  <url><loc>{u}</loc><changefreq>daily</changefreq><priority>{"1.0" if u.endswith("/") else "0.8"}</priority></url>\n'
         for u in urls
