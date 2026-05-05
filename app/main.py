@@ -457,7 +457,7 @@ async def funkpay_page():
 
   <div id="funkpay" data-server="https://btcfunk.com/pay" data-currency="USD" data-theme="auto"></div>
 
-  <div class="links">
+  <div class="links" style="margin-top:2rem;">
     <a class="btn btn-primary" href="https://github.com/lucarocchi/btcfunkpay" target="_blank" rel="noopener">GitHub</a>
   </div>
 
