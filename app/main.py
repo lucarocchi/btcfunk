@@ -436,6 +436,7 @@ async def funkpay_page():
 <body>
   <a class="back" href="/">← BTCFunk</a>
 
+  <img src="/static/logo_funkpay.png" alt="FunkPay" style="width:100px;margin-bottom:1rem;">
   <h1>FunkPay</h1>
   <p class="sub">Self-custodial Bitcoin on-chain payments &mdash; no middlemen, no custody.</p>
 
