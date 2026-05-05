@@ -335,9 +335,12 @@ async def invoices_page(
         received = inv.get("received_sat") or 0
         txid = inv.get("txid") or "—"
         txid_short = txid[:12] + "…" if txid != "—" else "—"
+        pid = inv.get("payment_id") or "—"
+        pid_short = pid[:8] + "…" if pid != "—" else "—"
         rows += f"""
         <tr>
           <td style="color:#aaa;font-size:11px">{created}</td>
+          <td style="font-family:monospace;font-size:11px;color:#aaa" title="{pid}">{pid_short}</td>
           <td>{inv.get('label') or '—'}</td>
           <td style="text-align:right">{amount}</td>
           <td style="text-align:right;color:#22c55e">{received}</td>
@@ -372,7 +375,7 @@ async def invoices_page(
   </div>
   <table>
     <thead><tr>
-      <th>Created</th><th>Label</th><th style="text-align:right">Amount (sat)</th>
+      <th>Created</th><th>Receipt</th><th>Label</th><th style="text-align:right">Amount (sat)</th>
       <th style="text-align:right">Received (sat)</th><th>Status</th><th>Txid</th><th>Confirmed</th>
     </tr></thead>
     <tbody>{rows}</tbody>
