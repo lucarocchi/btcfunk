@@ -359,7 +359,10 @@ async def invoices_page(
 <style>
   body {{ font-family: sans-serif; background: #0f0f0f; color: #eee; padding: 2rem; }}
   h1 {{ font-size: 1.2rem; margin-bottom: 1rem; }}
-  .filters {{ display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }}
+  .filters {{ display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }}
+  .filters-right {{ margin-left: auto; }}
+  #receipt-search {{ background: #1a1a1a; border: 1px solid #333; color: #eee; padding: 4px 10px; border-radius: 4px; font-size: 12px; width: 220px; outline: none; }}
+  #receipt-search::placeholder {{ color: #555; }}
   table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
   th {{ text-align: left; color: #666; font-weight: 600; font-size: 11px; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid #222; }}
   td {{ padding: 8px; border-bottom: 1px solid #1a1a1a; vertical-align: middle; }}
@@ -372,7 +375,19 @@ async def invoices_page(
   <div class="filters">
     <a href="/invoices" style="padding:4px 10px;border-radius:4px;font-size:12px;text-decoration:none;background:{"#333" if not status else "#1a1a1a"};color:#eee">all</a>
     {filters}
+    <div class="filters-right">
+      <input id="receipt-search" type="text" placeholder="Search receipt…">
+    </div>
   </div>
+  <script>
+    document.getElementById('receipt-search').addEventListener('input', function() {{
+      var q = this.value.toLowerCase();
+      document.querySelectorAll('tbody tr').forEach(function(row) {{
+        var receipt = (row.cells[1] ? row.cells[1].getAttribute('title') || row.cells[1].textContent : '').toLowerCase();
+        row.style.display = (!q || receipt.includes(q)) ? '' : 'none';
+      }});
+    }});
+  </script>
   <table>
     <thead><tr>
       <th>Created</th><th>Receipt</th><th>Label</th><th style="text-align:right">Amount (sat)</th>
