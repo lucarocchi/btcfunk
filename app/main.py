@@ -64,6 +64,7 @@ async def index(request: Request):
 async def robots():
     return """User-agent: *
 Allow: /
+Disallow: /invoices
 Sitemap: https://btcfunk.com/sitemap.xml
 """
 
