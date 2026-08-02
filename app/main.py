@@ -208,22 +208,6 @@ async def prices(request: Request):
     return data
 
 
-@app.get("/api/analysis")
-@limiter.limit("60/minute")
-async def analysis(request: Request):
-    import json, os
-    path = "app/static/analysis.json"
-    if not os.path.exists(path):
-        return {"text": None, "generated_at": None}
-    with open(path) as f:
-        return json.load(f)
-
-
-@app.get("/analysis")
-async def analysis_page(request: Request):
-    return templates.TemplateResponse("analysis.html", {"request": request})
-
-
 @app.get("/api/fear_greed")
 @limiter.limit("60/minute")
 async def fear_greed(request: Request):
