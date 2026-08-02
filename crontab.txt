@@ -4,5 +4,7 @@
 # DISABILITATO 2026-06-02 — costava ~€194/mese di BigQuery (full scan giornaliero). Riattivare solo dopo fix partition pruning o migrazione a Bitcoin Core RPC.
 # 0 6 * * * cd /var/www/btcfunk/app && venv/bin/python3 scripts/daily_update.py >> /var/log/btcfunk_daily.log 2>&1
 0 6 * * * cd /var/www/btcfunk/app && venv/bin/python3 scripts/update_coinbase_premium.py >> /var/log/btcfunk_premium.log 2>&1
+# DISABILITATO 2026-08-02 — il blocco AI è stato rimosso dalla home, girava a vuoto consumando API Anthropic.
+# 0 */4 * * * cd /var/www/btcfunk/app && venv/bin/python3 scripts/ai_analysis.py >> /var/log/btcfunk_analysis.log 2>&1
 # Sostituto gratuito di daily_update.py per la parte prezzi: candele daily + btc_prices da Kraken API (nessuna credenziale, nessun costo)
 10 6 * * * cd /var/www/btcfunk/app && venv/bin/python3 scripts/update_kraken_daily.py >> /var/log/btcfunk_kraken.log 2>&1
