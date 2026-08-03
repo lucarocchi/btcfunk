@@ -723,3 +723,17 @@ ORDER BY day""",
 -- SELECT day, coinbase_close, binance_close, premium_pct FROM coinbase_premium_daily ORDER BY day DESC LIMIT 10""",
     },
 }
+
+
+# ── Metriche temporaneamente nascoste ────────────────────────────────────────
+# Dati congelati al 2026-06-01 (exchange_flow al 2026-04-30): il cron BigQuery
+# (scripts/daily_update.py) è disabilitato dal 2026-06-02 perché costava ~€194/mese.
+# Codice, tabelle SQLite ed endpoint /api/* restano intatti: per riattivare una
+# metrica basta toglierla da questo set (frontend e sitemap si adeguano da soli).
+HIDDEN_METRICS = {
+    'mvrv', 'mvrv_zscore', 'nupl', 'sopr', 'nvt', 'cdd', 'hodl', 'rhodl',
+    'supply_profit', 'lth', 'sth', 'puell', 'stf', 'active_addresses',
+    'whale_tx', 'exchange_flow', 'tx_count', 'avg_fee', 'hashrate',
+}
+
+VISIBLE_METRICS = {k: v for k, v in METRICS_META.items() if k not in HIDDEN_METRICS}

@@ -9,7 +9,7 @@ from fastapi.responses import PlainTextResponse, Response, RedirectResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.metrics_meta import METRICS_META, METRIC_LABELS, METRIC_QUERIES
+from app.metrics_meta import METRICS_META, METRIC_LABELS, METRIC_QUERIES, HIDDEN_METRICS, VISIBLE_METRICS
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
@@ -38,7 +38,7 @@ _TF = Query(1440, description="Timeframe in minutes: 15, 30, 60, 240, 720, 1440"
 @app.get("/")
 async def index(request: Request):
     return templates.TemplateResponse(
-        "index.html", {"request": request},
+        "index.html", {"request": request, "hidden_metrics": sorted(HIDDEN_METRICS)},
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
     )
 
@@ -439,7 +439,7 @@ async def funkpay_page():
 
 @app.get("/sitemap.xml")
 async def sitemap_dynamic():
-    urls = ['https://btcfunk.com/', 'https://btcfunk.com/funkpay'] + [f'https://btcfunk.com/{k}' for k in METRICS_META]
+    urls = ['https://btcfunk.com/', 'https://btcfunk.com/funkpay'] + [f'https://btcfunk.com/{k}' for k in VISIBLE_METRICS]
     items = ''.join(
         f'  <url><loc>{u}</loc><changefreq>daily</changefreq><priority>{"1.0" if u.endswith("/") else "0.8"}</priority></url>\n'
         for u in urls
@@ -451,7 +451,7 @@ async def sitemap_dynamic():
 
 @app.get("/{metric_id}")
 async def metric_page(request: Request, metric_id: str):
-    if metric_id not in METRICS_META:
+    if metric_id not in VISIBLE_METRICS:
         raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         "metric.html",
@@ -459,7 +459,7 @@ async def metric_page(request: Request, metric_id: str):
             "request": request,
             "metric_id": metric_id,
             "meta": METRICS_META[metric_id],
-            "related_labels": METRIC_LABELS,
+            "related_labels": {k: v for k, v in METRIC_LABELS.items() if k not in HIDDEN_METRICS},
             "query": METRIC_QUERIES.get(metric_id),
         },
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"},

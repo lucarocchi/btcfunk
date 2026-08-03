@@ -394,11 +394,8 @@
         <div class="cp-p landing-desc">On-chain metrics, technical indicators and macro signals — all in one place.</div>
 
         <div class="landing-chips">
-            <a href="/active_addresses">Active Addresses</a><a href="/avg_fee">Avg Fee</a><a href="/bb">Bollinger Bands</a><a href="/cdd">CDD</a><a href="/ema">EMA</a>
-            <a href="/exchange_flow">Exchange Flow</a><a href="/fear_greed">Fear & Greed</a><a href="/hashrate">Hash Rate</a><a href="/hodl">HODL Waves</a><a href="/lth">LTH Supply</a><a href="/mvrv">MVRV</a>
-            <a href="/mvrv_zscore">MVRV Z-Score</a><a href="/nupl">NUPL</a><a href="/nvt">NVT</a><a href="/price">Price</a><a href="/puell">Puell Multiple</a>
-            <a href="/rhodl">RHODL</a><a href="/rsi">RSI</a><a href="/stf">S2F</a><a href="/sopr">SOPR</a><a href="/sth">STH Supply</a>
-            <a href="/supply_profit">Supply in Profit</a><a href="/tx_count">Tx Count</a><a href="/volume">Volume</a><a href="/whale_tx">Whale Tx</a>
+            <a href="/bb">Bollinger Bands</a><a href="/coinbase_premium">Coinbase Premium</a><a href="/ema">EMA</a><a href="/fear_greed">Fear & Greed</a>
+            <a href="/mempool">Mempool</a><a href="/price">Price</a><a href="/rsi">RSI</a><a href="/volume">Volume</a>
         </div>
     </div>
 </div>
@@ -549,22 +546,14 @@
     <table class="api-table">
         <thead><tr><th>Endpoint</th><th>Description</th><th>Key fields</th></tr></thead>
         <tbody>
-            <tr><td>/api/mvrv</td><td>MVRV Ratio + 365d history</td><td>mvrv, market_cap, realized_cap, labels[], values[]<br><a href="/api/mvrv" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/nupl</td><td>NUPL + Realized Price</td><td>nupl, realized_price, labels[], values[]<br><a href="/api/nupl" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/sopr</td><td>SOPR + 365d history</td><td>current, labels[], values[]<br><a href="/api/sopr" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/nvt</td><td>NVT Ratio + 28d MA</td><td>nvt, labels[], values[]<br><a href="/api/nvt" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/hodl</td><td>HODL Waves — 12 age bands</td><td>lth_pct, sth_pct, total_btc, bands[]<br><a href="/api/hodl" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/rhodl</td><td>RHODL Ratio + Supply in Profit</td><td>rhodl, supply_in_profit_pct, bands_profit[]<br><a href="/api/rhodl" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/cdd</td><td>Coin Days Destroyed + 90d MA</td><td>current, ma90, labels[], values[]<br><a href="/api/cdd" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/puell</td><td>Puell Multiple + miner revenue</td><td>puell, daily_revenue, labels[], values[]<br><a href="/api/puell" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/active_addresses</td><td>Unique active addresses / day</td><td>current, ma30, labels[], values[]<br><a href="/api/active_addresses" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/whale_tx</td><td>Transactions &gt; 100 BTC / day</td><td>current, ma30, labels[], values[], btc_series[]<br><a href="/api/whale_tx" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/exchange_flow</td><td>Exchange inflows, outflows, net</td><td>current_net, labels[], inflows[], outflows[], net[], top_exchanges[]<br><a href="/api/exchange_flow" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/mvrv_zscore</td><td>MVRV Z-Score + 365d history</td><td>z_score, market_cap, realized_cap, labels[], values[]<br><a href="/api/mvrv_zscore" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/lth_sth</td><td>LTH &amp; STH supply + realized price</td><td>lth_supply, sth_supply, lth_realized_price, sth_realized_price, bands[]<br><a href="/api/lth_sth" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/stf</td><td>Stock-to-Flow ratio + model price</td><td>sf, model_price, deviation_pct, labels[], values[]<br><a href="/api/stf" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/tx_stats</td><td>Daily tx count, volume, fees</td><td>tx_count, tx_count_ma30, volume_btc, avg_fee_btc, labels[], tx_counts[], avg_fees[]<br><a href="/api/tx_stats" target="_blank">↗ live JSON</a></td></tr>
-            <tr><td>/api/hashrate</td><td>Network hash rate (EH/s) + 14d MA</td><td>hashrate_eh, ma14_eh, block_count, labels[], values[]<br><a href="/api/hashrate" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/price</td><td>OHLC candles — Kraken XBTUSD</td><td>labels[], open[], high[], low[], close[], volume[]<br><a href="/api/price" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/rsi</td><td>RSI 14 + signal</td><td>current, signal, labels[], rsi[]<br><a href="/api/rsi" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/ema</td><td>EMA 20 / 50 / 200</td><td>ema20_val, ema50_val, ema200_val, labels[], ema20[], ema50[], ema200[]<br><a href="/api/ema" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/bb</td><td>Bollinger Bands + bandwidth</td><td>bandwidth, labels[], bb_upper[], bb_mid[], bb_lower[]<br><a href="/api/bb" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/mempool</td><td>Live mempool from a full node</td><td>tx_count, size_mb, total_fees, fee_next, fee_30min, hashrate_eh, difficulty, block_height<br><a href="/api/mempool" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/fear_greed</td><td>Fear &amp; Greed index 0–100</td><td>current, classification, labels[], values[]<br><a href="/api/fear_greed" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/coinbase_premium</td><td>Coinbase vs Binance price gap (%)</td><td>current, coinbase, binance, labels[], values[]<br><a href="/api/coinbase_premium" target="_blank">↗ live JSON</a></td></tr>
+            <tr><td>/api/dxy</td><td>US Dollar Index + BTC overlay</td><td>current, labels[], values[], btc_labels[], btc_close[]<br><a href="/api/dxy" target="_blank">↗ live JSON</a></td></tr>
         </tbody>
     </table>
 
@@ -573,13 +562,13 @@
     <table class="api-table" style="margin-top:0.75rem">
         <thead><tr><th>Example</th><th>Response</th></tr></thead>
         <tbody>
-            <tr><td>/api/mvrv</td><td>mvrv, market_cap, realized_cap, current_price, <strong>labels[], values[]</strong>, updated_at</td></tr>
-            <tr><td>/api/mvrv?summary=true</td><td>mvrv, market_cap, realized_cap, current_price, updated_at</td></tr>
+            <tr><td>/api/rsi</td><td>current, signal, tf, period, <strong>labels[], rsi[]</strong></td></tr>
+            <tr><td>/api/rsi?summary=true</td><td>current, signal, tf, period</td></tr>
         </tbody>
     </table>
 
     <h3>Notes</h3>
-    <div class="cp-p">Responses are cached for <strong>24 hours</strong>. On-chain data reflects blockchain state with approximately a 1–2 day lag (BigQuery public dataset update cadence).</div>
+    <div class="cp-p">Price and technical endpoints are backed by Kraken OHLC data, refreshed every 7 minutes. The on-chain endpoints (MVRV, SOPR, NVT, HODL Waves, Puell and the others) are <strong>temporarily paused</strong> while the data pipeline is being moved off BigQuery, and are not listed above.</div>
     <div class="cp-p">No rate limits are currently enforced, but please be reasonable. All data is provided as-is for informational purposes.</div>
 </div>
 </div><!-- /page-api -->
@@ -900,6 +889,18 @@
             chartHeight: 340,
         },
     };
+
+    // Metriche nascoste: dati on-chain congelati, elenco in app/metrics_meta.py → HIDDEN_METRICS.
+    // Toglierne una da quel set la fa riapparire ovunque (card, sidebar, settings, sitemap).
+    const HIDDEN = new Set({{ hidden_metrics|tojson }});
+    HIDDEN.forEach(id => delete METRICS[id]);
+
+    // Le metriche nascoste non vengono nemmeno richieste: promise che non si risolve mai,
+    // così i blocchi .then/.catch che scrivono su card inesistenti non partono.
+    function apiFetch(id, url) {
+        if (HIDDEN.has(id)) return new Promise(() => {});
+        return fetch(url);
+    }
 
     let data = { price: null, volume: null, rsi: null, ema: null, bb: null, mvrv: null, sopr: null, nvt: null, hodl: null, cdd: null, exchange_flow: null, nupl: null, rhodl: null, supply_profit: null, puell: null, active_addresses: null, whale_tx: null, mvrv_zscore: null, lth: null, sth: null, stf: null, tx_count: null, avg_fee: null, hashrate: null, dxy: null, mempool: null, coinbase_premium: null, fear_greed: null };
     let currentTF = { price: 1440, volume: 1440, rsi: 1440, ema: 1440, bb: 1440 };
@@ -1906,7 +1907,7 @@
     }
 
     // Load MVRV
-    fetch('/api/mvrv').then(r => r.json()).then(d => {
+    apiFetch('mvrv', '/api/mvrv').then(r => r.json()).then(d => {
         data.mvrv = d;
         const sig = mvrv_signal(d.mvrv);
         const hv = document.getElementById('hc-mvrv-val');
@@ -1926,7 +1927,7 @@
     });
 
     // Load SOPR
-    fetch('/api/sopr').then(r => r.json()).then(d => {
+    apiFetch('sopr', '/api/sopr').then(r => r.json()).then(d => {
         data.sopr = d;
         const sig = sopr_signal(d.current);
         const hv = document.getElementById('hc-sopr-val');
@@ -1943,7 +1944,7 @@
     });
 
     // Load NVT
-    fetch('/api/nvt').then(r => r.json()).then(d => {
+    apiFetch('nvt', '/api/nvt').then(r => r.json()).then(d => {
         data.nvt = d;
         const sig = nvt_signal(d.nvt);
         document.getElementById('hc-nvt-val').textContent = d.nvt ? d.nvt.toFixed(1) : '—';
@@ -1956,7 +1957,7 @@
     }).catch(() => { document.getElementById('hc-nvt-val').textContent = 'error'; cardReady('nvt'); });
 
     // Load HODL
-    fetch('/api/hodl').then(r => r.json()).then(d => {
+    apiFetch('hodl', '/api/hodl').then(r => r.json()).then(d => {
         data.hodl = d;
         const sig = hodl_signal(d.lth_pct);
         document.getElementById('hc-hodl-val').textContent = d.lth_pct ? d.lth_pct.toFixed(1) + '%' : '—';
@@ -1970,7 +1971,7 @@
     }).catch(() => { document.getElementById('hc-hodl-val').textContent = 'error'; cardReady('hodl'); });
 
     // Load Exchange Flow
-    fetch('/api/exchange_flow').then(r => r.json()).then(d => {
+    apiFetch('exchange_flow', '/api/exchange_flow').then(r => r.json()).then(d => {
         data.exchange_flow = d;
         const sig = ef_signal(d.current_net);
         document.getElementById('hc-exchange_flow-val').textContent = fmt_btc(d.current_net);
@@ -1985,7 +1986,7 @@
     }).catch(() => { document.getElementById('hc-exchange_flow-val').textContent = 'error'; cardReady('exchange_flow'); });
 
     // Load CDD
-    fetch('/api/cdd').then(r => r.json()).then(d => {
+    apiFetch('cdd', '/api/cdd').then(r => r.json()).then(d => {
         data.cdd = d;
         const sig = cdd_signal(d.current, d.ma90);
         document.getElementById('hc-cdd-val').textContent = fmt_cdd(d.current);
@@ -1999,7 +2000,7 @@
     }).catch(() => { document.getElementById('hc-cdd-val').textContent = 'error'; cardReady('cdd'); });
 
     // Load NUPL
-    fetch('/api/nupl').then(r => r.json()).then(d => {
+    apiFetch('nupl', '/api/nupl').then(r => r.json()).then(d => {
         data.nupl = d;
         const sig = nupl_signal(d.nupl);
         document.getElementById('hc-nupl-val').textContent = d.nupl !== null ? d.nupl.toFixed(3) : '—';
@@ -2013,7 +2014,7 @@
     }).catch(() => { document.getElementById('hc-nupl-val').textContent = 'error'; cardReady('nupl'); });
 
     // Load RHODL + Supply in Profit
-    fetch('/api/rhodl').then(r => r.json()).then(d => {
+    apiFetch('rhodl', '/api/rhodl').then(r => r.json()).then(d => {
         data.rhodl = d;
         data.supply_profit = d;
         // RHODL card
@@ -2041,7 +2042,7 @@
     });
 
     // Load Puell Multiple
-    fetch('/api/puell').then(r => r.json()).then(d => {
+    apiFetch('puell', '/api/puell').then(r => r.json()).then(d => {
         data.puell = d;
         const sig = puell_signal(d.puell);
         document.getElementById('hc-puell-val').textContent = d.puell !== null ? d.puell.toFixed(2) : '—';
@@ -2055,7 +2056,7 @@
     }).catch(() => { document.getElementById('hc-puell-val').textContent = 'error'; cardReady('puell'); });
 
     // Load Active Addresses
-    fetch('/api/active_addresses').then(r => r.json()).then(d => {
+    apiFetch('active_addresses', '/api/active_addresses').then(r => r.json()).then(d => {
         data.active_addresses = d;
         const sig = active_signal(d.current, d.ma30);
         document.getElementById('hc-active_addresses-val').textContent = fmt_addr(d.current);
@@ -2069,7 +2070,7 @@
     }).catch(() => { document.getElementById('hc-active_addresses-val').textContent = 'error'; cardReady('active_addresses'); });
 
     // Load Whale Transactions
-    fetch('/api/whale_tx').then(r => r.json()).then(d => {
+    apiFetch('whale_tx', '/api/whale_tx').then(r => r.json()).then(d => {
         data.whale_tx = d;
         const sig = whale_signal(d.current, d.ma30);
         document.getElementById('hc-whale_tx-val').textContent = d.current !== null ? d.current.toLocaleString() : '—';
@@ -2083,7 +2084,7 @@
     }).catch(() => { document.getElementById('hc-whale_tx-val').textContent = 'error'; cardReady('whale_tx'); });
 
     // Load MVRV Z-Score
-    fetch('/api/mvrv_zscore').then(r => r.json()).then(d => {
+    apiFetch('mvrv_zscore', '/api/mvrv_zscore').then(r => r.json()).then(d => {
         data.mvrv_zscore = d;
         const sig = mvrv_zscore_signal(d.z_score);
         document.getElementById('hc-mvrv_zscore-val').textContent = d.z_score !== null ? d.z_score.toFixed(2) : '—';
@@ -2098,7 +2099,7 @@
     }).catch(() => { document.getElementById('hc-mvrv_zscore-val').textContent = 'error'; cardReady('mvrv_zscore'); });
 
     // Load LTH + STH Supply
-    fetch('/api/lth_sth').then(r => r.json()).then(d => {
+    apiFetch('lth', '/api/lth_sth').then(r => r.json()).then(d => {
         data.lth = d;
         data.sth = d;
         // LTH card
@@ -2130,7 +2131,7 @@
     });
 
     // Load Stock-to-Flow
-    fetch('/api/stf').then(r => r.json()).then(d => {
+    apiFetch('stf', '/api/stf').then(r => r.json()).then(d => {
         data.stf = d;
         if (d.error) { document.getElementById('hc-stf-val').textContent = 'n/a'; cardReady('stf'); return; }
         const sig = stf_signal(d.deviation_pct);
@@ -2146,7 +2147,7 @@
     }).catch(() => { document.getElementById('hc-stf-val').textContent = 'error'; cardReady('stf'); });
 
     // Load Tx Count + Avg Fee
-    fetch('/api/tx_stats').then(r => r.json()).then(d => {
+    apiFetch('tx_count', '/api/tx_stats').then(r => r.json()).then(d => {
         data.tx_count = d;
         data.avg_fee  = d;
         // Tx Count card
@@ -2174,7 +2175,7 @@
     });
 
     // Load Hash Rate
-    fetch('/api/hashrate').then(r => r.json()).then(d => {
+    apiFetch('hashrate', '/api/hashrate').then(r => r.json()).then(d => {
         data.hashrate = d;
         const sig = hashrate_signal(d.hashrate_eh, d.ma14_eh);
         document.getElementById('hc-hashrate-val').textContent = d.hashrate_eh ? d.hashrate_eh.toFixed(1) + ' EH/s' : '—';
@@ -2396,7 +2397,7 @@
         document.getElementById('home-tabs').style.display = 'flex';
         document.getElementById('view-detail').style.display = 'none';
         document.querySelectorAll('.metric-item').forEach(el => {
-            el.classList.toggle('active', ['mvrv','sopr'].includes(el.dataset.id));
+            el.classList.toggle('active', ['price','rsi'].includes(el.dataset.id));
         });
     }
 
